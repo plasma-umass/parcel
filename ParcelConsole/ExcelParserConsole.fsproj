@@ -74,7 +74,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <ProjectReference Include="..\ExcelParser\ExcelParser.fsproj">
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Parcel\ExcelParser.fsproj">
       <Name>ExcelParser</Name>
       <Project>{6de2a2b9-c029-4bdb-8992-d16276471d9f}</Project>
       <Private>True</Private>
