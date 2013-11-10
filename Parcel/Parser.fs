@@ -6,6 +6,7 @@
 
     type Workbook = Microsoft.Office.Interop.Excel.Workbook
     type Worksheet = Microsoft.Office.Interop.Excel.Worksheet
+    type Name = Microsoft.Office.Interop.Excel.Name
     type UserState = unit
     type Parser<'t> = Parser<'t, UserState>
     
