@@ -196,6 +196,15 @@
             self.getYTop() = r.getYTop() &&
             self.getYBottom() = r.getYBottom()
 
+    type ReferenceType =
+    | ReferenceAddress  = 0
+    | ReferenceRange    = 1
+    | ReferenceFunction = 2
+    | ReferenceConstant = 3
+    | ReferenceString   = 4
+    | ReferenceNamed    = 5
+
+    [<AbstractClass>]
     type Reference(path: string option, wbname: string option, wsname: string option) =
         let mutable _path: string option = path
         let mutable _wbn: string option = wbname
@@ -205,6 +214,7 @@
         abstract member Resolve: string -> Workbook -> Worksheet -> unit
         abstract member WorkbookName: string option with get, set
         abstract member WorksheetName: string option with get, set
+        abstract member Type: ReferenceType
         default self.Path
             with get() = _path
             and set(value) = _path <- value
@@ -235,6 +245,7 @@
             // also set the Workbook and Worksheet for the Range object itself
             rng.SetWorkbookName(wbname)
             rng.SetWorksheetName(wsname)
+        override self.Type = ReferenceType.ReferenceRange
         override self.ToString() =
             let pth = match self.Path with
                       | Some(pth) -> pth
@@ -292,6 +303,7 @@
             // also set the Workbook and Worksheet for the Address object itself
             addr.WorkbookName <- wbname
             addr.WorksheetName <- wsname
+        override self.Type = ReferenceType.ReferenceAddress
         override self.ToString() =
             let pth = match self.Path with
                       | Some(pth) -> pth
@@ -345,6 +357,7 @@
 
     and ReferenceFunction(wsname: string option, fnname: string, arglist: Expression list) =
         inherit Reference(None, None, wsname)
+        override self.Type = ReferenceType.ReferenceFunction
         member self.ArgumentList = arglist
         member self.FunctionName = fnname
         override self.ToString() =
@@ -360,9 +373,11 @@
             self.WorkbookName = rf.WorkbookName &&
             self.WorksheetName = rf.WorksheetName &&
             self.FunctionName = rf.FunctionName
+            // TODO: should also check ArgumentList here!
 
     and ReferenceConstant(wsname: string option, value: int) =
         inherit Reference(None, None, wsname)
+        override self.Type = ReferenceType.ReferenceConstant
         member self.Value = value
         override self.ToString() = "Constant(" + value.ToString() + ")"
         override self.Equals(obj: obj) : bool =
@@ -374,6 +389,7 @@
 
     and ReferenceString(wsname: string option, value: string) =
         inherit Reference(None, None, wsname)
+        override self.Type = ReferenceType.ReferenceString
         member self.Value = value
         override self.ToString() = "String(" + value + ")"
         override self.Equals(obj: obj) : bool =
@@ -385,6 +401,7 @@
 
     and ReferenceNamed(wsname: string option, varname: string) =
         inherit Reference(None, None, wsname)
+        override self.Type = ReferenceType.ReferenceNamed
         member self.Name = varname
         override self.ToString() =
             match self.WorksheetName with
@@ -397,6 +414,7 @@
             self.WorksheetName = rn.WorksheetName &&
             self.Name = rn.Name
 
+    // TODO: implement .Equals!
     and Expression =
     | ReferenceExpr of Reference
     | BinOpExpr of string * Expression * Expression
