@@ -168,3 +168,9 @@
     // The parser REPL calls this; note that the
     // Formula parser looks for EOF
     let ConsoleTest(s: string) = test Formula s
+
+    // Call this for simple address parsing
+    let SimpleReferenceParser(s: string) : AST.Reference =
+        match run Reference s with
+        | Success(result, _, _) -> result
+        | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)

@@ -189,6 +189,12 @@
             let ws: Worksheet = wb.Worksheets.Item(_tl.A1Worksheet()) :?> Worksheet
             let range: XLRange = ws.Range(_tl.A1Local(), _br.A1Local())
             range
+        override self.Equals(obj: obj) : bool =
+            let r = obj :?> Range
+            self.getXLeft() = r.getXLeft() &&
+            self.getXRight() = r.getXRight() &&
+            self.getYTop() = r.getYTop() &&
+            self.getYBottom() = r.getYBottom()
 
     type Reference(path: string option, wbname: string option, wsname: string option) =
         let mutable _path: string option = path
@@ -273,6 +279,12 @@
                                   | None ->
                                       rng.SetWorksheetName(Some ws.Name)
                                       Some ws.Name
+        override self.Equals(obj: obj) : bool =
+            let rr = obj :?> ReferenceRange
+            self.Path = rr.Path &&
+            self.WorkbookName = rr.WorkbookName &&
+            self.WorksheetName = rr.WorksheetName &&
+            self.Range = rr.Range
 
     and ReferenceAddress(path: string option, wbname: string option, wsname: string option, addr: Address) =
         inherit Reference(path, wbname, wsname)
@@ -324,6 +336,12 @@
                                   | None ->
                                       addr.WorksheetName <- Some ws.Name
                                       Some ws.Name
+        override self.Equals(obj: obj) : bool =
+            let ra = obj :?> ReferenceAddress
+            self.Path = ra.Path &&
+            self.WorkbookName = ra.WorkbookName &&
+            self.WorksheetName = ra.WorksheetName &&
+            self.Address = ra.Address
 
     and ReferenceFunction(wsname: string option, fnname: string, arglist: Expression list) =
         inherit Reference(None, None, wsname)
@@ -336,21 +354,48 @@
             // wb and ws names do not matter for functions
             for expr in arglist do
                 expr.Resolve path wb ws
+        override self.Equals(obj: obj) : bool =
+            let rf = obj :?> ReferenceFunction
+            self.Path = rf.Path &&
+            self.WorkbookName = rf.WorkbookName &&
+            self.WorksheetName = rf.WorksheetName &&
+            self.FunctionName = rf.FunctionName
 
     and ReferenceConstant(wsname: string option, value: int) =
         inherit Reference(None, None, wsname)
+        member self.Value = value
         override self.ToString() = "Constant(" + value.ToString() + ")"
+        override self.Equals(obj: obj) : bool =
+            let rc = obj :?> ReferenceConstant
+            self.Path = rc.Path &&
+            self.WorkbookName = rc.WorkbookName &&
+            self.WorksheetName = rc.WorksheetName &&
+            self.Value = rc.Value
 
     and ReferenceString(wsname: string option, value: string) =
         inherit Reference(None, None, wsname)
+        member self.Value = value
         override self.ToString() = "String(" + value + ")"
+        override self.Equals(obj: obj) : bool =
+            let rs = obj :?> ReferenceString
+            self.Path = rs.Path &&
+            self.WorkbookName = rs.WorkbookName &&
+            self.WorksheetName = rs.WorksheetName &&
+            self.Value = rs.Value
 
     and ReferenceNamed(wsname: string option, varname: string) =
         inherit Reference(None, None, wsname)
+        member self.Name = varname
         override self.ToString() =
             match self.WorksheetName with
             | Some(wsn) -> "ReferenceName(" + wsn + ", " + varname + ")"
             | None -> "ReferenceName(None, " + varname + ")"
+        override self.Equals(obj: obj) : bool =
+            let rn = obj :?> ReferenceNamed
+            self.Path = rn.Path &&
+            self.WorkbookName = rn.WorkbookName &&
+            self.WorksheetName = rn.WorksheetName &&
+            self.Name = rn.Name
 
     and Expression =
     | ReferenceExpr of Reference
