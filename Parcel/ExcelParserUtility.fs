@@ -56,7 +56,7 @@
                         else
                             Some(r.GetCOMObject(wb.Application))
                      ) refs |> List.choose id |> Seq.ofList
-        | None -> [] |> Seq.ofList
+        | None -> raise (ParseException(formula))
 
     // single-cell variants:
 
@@ -101,7 +101,7 @@
         let app = wb.Application
         match ExcelParser.ParseFormula(formula, path, wb, ws) with
         | Some(ast) -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
-        | None -> [] |> Seq.ofList
+        | None -> raise (ParseException formula)
 
     let GetSingleCellReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<AST.Address> =
         let app = wb.Application

@@ -1,6 +1,9 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.FSharp.Core;
+using System.Collections.Generic;
+using System.Linq;
+using Excel = Microsoft.Office.Interop.Excel;
 
 namespace ParcelTest
 {
@@ -33,6 +36,27 @@ namespace ParcelTest
                                                                         )
                                                           );
             Assert.AreEqual(r, correct);
+        }
+
+        [TestMethod]
+        public void IFStatement()
+        {
+            using (var mwb = new MockWorkbook())
+            {
+                String s = "=IF(SUM(A1:A5) = 10, \"yes\", \"no\")";
+
+                IEnumerable<Excel.Range> rngs = new List<Excel.Range>();
+                try
+                {
+                    rngs = ExcelParserUtility.GetReferencesFromFormula(s, mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                }
+                catch (ExcelParserUtility.ParseException e)
+                {
+                    Assert.Fail(String.Format("\"{0}\" should parse.", s));
+                }
+
+                Assert.AreEqual(1, rngs.Count());
+            }
         }
     }
 }
