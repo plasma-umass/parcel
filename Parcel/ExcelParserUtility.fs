@@ -3,6 +3,10 @@
     type Worksheet = Microsoft.Office.Interop.Excel.Worksheet
     type XLRange = Microsoft.Office.Interop.Excel.Range
 
+    // using C#-style exceptions so that the can be handled by C# code
+    type ParseException(formula: string) =
+        inherit System.Exception(formula)
+
     let PuntedFunction(fnname: string) : bool =
         match fnname with
         | "INDEX" -> true
@@ -104,4 +108,4 @@
         let path = wb.FullName
         match ExcelParser.ParseFormula(formula, path, wb, ws) with
         | Some(tree) -> GetSCExprRanges(tree) |> Seq.ofList
-        | None -> [] |> Seq.ofList
+        | None -> raise (ParseException formula)
