@@ -100,7 +100,7 @@
     let BinOp: Parser<string*Expression,unit> = (attempt BinOpLong) <|> BinOpShort
 
     // Unary operators
-    let UnaryOpChar = satisfy (fun c -> c = '+' || c = '-')
+    let UnaryOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces
 
     // Expressions
     let ParensExpr: Parser<Expression,unit> = (between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr
