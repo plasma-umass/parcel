@@ -61,5 +61,33 @@ namespace ParcelTest
                 Assert.AreEqual("$A$1:$A$5", addr);
             }
         }
+
+        [TestMethod]
+        public void UnOpAndBinOp()
+        {
+            using (var mwb = new MockWorkbook())
+            {
+                String formula = "=(+E6+E7)*0.28";
+
+                IEnumerable<AST.Address> addrs = new List<AST.Address>();
+                try
+                {
+                    addrs = ExcelParserUtility.GetSingleCellReferencesFromFormula(formula, mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                }
+                catch (ExcelParserUtility.ParseException e)
+                {
+                    Assert.Fail(String.Format("\"{0}\" should parse.", formula));
+                }
+
+                Assert.AreEqual(2, addrs.Count());
+
+                var a1 = AST.Address.AddressFromCOMObject(mwb.GetWorksheet(1).get_Range("E6"), mwb.GetWorkbook());
+                var a2 = AST.Address.AddressFromCOMObject(mwb.GetWorksheet(1).get_Range("E7"), mwb.GetWorkbook());
+
+                Assert.AreEqual(true, addrs.Contains(a1));
+                Assert.AreEqual(true, addrs.Contains(a2));
+            }
+        }
+        
     }
 }

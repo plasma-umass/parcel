@@ -375,7 +375,7 @@
             self.FunctionName = rf.FunctionName
             // TODO: should also check ArgumentList here!
 
-    and ReferenceConstant(wsname: string option, value: int) =
+    and ReferenceConstant(wsname: string option, value: double) =
         inherit Reference(None, None, wsname)
         override self.Type = ReferenceType.ReferenceConstant
         member self.Value = value
