@@ -56,6 +56,9 @@ namespace ParcelTest
                 }
 
                 Assert.AreEqual(1, rngs.Count());
+
+                var addr = rngs.First().Address;
+                Assert.AreEqual("$A$1:$A$5", addr);
             }
         }
     }

@@ -90,11 +90,11 @@
     // Functions
     let FunctionName = many1Satisfy (fun c -> isLetter(c))
     let Function = pipe2 (FunctionName .>> pstring "(") (ArgumentList .>> pstring ")") (fun fname arglist -> ReferenceFunction(None, fname, arglist) :> Reference)
-    do ArgumentListImpl := sepBy ExpressionDecl (pstring ",")
+    do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces)
 
     // Binary arithmetic operators
-    let BinOpChar = satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>')
-    let BinOp2Char = regex "<="
+    let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=') .>> spaces
+    let BinOp2Char = spaces >>. regex "<=" .>> spaces
     let BinOpLong: Parser<string*Expression,unit> = pipe2 BinOp2Char ExpressionDecl (fun op rhs -> (op, rhs))
     let BinOpShort: Parser<string*Expression,unit> = pipe2 BinOpChar ExpressionDecl (fun op rhs -> (op.ToString(), rhs))
     let BinOp: Parser<string*Expression,unit> = (attempt BinOpLong) <|> BinOpShort
