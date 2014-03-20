@@ -93,7 +93,7 @@
     do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces)
 
     // Binary arithmetic operators
-    let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=') .>> spaces
+    let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^') .>> spaces
     let BinOp2Char = spaces >>. regex "<=" .>> spaces
     let BinOpLong: Parser<string*Expression,unit> = pipe2 BinOp2Char ExpressionDecl (fun op rhs -> (op, rhs))
     let BinOpShort: Parser<string*Expression,unit> = pipe2 BinOpChar ExpressionDecl (fun op rhs -> (op.ToString(), rhs))
