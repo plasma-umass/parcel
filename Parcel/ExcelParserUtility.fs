@@ -1,11 +1,13 @@
 ﻿module ExcelParserUtility
+    open FParsec
     type Workbook = Microsoft.Office.Interop.Excel.Workbook
     type Worksheet = Microsoft.Office.Interop.Excel.Worksheet
     type XLRange = Microsoft.Office.Interop.Excel.Range
 
     // using C#-style exceptions so that the can be handled by C# code
-    type ParseException(formula: string) =
+    type ParseException(formula: string, reason: string) =
         inherit System.Exception(formula)
+        new(formula: string) = ParseException(formula, "")
 
     let PuntedFunction(fnname: string) : bool =
         match fnname with
@@ -109,3 +111,11 @@
         match ExcelParser.ParseFormula(formula, path, wb, ws) with
         | Some(tree) -> GetSCExprRanges(tree) |> Seq.ofList
         | None -> raise (ParseException formula)
+
+    // This is the one you want to call from user code
+    let ParseFormula(str, path, wb, ws): AST.Expression =
+        match run ExcelParser.Formula str with
+        | Success(formula, _, _) ->
+            ExcelParser.ExprAddrResolve formula path wb ws
+            formula
+        | Failure(errorMsg, _, _) -> raise (ParseException(str, errorMsg))

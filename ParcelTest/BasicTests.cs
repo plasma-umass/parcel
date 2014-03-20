@@ -100,7 +100,7 @@ namespace ParcelTest
                 {
                     try
                     {
-                        ExcelParser.ParseFormula(f, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                        ExcelParserUtility.ParseFormula(f, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
                         // show progress
                         System.Diagnostics.Debug.WriteLine(String.Format("{0}", count++));
                     }
