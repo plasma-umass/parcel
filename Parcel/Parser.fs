@@ -83,7 +83,8 @@
 
     let StringReference = between (pstring "\"") (pstring "\"") (manySatisfy ((<>) '"')) |>> (fun s -> ReferenceString(None, s) :> Reference)
 
-    let ConstantReference = pfloat |>> (fun r -> ReferenceConstant(None, r) :> Reference)
+    let ConstantReference = (attempt (pfloat .>> pstring "%" |>> (fun r -> ReferenceConstant(None, r / 100.0) :> Reference)))
+                            <|> (pfloat |>> (fun r -> ReferenceConstant(None, r) :> Reference))
 
     let Reference = (attempt RangeReference) <|> (attempt AddressReference) <|> (attempt ConstantReference) <|> (attempt StringReference) <|> NamedReference
 
