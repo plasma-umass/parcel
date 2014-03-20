@@ -111,7 +111,7 @@
     do ExpressionDeclImpl := (attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)
 
     // Formulas
-    let Formula = pstring "=" >>. ExpressionDecl .>> eof
+    let Formula = spaces >>. pstring "=" .>> spaces >>. ExpressionDecl .>> eof
 
     // Resolve all undefined references to the current worksheet and workbook
     let RefAddrResolve(ref: Reference)(path: string)(wb: Workbook)(ws: Worksheet) = ref.Resolve path wb ws

@@ -1,0 +1,3 @@
+=total costs project staff  * productive days / # working days per year
+=total costs not project staff + unproductive days project staff
+
