@@ -92,7 +92,24 @@ namespace ParcelTest
         [TestMethod]
         public void BrutalEUSESTest()
         {
-
+            using (var mwb = new MockWorkbook())
+            {
+                var formulas = System.IO.File.ReadAllLines(@"..\..\TestData\formulas_distinct.txt");
+                int count = 0;
+                foreach (String f in formulas)
+                {
+                    try
+                    {
+                        ExcelParser.ParseFormula(f, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                        // show progress
+                        System.Diagnostics.Debug.WriteLine(String.Format("{0}", count++));
+                    }
+                    catch (ExcelParserUtility.ParseException e)
+                    {
+                        Assert.Fail(String.Format("\"{0}\" should parse.", f));
+                    }
+                }
+            }
         }
     }
 }
