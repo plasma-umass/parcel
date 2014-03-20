@@ -41,14 +41,6 @@
   <ItemGroup>
     <Compile Include="AST.fs" />
     <Compile Include="Parser.fs" />
-    <COMReference Include="Microsoft Office 14.0 Object Library">
-      <Guid>{2df8d04c-5bfa-101b-bde5-00aa0044de52}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>5</VersionMinor>
-      <Lcid>0</Lcid>
-      <Isolated>False</Isolated>
-      <WrapperTool>primary</WrapperTool>
-    </COMReference>
     <Compile Include="ExcelParserUtility.fs" />
   </ItemGroup>
   <ItemGroup>
