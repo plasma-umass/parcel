@@ -361,7 +361,7 @@
         member self.ArgumentList = arglist
         member self.FunctionName = fnname
         override self.ToString() =
-            fnname + "(" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            fnname + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Resolve(path: string)(wb: Workbook)(ws: Worksheet) =
             // pass wb and ws information down to arguments
             // wb and ws names do not matter for functions

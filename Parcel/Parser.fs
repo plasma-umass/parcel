@@ -81,7 +81,7 @@
     let NamedReferenceLastChars = manySatisfy (fun c -> c = '_' || isLetter(c) || isDigit(c))
     let NamedReference = pipe2 NamedReferenceFirstChar NamedReferenceLastChars (fun c s -> ReferenceNamed(None, c.ToString() + s) :> Reference)
 
-    let StringReference = between (pstring "\"") (pstring "\"") (many1Satisfy ((<>) '"')) |>> (fun s -> ReferenceString(None, s) :> Reference)
+    let StringReference = between (pstring "\"") (pstring "\"") (manySatisfy ((<>) '"')) |>> (fun s -> ReferenceString(None, s) :> Reference)
 
     let ConstantReference = pfloat |>> (fun r -> ReferenceConstant(None, r) :> Reference)
 
@@ -111,7 +111,7 @@
     do ExpressionDeclImpl := (attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)
 
     // Formulas
-    let Formula = spaces >>. pstring "=" .>> spaces >>. ExpressionDecl .>> eof
+    let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
 
     // Resolve all undefined references to the current worksheet and workbook
     let RefAddrResolve(ref: Reference)(path: string)(wb: Workbook)(ws: Worksheet) = ref.Resolve path wb ws
