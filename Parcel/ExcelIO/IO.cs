@@ -41,19 +41,33 @@ namespace ExcelIO
                     Excel.Range ur = ws.UsedRange;
                     _rs.Add(ur);
 
-                    // array read formulas
-                    object[,] formulas = ur.Formula;
-
-                    // grab formula strings
-                    // danger: one-based array
-                    for (int i = 1; i <= formulas.GetLength(0); i++)
+                    // if a single cell
+                    if (ur.Columns.Count == 1 && ur.Rows.Count == 1)
                     {
-                        for (int j = 1; j <= formulas.GetLength(1); j++)
+                        String s = ur.Formula;
+                        if (!String.IsNullOrEmpty(s) && _formula_filter.IsMatch(s))
                         {
-                            String s = (String)formulas[i, j];
-                            if (!String.IsNullOrEmpty(s) && _formula_filter.IsMatch(s))
+                            fs.Add(s);
+                        }
+                    }
+                    // if an array
+                    else
+                    {
+
+                        // array read formulas
+                        object[,] formulas = ur.Formula;
+
+                        // grab formula strings
+                        // danger: one-based array
+                        for (int i = 1; i <= formulas.GetLength(0); i++)
+                        {
+                            for (int j = 1; j <= formulas.GetLength(1); j++)
                             {
-                                fs.Add(s);
+                                String s = (String)formulas[i, j];
+                                if (!String.IsNullOrEmpty(s) && _formula_filter.IsMatch(s))
+                                {
+                                    fs.Add(s);
+                                }
                             }
                         }
                     }
