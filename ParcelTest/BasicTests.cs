@@ -92,17 +92,16 @@ namespace ParcelTest
         [TestMethod]
         public void BrutalEUSESTest()
         {
+            var failures = new System.Collections.Concurrent.ConcurrentQueue<string>();
+
             using (var mwb = new MockWorkbook())
             {
                 var formulas = System.IO.File.ReadAllLines(@"..\..\TestData\formulas_distinct.txt");
-                int count = 0;
-                foreach (String f in formulas)
+                System.Threading.Tasks.Parallel.ForEach(formulas, f =>
                 {
                     try
                     {
                         ExcelParserUtility.ParseFormula(f, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
-                        // show progress
-                        System.Diagnostics.Debug.WriteLine(String.Format("{0}", count++));
                     }
                     catch (Exception e)
                     {
@@ -112,10 +111,17 @@ namespace ParcelTest
                         }
                         else if (e is ExcelParserUtility.ParseException)
                         {
-                            Assert.Fail(String.Format("\"{0}\" should parse.", f));
+                            System.Diagnostics.Debug.WriteLine("Fail: " + f);
+                            failures.Enqueue(f);
                         }
                     }
-                }
+                });
+            }
+
+            Assert.AreEqual(0, failures.Count);
+            if (failures.Count > 0)
+            {
+                String.Join("\n", failures);
             }
         }
 
