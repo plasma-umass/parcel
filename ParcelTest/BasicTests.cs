@@ -111,5 +111,29 @@ namespace ParcelTest
                 }
             }
         }
+
+        [TestMethod]
+        public void IndirectReferences()
+        {
+            using (var mwb = new MockWorkbook())
+            {
+                String formula = "=TRANSPOSE(INDIRECT(ADDRESS(1,4,3,1,Menus!$K$10)):INDIRECT(ADDRESS(1,256,3,1,Menus!$K$10)))";
+                try
+                {
+                    ExcelParserUtility.ParseFormula(formula, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                }
+                catch (Exception e)
+                {
+                    if (e is AST.IndirectAddressingNotSupportedException)
+                    {
+                        // we pass
+                    }
+                    else
+                    {
+                        Assert.Fail(e.Message);
+                    }
+                }
+            }
+        }
     }
 }

@@ -35,13 +35,14 @@
     // exactly the same way unless you copy and paste them.
     let AddrR = pstring "R" >>. pint32
     let AddrC = pstring "C" >>. pint32
-    let AddrR1C1 = pipe2 AddrR AddrC (fun r c -> Address.NewFromR1C1(r,c,None,None,None))
+    let AddrIndirect = between (pstring "INDIRECT(") (pstring ")") (manySatisfy ((<>) ')')) |>> (fun exprstr -> IndirectAddress(exprstr) :> Address)
+    let AddrR1C1 = (attempt AddrIndirect) <|> pipe2 AddrR AddrC (fun r c -> Address.NewFromR1C1(r,c,None,None,None))
     let AddrA = many1Satisfy isAsciiUpper
     let AddrAAbs = (pstring "$" <|> pstring "") >>. AddrA
     let Addr1 = pint32
     let Addr1Abs = (pstring "$" <|> pstring "") >>. Addr1
-    let AddrA1 = (pipe2 AddrAAbs Addr1Abs (fun col row -> Address.NewFromA1(row,col,None,None,None))) <!> "AddrA1"
-    let AnyAddr = ((attempt AddrR1C1) <|> AddrA1) <!> "AnyAddr"
+    let AddrA1 = (attempt AddrIndirect) <|> (pipe2 AddrAAbs Addr1Abs (fun col row -> Address.NewFromA1(row,col,None,None,None))) <!> "AddrA1"
+    let AnyAddr = ((attempt AddrIndirect) <|> (attempt AddrR1C1) <|> AddrA1) <!> "AnyAddr"
 
     // Ranges
     let MoreAddrR1C1 = pstring ":" >>. AddrR1C1
@@ -89,7 +90,7 @@
     let Reference = (attempt RangeReference) <|> (attempt AddressReference) <|> (attempt ConstantReference) <|> (attempt StringReference) <|> NamedReference
 
     // Functions
-    let FunctionName = many1Satisfy (fun c -> isLetter(c))
+    let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
     let Function = pipe2 (FunctionName .>> pstring "(") (ArgumentList .>> pstring ")") (fun fname arglist -> ReferenceFunction(None, fname, arglist) :> Reference)
     do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces)
 

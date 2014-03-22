@@ -13,7 +13,10 @@ let rec readAndProcess() =
             printfn "Parsing..."
             ExcelParser.ConsoleTest expr
             
-        with ex ->
+        with
+        | :? AST.IndirectAddressingNotSupportedException as ex ->
+            printfn "Indirect addressing mode is not presently supported:\n%s" ex.Message
+        | _ as ex ->
             printfn "Unhandled Exception: %s" ex.Message
 
         readAndProcess()

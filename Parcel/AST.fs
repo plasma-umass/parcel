@@ -9,6 +9,9 @@
     type XLRange = Microsoft.Office.Interop.Excel.Range
     type XLRefStyle = Microsoft.Office.Interop.Excel.XlReferenceStyle
 
+    type IndirectAddressingNotSupportedException(expression: string) =
+        inherit Exception(expression)
+
     [<Serializable>]
     type Address() =
         let mutable R: int = 0
@@ -147,6 +150,11 @@
             else
                 Address.IntToColChars(quot) + ltr.ToString()
 
+    and IndirectAddress(expr: string) =
+        inherit Address()
+        do
+            raise(IndirectAddressingNotSupportedException(expr))
+        
     and Range(topleft: Address, bottomright: Address) =
         let _tl = topleft
         let _br = bottomright
