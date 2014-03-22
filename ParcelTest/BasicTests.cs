@@ -104,9 +104,13 @@ namespace ParcelTest
                         // show progress
                         System.Diagnostics.Debug.WriteLine(String.Format("{0}", count++));
                     }
-                    catch (ExcelParserUtility.ParseException e)
+                    catch (Exception e)
                     {
-                        if (!(e is AST.IndirectAddressingNotSupportedException))
+                        if (e is AST.IndirectAddressingNotSupportedException)
+                        {
+                            // OK   
+                        }
+                        else if (e is ExcelParserUtility.ParseException)
                         {
                             Assert.Fail(String.Format("\"{0}\" should parse.", f));
                         }
