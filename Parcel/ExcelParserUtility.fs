@@ -46,19 +46,22 @@
     let GetReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<XLRange> =
         let wbpath = wb.FullName
         let app = wb.Application
-        match ExcelParser.ParseFormula(formula, wbpath, wb, ws) with
-        | Some(tree) ->
-            let refs = GetExprRanges(tree)
-            List.map (fun (r: AST.Range) ->
-                        // temporarily bail if r refers to object in a different workbook
-                        // TODO: we should open the other workbook and continue the analysis
-                        let paths = Seq.filter (fun pth -> pth = wbpath) (r.GetPathNames())
-                        if Seq.length(paths) = 0 then
-                            None
-                        else
-                            Some(r.GetCOMObject(wb.Application))
-                     ) refs |> List.choose id |> Seq.ofList
-        | None -> raise (ParseException(formula))
+        try
+            match ExcelParser.ParseFormula(formula, wbpath, wb, ws) with
+            | Some(tree) ->
+                let refs = GetExprRanges(tree)
+                List.map (fun (r: AST.Range) ->
+                            // temporarily bail if r refers to object in a different workbook
+                            // TODO: we should open the other workbook and continue the analysis
+                            let paths = Seq.filter (fun pth -> pth = wbpath) (r.GetPathNames())
+                            if Seq.length(paths) = 0 then
+                                None
+                            else
+                                Some(r.GetCOMObject(wb.Application))
+                         ) refs |> List.choose id |> Seq.ofList
+            | None -> raise (ParseException(formula))
+        with
+        | :? AST.IndirectAddressingNotSupportedException -> seq[]
 
     // single-cell variants:
 
