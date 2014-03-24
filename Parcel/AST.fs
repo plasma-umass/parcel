@@ -25,7 +25,7 @@
             addr.Col <- C
             addr.WorksheetName <- Some(wsname)
             addr.WorkbookName <- Some(wbname)
-            addr.Path <- Some(path)
+            addr.Path <- Some(System.IO.Path.GetDirectoryName(path))
             addr
         static member NewFromR1C1(R: int, C: int, wsname: string option, wbname: string option, path: string option) : Address =
             let addr = Address()
@@ -33,7 +33,7 @@
             addr.Col <- C
             addr.WorksheetName <- wsname
             addr.WorkbookName <- wbname
-            addr.Path <- path
+            addr.Path <- match path with | Some(p) -> Some(System.IO.Path.GetDirectoryName(p)) | None -> None
             addr
         static member NewFromA1(row: int, col: string, wsname: string option, wbname: string option, path: string option) : Address =
             let addr = Address()
@@ -41,7 +41,7 @@
             addr.Col <- Address.CharColToInt(col)
             addr.WorksheetName <- wsname
             addr.WorkbookName <- wbname
-            addr.Path <- path
+            addr.Path <- match path with | Some(p) -> Some(System.IO.Path.GetDirectoryName(p)) | None -> None
             addr
         member self.A1Local() : string = Address.IntToColChars(self.X) + self.Y.ToString()
         member self.A1Path() : string =
@@ -127,7 +127,7 @@
         static member AddressFromCOMObject(com: Microsoft.Office.Interop.Excel.Range, wb: Microsoft.Office.Interop.Excel.Workbook) : Address =
             let wsname = com.Worksheet.Name
             let wbname = wb.Name
-            let path = wb.FullName
+            let path = System.IO.Path.GetDirectoryName(wb.FullName)
             let addr = com.get_Address(true, true, Microsoft.Office.Interop.Excel.XlReferenceStyle.xlR1C1, Type.Missing, Type.Missing)
             Address.FromString(addr, Some(wsname), Some(wbname), Some(path))
         static member FromString(addr: string, wsname: string option, wbname: string option, path: string option) : Address =

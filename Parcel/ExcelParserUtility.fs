@@ -43,8 +43,12 @@
         | :? AST.ReferenceString -> []
         | _ -> failwith "Unknown reference type."
 
+//    let ValidXWBRef(cur_wb: Workbook, target_ref: AST.Range) : bool =
+//        let target_wbs = target_ref.GetWorkbookNames()
+//        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
+
     let GetReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<XLRange> =
-        let wbpath = wb.FullName
+        let wbpath = System.IO.Path.GetDirectoryName(wb.FullName)
         let app = wb.Application
         try
             match ExcelParser.ParseFormula(formula, wbpath, wb, ws) with
@@ -104,15 +108,23 @@
 
     let GetSCFormulaNames(formula: string, path: string, ws: Worksheet, wb: Workbook) =
         let app = wb.Application
-        match ExcelParser.ParseFormula(formula, path, wb, ws) with
+        let path' = System.IO.Path.GetDirectoryName(wb.FullName)
+        match ExcelParser.ParseFormula(formula, path', wb, ws) with
         | Some(ast) -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
         | None -> raise (ParseException formula)
 
     let GetSingleCellReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<AST.Address> =
         let app = wb.Application
-        let path = wb.FullName
+        let path = System.IO.Path.GetDirectoryName(wb.FullName)
         match ExcelParser.ParseFormula(formula, path, wb, ws) with
-        | Some(tree) -> GetSCExprRanges(tree) |> Seq.ofList
+        | Some(tree) ->
+            // temporarily bail if a refers to object in a different workbook
+            // TODO: we should open the other workbook and continue the analysis
+            let refs = GetSCExprRanges(tree) |> Seq.ofList
+            Seq.filter (fun (a: AST.Address) ->
+                let a_path = a.A1Path()
+                a_path = path
+            ) refs
         | None -> raise (ParseException formula)
 
     // This is the one you want to call from user code
