@@ -15,7 +15,8 @@
         isDigit(c) || isLetter(c) || c = '-' || c = ' '
 
     // Special breakpoint-friendly parser
-    let BP (p: Parser<_,_>) stream =
+    let BP (p: Parser<_,_>)(stream: CharStream<'b>) =
+        printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
         p stream // set a breakpoint here
 
     let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
@@ -52,7 +53,12 @@
     let RangeAny = ((attempt RangeR1C1) <|> RangeA1) <!> "RangeAny"
 
     // Worksheet Names
-    let WorksheetNameQuoted = (between (pstring "'") (pstring "'") (many1Satisfy ((<>) '\''))) <!> "WorksheetNameQuoted"
+
+    let WorksheetNameQuoted =
+        let NormalChar = satisfy ((<>) '\'')
+        let EscapedChar = pstring "''" |>> (fun s -> ''')
+        between (pstring "'") (pstring "'")
+                (many1Chars (NormalChar <|> EscapedChar))
     let WorksheetNameUnquoted = (many1Satisfy (fun c -> isWSChar(c))) <!> "WorksheetNameUnquoted"
     let WorksheetName = (WorksheetNameQuoted <|> WorksheetNameUnquoted) <!> "WorksheetName"
 

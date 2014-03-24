@@ -148,5 +148,39 @@ namespace ParcelTest
                 }
             }
         }
+
+        [TestMethod]
+        public void WorksheetNameQuoteEscaping()
+        {
+            using (var mwb = new MockWorkbook())
+            {
+                String formula1 = "=Dan!H45";
+                String formula2 = "='Dan Stuff'!H45";
+                String formula3 = "='Dan''s Stuff'!H45";
+                String formula4 = "='Dan's Stuff'!H45";
+
+                // first, the good ones
+                try
+                {
+                    ExcelParserUtility.ParseFormula(formula1, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula2, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula3, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                }
+                catch (ExcelParserUtility.ParseException e)
+                {
+                    Assert.Fail(e.Message);
+                }
+
+                // a bad one
+                try
+                {
+                    ExcelParserUtility.ParseFormula(formula4, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                }
+                catch (ExcelParserUtility.ParseException e)
+                {
+                    // OK
+                }
+            }
+        }
     }
 }
