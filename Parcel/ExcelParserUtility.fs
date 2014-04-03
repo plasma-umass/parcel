@@ -1,5 +1,6 @@
 ﻿module ExcelParserUtility
     open FParsec
+    open SpreadsheetAST
 
     // using C#-style exceptions so that the can be handled by C# code
     type ParseException(formula: string, reason: string) =
@@ -15,38 +16,38 @@
         | "OFFSET" -> true
         | _ -> false
 
-    let rec GetRangeReferenceRanges(ref: AST.ReferenceRange) : AST.Range list = [ref.Range]
+    let rec GetRangeReferenceRanges(ref: ReferenceRange) : Range list = [ref.Range]
 
-    and GetFunctionRanges(ref: AST.ReferenceFunction) : AST.Range list =
+    and GetFunctionRanges(ref: ReferenceFunction) : Range list =
         if PuntedFunction(ref.FunctionName) then
             []
         else
             List.map (fun arg -> GetExprRanges(arg)) ref.ArgumentList |> List.concat
         
-    and GetExprRanges(expr: AST.Expression) : AST.Range list =
+    and GetExprRanges(expr: Expression) : Range list =
         match expr with
-        | AST.ReferenceExpr(r) -> GetRanges(r)
-        | AST.BinOpExpr(op, e1, e2) -> GetExprRanges(e1) @ GetExprRanges(e2)
-        | AST.UnaryOpExpr(op, e) -> GetExprRanges(e)
-        | AST.ParensExpr(e) -> GetExprRanges(e)
+        | ReferenceExpr(r) -> GetRanges(r)
+        | BinOpExpr(op, e1, e2) -> GetExprRanges(e1) @ GetExprRanges(e2)
+        | UnaryOpExpr(op, e) -> GetExprRanges(e)
+        | ParensExpr(e) -> GetExprRanges(e)
 
-    and GetRanges(ref: AST.Reference) : AST.Range list =
+    and GetRanges(ref: Reference) : Range list =
         match ref with
-        | :? AST.ReferenceRange as r -> GetRangeReferenceRanges(r)
-        | :? AST.ReferenceAddress -> []
-        | :? AST.ReferenceNamed -> []   // TODO: symbol table lookup
-        | :? AST.ReferenceFunction as r -> GetFunctionRanges(r)
-        | :? AST.ReferenceConstant -> []
-        | :? AST.ReferenceString -> []
+        | :? ReferenceRange as r -> GetRangeReferenceRanges(r)
+        | :? ReferenceAddress -> []
+        | :? ReferenceNamed -> []   // TODO: symbol table lookup
+        | :? ReferenceFunction as r -> GetFunctionRanges(r)
+        | :? ReferenceConstant -> []
+        | :? ReferenceString -> []
         | _ -> failwith "Unknown reference type."
 
-    let GetReferencesFromFormula(formula: string, wbname: string, wsname: string) : seq<AST.Range> =
+    let GetReferencesFromFormula(formula: string, wbname: string, wsname: string) : seq<Range> =
         let wbpath = System.IO.Path.GetDirectoryName(wbname)
         try
             match ExcelParser.ParseFormula(formula, wbpath, wbname, wsname) with
             | Some(tree) ->
                 let refs = GetExprRanges(tree)
-                List.map (fun (r: AST.Range) ->
+                List.map (fun (r: Range) ->
                             // temporarily bail if r refers to object in a different workbook
                             // TODO: we should open the other workbook and continue the analysis
                             let paths = Seq.filter (fun pth -> pth = wbpath) (r.GetPathNames())
@@ -57,45 +58,45 @@
                          ) refs |> List.choose id |> Seq.ofList
             | None -> raise (ParseException(formula))
         with
-        | :? AST.IndirectAddressingNotSupportedException -> seq[]
+        | :? IndirectAddressingNotSupportedException -> seq[]
 
     // single-cell variants:
 
-    let rec GetSCExprRanges(expr: AST.Expression) : AST.Address list =
+    let rec GetSCExprRanges(expr: Expression) : Address list =
         match expr with
-        | AST.ReferenceExpr(r) -> GetSCRanges(r)
-        | AST.BinOpExpr(op, e1, e2) -> GetSCExprRanges(e1) @ GetSCExprRanges(e2)
-        | AST.UnaryOpExpr(op, e) -> GetSCExprRanges(e)
-        | AST.ParensExpr(e) -> GetSCExprRanges(e)
+        | ReferenceExpr(r) -> GetSCRanges(r)
+        | BinOpExpr(op, e1, e2) -> GetSCExprRanges(e1) @ GetSCExprRanges(e2)
+        | UnaryOpExpr(op, e) -> GetSCExprRanges(e)
+        | ParensExpr(e) -> GetSCExprRanges(e)
 
-    and GetSCRanges(ref: AST.Reference) : AST.Address list =
+    and GetSCRanges(ref: Reference) : Address list =
         match ref with
-        | :? AST.ReferenceRange -> []
-        | :? AST.ReferenceAddress as r -> GetSCAddressReferenceRanges(r)
-        | :? AST.ReferenceNamed -> []   // TODO: symbol table lookup
-        | :? AST.ReferenceFunction as r -> GetSCFunctionRanges(r)
-        | :? AST.ReferenceConstant -> []
-        | :? AST.ReferenceString -> []
+        | :? ReferenceRange -> []
+        | :? ReferenceAddress as r -> GetSCAddressReferenceRanges(r)
+        | :? ReferenceNamed -> []   // TODO: symbol table lookup
+        | :? ReferenceFunction as r -> GetSCFunctionRanges(r)
+        | :? ReferenceConstant -> []
+        | :? ReferenceString -> []
         | _ -> failwith "Unknown reference type."
 
-    and GetSCAddressReferenceRanges(ref: AST.ReferenceAddress) : AST.Address list = [ref.Address]
+    and GetSCAddressReferenceRanges(ref: ReferenceAddress) : Address list = [ref.Address]
 
-    and GetSCFunctionRanges(ref: AST.ReferenceFunction) : AST.Address list =
+    and GetSCFunctionRanges(ref: ReferenceFunction) : Address list =
         if PuntedFunction(ref.FunctionName) then
             []
         else
             List.map (fun arg -> GetSCExprRanges(arg)) ref.ArgumentList |> List.concat
 
-    let rec GetFormulaNamesFromExpr(ast: AST.Expression): string list =
+    let rec GetFormulaNamesFromExpr(ast: Expression): string list =
         match ast with
-        | AST.ReferenceExpr(r) -> GetFormulaNamesFromReference(r)
-        | AST.BinOpExpr(op, e1, e2) -> GetFormulaNamesFromExpr(e1) @ GetFormulaNamesFromExpr(e2)
-        | AST.UnaryOpExpr(op, e) -> GetFormulaNamesFromExpr(e)
-        | AST.ParensExpr(e) -> GetFormulaNamesFromExpr(e)
+        | ReferenceExpr(r) -> GetFormulaNamesFromReference(r)
+        | BinOpExpr(op, e1, e2) -> GetFormulaNamesFromExpr(e1) @ GetFormulaNamesFromExpr(e2)
+        | UnaryOpExpr(op, e) -> GetFormulaNamesFromExpr(e)
+        | ParensExpr(e) -> GetFormulaNamesFromExpr(e)
 
-    and GetFormulaNamesFromReference(ref: AST.Reference): string list =
+    and GetFormulaNamesFromReference(ref: Reference): string list =
         match ref with
-        | :? AST.ReferenceFunction as r -> [r.FunctionName]
+        | :? ReferenceFunction as r -> [r.FunctionName]
         | _ -> []
 
     let GetSCFormulaNames(formula: string, path: string, wsname: string, wbname: string) =
@@ -104,23 +105,32 @@
         | Some(ast) -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
         | None -> raise (ParseException formula)
 
-    let GetSingleCellReferencesFromFormula(formula: string, wbname: string, wsname: string) : seq<AST.Address> =
+    let GetSingleCellReferencesFromFormula(formula: string, wbname: string, wsname: string) : seq<Address> =
         let path = System.IO.Path.GetDirectoryName(wbname)
         match ExcelParser.ParseFormula(formula, path, wbname, wsname) with
         | Some(tree) ->
             // temporarily bail if a refers to object in a different workbook
             // TODO: we should open the other workbook and continue the analysis
             let refs = GetSCExprRanges(tree) |> Seq.ofList
-            Seq.filter (fun (a: AST.Address) ->
+            Seq.filter (fun (a: Address) ->
                 let a_path = a.A1Path()
                 a_path = path
             ) refs
         | None -> raise (ParseException formula)
 
     // This is the one you want to call from user code
-    let ParseFormula(str, path, wb, ws): AST.Expression =
-        match run ExcelParser.Formula str with
+    let ParseFormula(fstr, path, wb, ws): Expression =
+        match run ExcelParser.Formula fstr with
         | Success(formula, _, _) ->
             ExcelParser.ExprAddrResolve formula path wb ws
             formula
-        | Failure(errorMsg, _, _) -> raise (ParseException(str, errorMsg))
+        | Failure(errorMsg, _, _) -> raise (ParseException(fstr, errorMsg))
+
+    // You can also call this one from user code if you
+    // already have an Address object
+    let ParseFormulaWithAddress(fstr: string, addr: Address): Expression =
+        match run ExcelParser.Formula fstr with
+        | Success(formula, _, _) ->
+            ExcelParser.ExprAddrResolve formula (addr.A1Path()) (addr.A1Workbook()) (addr.A1Worksheet())
+            formula
+        | Failure(errorMsg, _, _) -> raise (ParseException(fstr, errorMsg))

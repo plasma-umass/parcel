@@ -1,6 +1,6 @@
 ﻿module ExcelParser
     open FParsec
-    open AST
+    open SpreadsheetAST
     open System.Text.RegularExpressions
 
     type Workbook = Microsoft.Office.Interop.Excel.Workbook
@@ -148,7 +148,7 @@
             addr
         | Failure(errorMsg, _, _) -> failwith errorMsg
 
-    let GetRange str ws: AST.Range option =
+    let GetRange str ws: Range option =
         match run (RangeR1C1 .>> eof) str with
         | Success(range, _, _) -> Some(range)
         | Failure(errorMsg, _, _) -> None
@@ -177,7 +177,7 @@
     let ConsoleTest(s: string) = test Formula s
 
     // Call this for simple address parsing
-    let SimpleReferenceParser(s: string) : AST.Reference =
+    let SimpleReferenceParser(s: string) : Reference =
         match run Reference s with
         | Success(result, _, _) -> result
         | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
