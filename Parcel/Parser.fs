@@ -1,7 +1,6 @@
 ﻿module ExcelParser
     open FParsec
     open AST
-    open Microsoft.Office.Interop.Excel
     open System.Text.RegularExpressions
 
     type Workbook = Microsoft.Office.Interop.Excel.Workbook
@@ -122,18 +121,18 @@
     let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
 
     // Resolve all undefined references to the current worksheet and workbook
-    let RefAddrResolve(ref: Reference)(path: string)(wb: Workbook)(ws: Worksheet) = ref.Resolve path wb ws
-    let rec ExprAddrResolve(expr: Expression)(path: string)(wb: Workbook)(ws: Worksheet) =
+    let RefAddrResolve(ref: Reference)(path: string)(wbname: string)(wsname: string) = ref.Resolve path wbname wsname
+    let rec ExprAddrResolve(expr: Expression)(path: string)(wbname: string)(wsname: string) =
         match expr with
         | ReferenceExpr(r) ->
-            RefAddrResolve r path wb ws
+            RefAddrResolve r path wbname wsname
         | BinOpExpr(op,e1,e2) ->
-            ExprAddrResolve e1 path wb ws
-            ExprAddrResolve e2 path wb ws
+            ExprAddrResolve e1 path wbname wsname
+            ExprAddrResolve e2 path wbname wsname
         | UnaryOpExpr(op, e) ->
-            ExprAddrResolve e path wb ws
+            ExprAddrResolve e path wbname wsname
         | ParensExpr(e) ->
-            ExprAddrResolve e path wb ws
+            ExprAddrResolve e path wbname wsname
 
     // monadic wrapper for success/failure
     let test p str =

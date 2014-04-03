@@ -1,8 +1,5 @@
 ﻿module ExcelParserUtility
     open FParsec
-    type Workbook = Microsoft.Office.Interop.Excel.Workbook
-    type Worksheet = Microsoft.Office.Interop.Excel.Worksheet
-    type XLRange = Microsoft.Office.Interop.Excel.Range
 
     // using C#-style exceptions so that the can be handled by C# code
     type ParseException(formula: string, reason: string) =
@@ -43,15 +40,10 @@
         | :? AST.ReferenceString -> []
         | _ -> failwith "Unknown reference type."
 
-//    let ValidXWBRef(cur_wb: Workbook, target_ref: AST.Range) : bool =
-//        let target_wbs = target_ref.GetWorkbookNames()
-//        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
-
-    let GetReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<XLRange> =
-        let wbpath = System.IO.Path.GetDirectoryName(wb.FullName)
-        let app = wb.Application
+    let GetReferencesFromFormula(formula: string, wbname: string, wsname: string) : seq<AST.Range> =
+        let wbpath = System.IO.Path.GetDirectoryName(wbname)
         try
-            match ExcelParser.ParseFormula(formula, wbpath, wb, ws) with
+            match ExcelParser.ParseFormula(formula, wbpath, wbname, wsname) with
             | Some(tree) ->
                 let refs = GetExprRanges(tree)
                 List.map (fun (r: AST.Range) ->
@@ -61,7 +53,7 @@
                             if Seq.length(paths) = 0 then
                                 None
                             else
-                                Some(r.GetCOMObject(wb.Application))
+                                Some(r)
                          ) refs |> List.choose id |> Seq.ofList
             | None -> raise (ParseException(formula))
         with
@@ -106,17 +98,15 @@
         | :? AST.ReferenceFunction as r -> [r.FunctionName]
         | _ -> []
 
-    let GetSCFormulaNames(formula: string, path: string, ws: Worksheet, wb: Workbook) =
-        let app = wb.Application
-        let path' = System.IO.Path.GetDirectoryName(wb.FullName)
-        match ExcelParser.ParseFormula(formula, path', wb, ws) with
+    let GetSCFormulaNames(formula: string, path: string, wsname: string, wbname: string) =
+        let path' = System.IO.Path.GetDirectoryName(wbname)
+        match ExcelParser.ParseFormula(formula, path', wbname, wsname) with
         | Some(ast) -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
         | None -> raise (ParseException formula)
 
-    let GetSingleCellReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<AST.Address> =
-        let app = wb.Application
-        let path = System.IO.Path.GetDirectoryName(wb.FullName)
-        match ExcelParser.ParseFormula(formula, path, wb, ws) with
+    let GetSingleCellReferencesFromFormula(formula: string, wbname: string, wsname: string) : seq<AST.Address> =
+        let path = System.IO.Path.GetDirectoryName(wbname)
+        match ExcelParser.ParseFormula(formula, path, wbname, wsname) with
         | Some(tree) ->
             // temporarily bail if a refers to object in a different workbook
             // TODO: we should open the other workbook and continue the analysis
