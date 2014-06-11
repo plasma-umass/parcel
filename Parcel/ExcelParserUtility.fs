@@ -63,7 +63,8 @@
                             else
                                 Some(r.GetCOMObject(wb.Application))
                          ) refs |> List.choose id |> Seq.ofList
-            | None -> raise (ParseException(formula))
+//            | None -> raise (ParseException(formula))
+            | None -> Seq.empty    // just ignore parse exceptions for now
         with
         | :? AST.IndirectAddressingNotSupportedException -> seq[]
 
