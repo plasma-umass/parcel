@@ -66,6 +66,7 @@
 //            | None -> raise (ParseException(formula))
             | None -> Seq.empty    // just ignore parse exceptions for now
         with
+        // right now, we recognize indirect addresses but do not correctly dereference them
         | :? AST.IndirectAddressingNotSupportedException -> seq[]
 
     // single-cell variants:
