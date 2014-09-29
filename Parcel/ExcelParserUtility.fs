@@ -47,12 +47,12 @@
 //        let target_wbs = target_ref.GetWorkbookNames()
 //        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
 
-    let GetReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<XLRange> =
+    let GetReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet, ignore_parse_errors: bool) : seq<XLRange> =
         let wbpath = System.IO.Path.GetDirectoryName(wb.FullName)
         let app = wb.Application
         try
-            match ExcelParser.ParseFormula(formula, wbpath, wb, ws) with
-            | Some(tree) ->
+            match ExcelParser.ParseFormula(formula, wbpath, wb, ws),ignore_parse_errors with
+            | Some(tree),_ ->
                 let refs = GetExprRanges(tree)
                 List.map (fun (r: AST.Range) ->
                             // temporarily bail if r refers to object in a different workbook
@@ -63,8 +63,8 @@
                             else
                                 Some(r.GetCOMObject(wb.Application))
                          ) refs |> List.choose id |> Seq.ofList
-//            | None -> raise (ParseException(formula))
-            | None -> Seq.empty    // just ignore parse exceptions for now
+            | None,false -> raise (ParseException(formula))
+            | None,true -> Seq.empty    // just ignore parse exceptions for now
         with
         | :? AST.IndirectAddressingNotSupportedException -> seq[]
 
@@ -107,18 +107,19 @@
         | :? AST.ReferenceFunction as r -> [r.FunctionName]
         | _ -> []
 
-    let GetSCFormulaNames(formula: string, path: string, ws: Worksheet, wb: Workbook) =
+    let GetSCFormulaNames(formula: string, path: string, ws: Worksheet, wb: Workbook, ignore_parse_errors: bool) =
         let app = wb.Application
         let path' = System.IO.Path.GetDirectoryName(wb.FullName)
-        match ExcelParser.ParseFormula(formula, path', wb, ws) with
-        | Some(ast) -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
-        | None -> raise (ParseException formula)
+        match ExcelParser.ParseFormula(formula, path', wb, ws),ignore_parse_errors with
+        | Some(ast),_ -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
+        | None,false -> raise (ParseException formula)
+        | None,true -> Seq.empty    // just ignore parse exceptions for now
 
-    let GetSingleCellReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet) : seq<AST.Address> =
+    let GetSingleCellReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet, ignore_parse_errors: bool) : seq<AST.Address> =
         let app = wb.Application
         let path = System.IO.Path.GetDirectoryName(wb.FullName)
-        match ExcelParser.ParseFormula(formula, path, wb, ws) with
-        | Some(tree) ->
+        match ExcelParser.ParseFormula(formula, path, wb, ws),ignore_parse_errors with
+        | Some(tree),_ ->
             // temporarily bail if a refers to object in a different workbook
             // TODO: we should open the other workbook and continue the analysis
             let refs = GetSCExprRanges(tree) |> Seq.ofList
@@ -126,7 +127,8 @@
                 let a_path = a.A1Path()
                 a_path = path
             ) refs
-        | None -> raise (ParseException formula)
+        | None,false -> raise (ParseException formula)
+        | None,true -> Seq.empty    // just ignore parse exceptions for now
 
     // This is the one you want to call from user code
     let ParseFormula(str, path, wb, ws): AST.Expression =
