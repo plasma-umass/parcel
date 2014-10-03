@@ -2,6 +2,7 @@
     open System
     open System.Diagnostics
     open Microsoft.Office.Interop.Excel
+    open System.Collections.Generic
 
     type Application = Microsoft.Office.Interop.Excel.Application
     type Workbook = Microsoft.Office.Interop.Excel.Workbook
@@ -11,6 +12,50 @@
 
     type IndirectAddressingNotSupportedException(expression: string) =
         inherit Exception(expression)
+
+    type COMRef(unique_id: string,
+                wb: Workbook,
+                ws: Worksheet,
+                range: XLRange,
+                path: string,           // path excluding final separator and filename
+                workbook_name: string,
+                worksheet_name: string,
+                formula: string option,
+                width: int,
+                height: int) =
+        let _inputs = new HashSet<COMRef>()
+        let _outputs = new HashSet<COMRef>()
+        let _wb = wb
+        let _ws = ws
+        let _r = range
+        let _is_cell = width = 1 && height = 1
+        let _interned_unique_id = String.Intern(unique_id)
+        let _width = width
+        let _height = height
+        let _path = path
+        let _workbook_name = workbook_name
+        let _worksheet_name = worksheet_name
+        let _formula = formula
+        let mutable _do_not_perturb = match formula with | Some(f) -> true | None -> false
+
+        member self.Workbook = _wb
+        member self.Worksheet = _ws
+        member self.Range = _r
+        member self.IsFormula = match _formula with | Some(f) -> true | None -> false
+        member self.Formula = match _formula with
+            | Some(f) -> f
+            | None -> failwith "Not a formula reference."
+        member self.IsCell = _is_cell
+        member self.UniqueID = _interned_unique_id
+        member self.Path = _path
+        member self.WorkbookName = _workbook_name
+        member self.WorksheetName = _worksheet_name
+        member self.GetInputs = _inputs
+        member self.GetOutputs = _outputs
+        member self.DoNotPerturb
+            with get() = _do_not_perturb
+            and set(value) = _do_not_perturb <- value
+        override self.GetHashCode() = _interned_unique_id.GetHashCode()
 
     [<Serializable>]
     type Address() =
@@ -162,6 +207,8 @@
             let tlstr = topleft.ToString()
             let brstr = bottomright.ToString()
             tlstr + "," + brstr
+        member self.getUniqueID() : string =
+            topleft.ToString() + "," + bottomright.ToString()
         member self.getXLeft() : int = _tl.X
         member self.getXRight() : int = _br.X
         member self.getYTop() : int = _tl.Y

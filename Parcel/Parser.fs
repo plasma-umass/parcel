@@ -135,7 +135,7 @@
         | ParensExpr(e) ->
             ExprAddrResolve e path wb ws
 
-    // monadic wrapper for success/failure
+    // wrapper for success/failure
     let test p str =
         match run p str with
         | Success(result, _, _)   -> printfn "Success: %A" result
