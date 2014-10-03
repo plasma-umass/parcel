@@ -234,6 +234,8 @@
         member self.SetWorkbookName(wbname: string option) : unit =
             _tl.WorkbookName <- wbname
             _br.WorkbookName <- wbname
+        member self.GetWorksheetNames() : seq<string> =
+            [_tl.WorksheetName; _br.WorksheetName] |> List.choose id |> List.toSeq
         member self.GetWorkbookNames() : seq<string> =
             [_tl.WorkbookName; _br.WorkbookName] |> List.choose id |> List.toSeq
         member self.GetPathNames() : seq<string> =
@@ -244,6 +246,13 @@
             let ws: Worksheet = wb.Worksheets.Item(_tl.A1Worksheet()) :?> Worksheet
             let range: XLRange = ws.Range(_tl.A1Local(), _br.A1Local())
             range
+        member self.Addresses() : Address[] =
+            Array.map (fun c ->
+                Array.map (fun r ->
+                    Address.NewFromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
+                ) [|self.getYBottom()..self.getYTop()|]
+            ) [|self.getXLeft()..self.getXRight()|] |>
+            Array.concat
         override self.Equals(obj: obj) : bool =
             let r = obj :?> Range
             self.getXLeft() = r.getXLeft() &&
