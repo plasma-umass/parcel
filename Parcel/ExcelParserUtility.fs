@@ -47,7 +47,7 @@
 //        let target_wbs = target_ref.GetWorkbookNames()
 //        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
 
-    let GetReferencesFromFormula(cr: AST.COMRef, ignore_parse_errors: bool) : seq<AST.Range> =
+    let GetRangeReferencesFromFormula(cr: AST.COMRef, ignore_parse_errors: bool) : seq<AST.Range> =
         try
             match ExcelParser.ParseFormula(cr.Formula, cr.Path, cr.Workbook, cr.Worksheet),ignore_parse_errors with
             | Some(tree),_ ->
@@ -114,19 +114,17 @@
         | None,false -> raise (ParseException formula)
         | None,true -> Seq.empty    // just ignore parse exceptions for now
 
-    let GetSingleCellReferencesFromFormula(formula: string, wb: Workbook, ws: Worksheet, ignore_parse_errors: bool) : seq<AST.Address> =
-        let app = wb.Application
-        let path = System.IO.Path.GetDirectoryName(wb.FullName)
-        match ExcelParser.ParseFormula(formula, path, wb, ws),ignore_parse_errors with
+    let GetSingleCellReferencesFromFormula(cr: AST.COMRef, ignore_parse_errors: bool) : seq<AST.Address> =
+        match ExcelParser.ParseFormula(cr.Formula, cr.Path, cr.Workbook, cr.Worksheet),ignore_parse_errors with
         | Some(tree),_ ->
             // temporarily bail if a refers to object in a different workbook
             // TODO: we should open the other workbook and continue the analysis
             let refs = GetSCExprRanges(tree) |> Seq.ofList
             Seq.filter (fun (a: AST.Address) ->
                 let a_path = a.A1Path()
-                a_path = path
+                a_path = cr.Path
             ) refs
-        | None,false -> raise (ParseException formula)
+        | None,false -> raise (ParseException cr.Formula)
         | None,true -> Seq.empty    // just ignore parse exceptions for now
 
     // This is the one you want to call from user code

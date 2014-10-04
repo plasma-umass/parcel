@@ -23,8 +23,6 @@
                 formula: string option,
                 width: int,
                 height: int) =
-        let _inputs = new HashSet<COMRef>()
-        let _outputs = new HashSet<COMRef>()
         let _wb = wb
         let _ws = ws
         let _r = range
@@ -50,8 +48,6 @@
         member self.Path = _path
         member self.WorkbookName = _workbook_name
         member self.WorksheetName = _worksheet_name
-        member self.GetInputs = _inputs
-        member self.GetOutputs = _outputs
         member self.DoNotPerturb
             with get() = _do_not_perturb
             and set(value) = _do_not_perturb <- value
