@@ -36,6 +36,8 @@
         let _formula = formula
         let mutable _do_not_perturb = match formula with | Some(f) -> true | None -> false
 
+        member self.Width = _width
+        member self.Height = _height
         member self.Workbook = _wb
         member self.Worksheet = _ws
         member self.Range = _r
