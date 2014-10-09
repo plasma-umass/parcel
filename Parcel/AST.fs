@@ -248,7 +248,7 @@
             Array.map (fun c ->
                 Array.map (fun r ->
                     Address.NewFromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
-                ) [|self.getYBottom()..self.getYTop()|]
+                ) [|self.getYTop()..self.getYBottom()|]
             ) [|self.getXLeft()..self.getXRight()|] |>
             Array.concat
         override self.Equals(obj: obj) : bool =
