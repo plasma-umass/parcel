@@ -67,8 +67,8 @@
         // right now, we recognize indirect addresses but do not correctly dereference them
         | :? AST.IndirectAddressingNotSupportedException -> seq[]
 
-    // single-cell variants:
 
+    // single-cell variants:
     let rec GetSCExprRanges(expr: AST.Expression) : AST.Address list =
         match expr with
         | AST.ReferenceExpr(r) -> GetSCRanges(r)

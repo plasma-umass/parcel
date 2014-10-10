@@ -149,7 +149,7 @@
             addr
         | Failure(errorMsg, _, _) -> failwith errorMsg
 
-    let GetRange str ws: AST.Range option =
+    let GetRange str: AST.Range option =
         match run (RangeR1C1 .>> eof) str with
         | Success(range, _, _) -> Some(range)
         | Failure(errorMsg, _, _) -> None
