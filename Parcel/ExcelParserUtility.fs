@@ -47,26 +47,28 @@
 //        let target_wbs = target_ref.GetWorkbookNames()
 //        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
 
-    let GetRangeReferencesFromFormula(cr: AST.COMRef, ignore_parse_errors: bool) : seq<AST.Range> =
+    let GetRangeReferencesFromFormulaRaw(formula: string, path: string, workbook: Workbook, worksheet: Worksheet, ignore_parse_errors: bool) : seq<AST.Range> =
         try
-            match ExcelParser.ParseFormula(cr.Formula, cr.Path, cr.Workbook, cr.Worksheet),ignore_parse_errors with
+            match ExcelParser.ParseFormula(formula, path, workbook, worksheet),ignore_parse_errors with
             | Some(tree),_ ->
                 let refs = GetExprRanges(tree)
                 List.map (fun (r: AST.Range) ->
                             // temporarily bail if r refers to object in a different workbook
                             // TODO: we should open the other workbook and continue the analysis
-                            let paths = Seq.filter (fun pth -> pth = cr.Path) (r.GetPathNames())
+                            let paths = Seq.filter (fun pth -> pth = path) (r.GetPathNames())
                             if Seq.length(paths) = 0 then
                                 None
                             else
                                 Some(r)
                          ) refs |> List.choose id |> Seq.ofList
-            | None,false -> raise (ParseException(cr.Formula))
+            | None,false -> raise (ParseException(formula))
             | None,true -> Seq.empty    // just ignore parse exceptions for now
         with
         // right now, we recognize indirect addresses but do not correctly dereference them
         | :? AST.IndirectAddressingNotSupportedException -> seq[]
 
+    let GetRangeReferencesFromFormula(cr: AST.COMRef, ignore_parse_errors: bool) : seq<AST.Range> =
+        GetRangeReferencesFromFormulaRaw(cr.Formula, cr.Path, cr.Workbook, cr.Worksheet, ignore_parse_errors)
 
     // single-cell variants:
     let rec GetSCExprRanges(expr: AST.Expression) : AST.Address list =
