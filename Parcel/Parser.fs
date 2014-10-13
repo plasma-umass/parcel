@@ -122,8 +122,8 @@
     let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
 
     // Resolve all undefined references to the current worksheet and workbook
-    let RefAddrResolve(ref: Reference)(path: string)(wb: Workbook)(ws: Worksheet) = ref.Resolve path wb ws
-    let rec ExprAddrResolve(expr: Expression)(path: string)(wb: Workbook)(ws: Worksheet) =
+    let RefAddrResolve(ref: Reference)(path: string option)(wb: Workbook)(ws: Worksheet) = ref.Resolve path wb ws
+    let rec ExprAddrResolve(expr: Expression)(path: string option)(wb: Workbook)(ws: Worksheet) =
         match expr with
         | ReferenceExpr(r) ->
             RefAddrResolve r path wb ws

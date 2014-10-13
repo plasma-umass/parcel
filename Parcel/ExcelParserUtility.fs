@@ -47,7 +47,7 @@
 //        let target_wbs = target_ref.GetWorkbookNames()
 //        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
 
-    let GetRangeReferencesFromFormulaRaw(formula: string, path: string, workbook: Workbook, worksheet: Worksheet, ignore_parse_errors: bool) : seq<AST.Range> =
+    let GetRangeReferencesFromFormulaRaw(formula: string, path: string option, workbook: Workbook, worksheet: Worksheet, ignore_parse_errors: bool) : seq<AST.Range> =
         try
             match ExcelParser.ParseFormula(formula, path, workbook, worksheet),ignore_parse_errors with
             | Some(tree),_ ->
@@ -110,7 +110,7 @@
 
     let GetSCFormulaNames(formula: string, path: string, ws: Worksheet, wb: Workbook, ignore_parse_errors: bool) =
         let app = wb.Application
-        let path' = System.IO.Path.GetDirectoryName(wb.FullName)
+        let path' = Some(System.IO.Path.GetDirectoryName(wb.FullName))
         match ExcelParser.ParseFormula(formula, path', wb, ws),ignore_parse_errors with
         | Some(ast),_ -> GetFormulaNamesFromExpr(ast) |> Seq.ofList
         | None,false -> raise (ParseException formula)
@@ -124,7 +124,7 @@
             let refs = GetSCExprRanges(tree) |> Seq.ofList
             Seq.filter (fun (a: AST.Address) ->
                 let a_path = a.A1Path()
-                a_path = cr.Path
+                Some(a_path) = cr.Path
             ) refs
         | None,false -> raise (ParseException cr.Formula)
         | None,true -> Seq.empty    // just ignore parse exceptions for now

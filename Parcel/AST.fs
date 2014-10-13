@@ -17,7 +17,7 @@
                 wb: Workbook,
                 ws: Worksheet,
                 range: XLRange,
-                path: string,           // path excluding final separator and filename
+                path: string option,           // path excluding final separator and filename; option type because in-memory workbooks have no path
                 workbook_name: string,
                 worksheet_name: string,
                 formula: string option,
@@ -123,19 +123,9 @@
         member self.WorkbookName
             with get() = _wbn
             and set(value) = _wbn <- value
-        member self.AddressAsInt32() =
-            // convert to zero-based indices
-            // the modulus catches overflow; collisions are OK because our equality
-            // operator does an exact check
-            // underflow should throw an exception
-            let col_idx = (C - 1) % 65536       // allow 16 bits for columns
-            let row_idx = (R - 1) % 65536       // allow 16 bits for rows
-            if (col_idx < 0 || row_idx < 0) then
-                failwith (System.String.Format("Nonsensical row or column index: {0}", self.ToString()))
-            row_idx + (col_idx <<< 16)
         // Address is used as a Dictionary key, and reference equality
         // does not suffice, therefore GetHashCode and Equals are provided
-        override self.GetHashCode() : int = self.AddressAsInt32()
+        override self.GetHashCode() : int = String.Intern(self.A1FullyQualified()).GetHashCode()
         override self.Equals(obj: obj) : bool =
             let addr = obj :?> Address
             self.SameAs addr
@@ -143,7 +133,8 @@
             self.X = addr.X &&
             self.Y = addr.Y &&
             self.WorksheetName = addr.WorksheetName &&
-            self.WorkbookName = addr.WorkbookName
+            self.WorkbookName = addr.WorkbookName &&
+            self.Path = self.Path
         member self.InsideRange(rng: Range) : bool =
             not (self.X < rng.getXLeft() ||
                  self.Y < rng.getYTop() ||
@@ -236,8 +227,8 @@
             [_tl.WorksheetName; _br.WorksheetName] |> List.choose id |> List.toSeq
         member self.GetWorkbookNames() : seq<string> =
             [_tl.WorkbookName; _br.WorkbookName] |> List.choose id |> List.toSeq
-        member self.GetPathNames() : seq<string> =
-            [_tl.Path; _br.Path] |> List.choose id |> List.toSeq
+        member self.GetPathNames() : seq<string option> =
+            [_tl.Path; _br.Path] |> List.toSeq
         member self.GetCOMObject(app: Application) : XLRange =
             // tl and br must share workbook and worksheet (I think)
             let wb: Workbook = app.Workbooks.Item(_tl.A1Workbook())
@@ -273,7 +264,7 @@
         let mutable _wsn: string option = wsname
         abstract member InsideRef: Reference -> bool
         abstract member Path: string option with get, set
-        abstract member Resolve: string -> Workbook -> Worksheet -> unit
+        abstract member Resolve: string option -> Workbook -> Worksheet -> unit
         abstract member WorkbookName: string option with get, set
         abstract member WorksheetName: string option with get, set
         abstract member Type: ReferenceType
@@ -287,13 +278,13 @@
             with get() = _wsn
             and set(value) = _wsn <- value
         default self.InsideRef(ref: Reference) = false
-        default self.Resolve(path: string)(wb: Workbook)(ws: Worksheet) : unit =
+        default self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) : unit =
             // we assume that missing workbook and worksheet
             // names mean that the address is local to the current
             // workbook and worksheet
             _path <- match self.Path with
                      | Some(pth) -> Some pth
-                     | None -> Some path
+                     | None -> path
             _wbn <- match self.WorkbookName with
                     | Some(wbn) -> Some wbn
                     | None -> Some wb.Name
@@ -325,7 +316,7 @@
             | :? ReferenceRange as rr -> rng.InsideRange(rr.Range)
             | _ -> failwith "Unknown Reference subclass."
         member self.Range = rng
-        override self.Resolve(path: string)(wb: Workbook)(ws: Worksheet) =
+        override self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
             // we assume that missing workbook and worksheet
             // names mean that the address is local to the current
             // workbook and worksheet
@@ -334,8 +325,8 @@
                             rng.SetPathName(Some pth)
                             Some pth
                          | None ->
-                            rng.SetPathName(Some path)
-                            Some path
+                            rng.SetPathName(path)
+                            path
             self.WorkbookName <- match self.WorkbookName with
                                  // If we know it, we also pass the wbname
                                  // down to ranges and addresses
@@ -383,7 +374,7 @@
             | :? ReferenceAddress as ar -> addr.InsideAddr(ar.Address)
             | :? ReferenceRange as rr -> addr.InsideRange(rr.Range)
             | _ -> failwith "Invalid Reference subclass."
-        override self.Resolve(path: string)(wb: Workbook)(ws: Worksheet) =
+        override self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
             // always resolve the workbook name when it is missing
             // but only resolve the worksheet name when the
             // workbook name is not set
@@ -392,8 +383,8 @@
                             addr.Path <- Some pth
                             Some pth
                          | None ->
-                            addr.Path <- Some path
-                            Some path
+                            addr.Path <- path
+                            path
             self.WorkbookName <- match self.WorkbookName with
                                  // If we know it, we also pass the wbname
                                  // down to ranges and addresses
@@ -424,7 +415,7 @@
         member self.FunctionName = fnname
         override self.ToString() =
             fnname + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
-        override self.Resolve(path: string)(wb: Workbook)(ws: Worksheet) =
+        override self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
             // pass wb and ws information down to arguments
             // wb and ws names do not matter for functions
             for expr in arglist do
@@ -482,7 +473,7 @@
     | BinOpExpr of string * Expression * Expression
     | UnaryOpExpr of char * Expression
     | ParensExpr of Expression
-        member self.Resolve(path: string)(wb: Workbook)(ws: Worksheet) =
+        member self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
             match self with
             | ReferenceExpr(r) -> r.Resolve path wb ws
             | BinOpExpr(op,e1,e2) ->
