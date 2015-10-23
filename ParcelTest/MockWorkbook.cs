@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Excel = Microsoft.Office.Interop.Excel;
+using FSCore = Microsoft.FSharp.Core;
 
 namespace ParcelTest
 {
@@ -37,6 +38,7 @@ namespace ParcelTest
             }
         }
         public Excel.Application GetApplication() { return app; }
+        public FSCore.FSharpOption<string> MaybeGetPath() { return FSCore.FSharpOption<string>.None; }
         public Excel.Workbook GetWorkbook() { return wb; }
         public Excel.Sheets GetWorksheets() { return ws; }
         public Excel.Worksheet GetWorksheet(int idx) { return (Excel.Worksheet)ws[idx]; }
@@ -47,7 +49,7 @@ namespace ParcelTest
             Excel.Workbook wb = mwb.GetWorkbook();
             Excel.Worksheet ws = mwb.GetWorksheet(1);
 
-            var ranges = ExcelParserUtility.GetReferencesFromFormula(formula, wb, ws);
+            var ranges = ExcelParserUtility.GetRangeReferencesFromFormulaRaw(formula, FSCore.FSharpOption<string>.None, wb, ws, false);
 
             return ranges.Count();
         }

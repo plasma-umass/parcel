@@ -196,6 +196,8 @@
             let tlstr = topleft.ToString()
             let brstr = bottomright.ToString()
             tlstr + "," + brstr
+        member self.A1Local() : string =
+            _tl.A1Local() + ":" + _br.A1Local()
         member self.getUniqueID() : string =
             topleft.ToString() + "," + bottomright.ToString()
         member self.getXLeft() : int = _tl.X

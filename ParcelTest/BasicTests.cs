@@ -12,6 +12,42 @@ namespace ParcelTest
     {
         FSharpOption<string> NONESTR = FSharpOption<string>.None;
 
+        private AST.Address makeAddressForA1(string col, int row, MockWorkbook mwb)
+        {
+            return AST.Address.NewFromA1(
+                row,
+                col,
+                FSharpOption<string>.Some(mwb.GetWorksheet(1).Name),
+                FSharpOption<string>.Some(mwb.GetWorkbook().Name),
+                mwb.MaybeGetPath()
+            );
+        }
+
+        private AST.COMRef makeCOMRefForFormula(string formula, MockWorkbook mwb)
+        {
+            var addr = AST.Address.NewFromR1C1(
+                1,
+                1,
+                FSharpOption<string>.Some(mwb.GetWorksheet(1).Name),
+                FSharpOption<string>.Some(mwb.GetWorkbook().Name),
+                mwb.MaybeGetPath());
+            var rng = new AST.Range(addr, addr);
+            Excel.Range com = rng.GetCOMObject(mwb.GetApplication());
+            Excel.Worksheet ws = com.Worksheet;
+            Excel.Workbook wb = ws.Parent;
+            string wsname = ws.Name;
+            string wbname = wb.Name;
+            var path = new Microsoft.FSharp.Core.FSharpOption<string>(wb.Path);
+            int width = com.Columns.Count;
+            int height = com.Rows.Count;
+            var frm = FSharpOption<string>.Some(formula);
+
+            AST.COMRef c = new AST.COMRef(rng.getUniqueID(), wb, ws, com, path, wbname, wsname, frm, width, height);
+            
+            return c;
+        }
+
+
         [TestMethod]
         public void StandardAddress()
         {
@@ -45,10 +81,10 @@ namespace ParcelTest
             {
                 String s = "=IF(SUM(A1:A5) = 10, \"yes\", \"no\")";
 
-                IEnumerable<Excel.Range> rngs = new List<Excel.Range>();
+                IEnumerable<AST.Range> rngs = new List<AST.Range>();
                 try
                 {
-                    rngs = ExcelParserUtility.GetReferencesFromFormula(s, mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    rngs = ExcelParserUtility.GetRangeReferencesFromFormulaRaw(s, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1), false);
                 }
                 catch (ExcelParserUtility.ParseException e)
                 {
@@ -57,8 +93,8 @@ namespace ParcelTest
 
                 Assert.AreEqual(1, rngs.Count());
 
-                var addr = rngs.First().Address;
-                Assert.AreEqual("$A$1:$A$5", addr);
+                var addr = rngs.First().A1Local();
+                Assert.AreEqual("A1:A5", addr);
             }
         }
 
@@ -68,11 +104,12 @@ namespace ParcelTest
             using (var mwb = new MockWorkbook())
             {
                 String formula = "=(+E6+E7)*0.28";
+                var cr = makeCOMRefForFormula(formula, mwb);
 
                 IEnumerable<AST.Address> addrs = new List<AST.Address>();
                 try
                 {
-                    addrs = ExcelParserUtility.GetSingleCellReferencesFromFormula(formula, mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    addrs = ExcelParserUtility.GetSingleCellReferencesFromFormula(cr, false);
                 }
                 catch (ExcelParserUtility.ParseException e)
                 {
@@ -81,8 +118,8 @@ namespace ParcelTest
 
                 Assert.AreEqual(2, addrs.Count());
 
-                var a1 = AST.Address.AddressFromCOMObject(mwb.GetWorksheet(1).get_Range("E6"), mwb.GetWorkbook());
-                var a2 = AST.Address.AddressFromCOMObject(mwb.GetWorksheet(1).get_Range("E7"), mwb.GetWorkbook());
+                var a1 = makeAddressForA1("E", 6, mwb);
+                var a2 = makeAddressForA1("E", 7, mwb);
 
                 Assert.AreEqual(true, addrs.Contains(a1));
                 Assert.AreEqual(true, addrs.Contains(a2));
@@ -101,29 +138,29 @@ namespace ParcelTest
                 {
                     try
                     {
-                        ExcelParserUtility.ParseFormula(f, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
-                    }
-                    catch (Exception e)
-                    {
-                        if (e is AST.IndirectAddressingNotSupportedException)
-                        {
-                            // OK   
+                        ExcelParserUtility.ParseFormula(f, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1));
                         }
-                        else if (e is ExcelParserUtility.ParseException)
+                        catch (Exception e)
                         {
-                            System.Diagnostics.Debug.WriteLine("Fail: " + f);
-                            failures.Enqueue(f);
+                            if (e is AST.IndirectAddressingNotSupportedException)
+                            {
+                                // OK   
+                            }
+                            else if (e is ExcelParserUtility.ParseException)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Fail: " + f);
+                                failures.Enqueue(f);
+                            }
                         }
-                    }
-                });
-            }
+                    });
+                }
 
-            Assert.AreEqual(0, failures.Count);
-            if (failures.Count > 0)
-            {
-                String.Join("\n", failures);
+                Assert.AreEqual(0, failures.Count);
+                if (failures.Count > 0)
+                {
+                    String.Join("\n", failures);
+                }
             }
-        }
 
         [TestMethod]
         public void IndirectReferences()
@@ -133,7 +170,7 @@ namespace ParcelTest
                 String formula = "=TRANSPOSE(INDIRECT(ADDRESS(1,4,3,1,Menus!$K$10)):INDIRECT(ADDRESS(1,256,3,1,Menus!$K$10)))";
                 try
                 {
-                    ExcelParserUtility.ParseFormula(formula, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1));
                 }
                 catch (Exception e)
                 {
@@ -162,9 +199,9 @@ namespace ParcelTest
                 // first, the good ones
                 try
                 {
-                    ExcelParserUtility.ParseFormula(formula1, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
-                    ExcelParserUtility.ParseFormula(formula2, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
-                    ExcelParserUtility.ParseFormula(formula3, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula1, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula2, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula3, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1));
                 }
                 catch (ExcelParserUtility.ParseException e)
                 {
@@ -174,7 +211,7 @@ namespace ParcelTest
                 // a bad one
                 try
                 {
-                    ExcelParserUtility.ParseFormula(formula4, "", mwb.GetWorkbook(), mwb.GetWorksheet(1));
+                    ExcelParserUtility.ParseFormula(formula4, mwb.MaybeGetPath(), mwb.GetWorkbook(), mwb.GetWorksheet(1));
                 }
                 catch (ExcelParserUtility.ParseException e)
                 {

@@ -43,10 +43,6 @@
         | :? AST.ReferenceString -> []
         | _ -> failwith "Unknown reference type."
 
-//    let ValidXWBRef(cur_wb: Workbook, target_ref: AST.Range) : bool =
-//        let target_wbs = target_ref.GetWorkbookNames()
-//        Seq.fold (fun acc wbname -> acc && cur_wb.Name = wbname) true target_wbs
-
     let GetRangeReferencesFromFormulaRaw(formula: string, path: string option, workbook: Workbook, worksheet: Worksheet, ignore_parse_errors: bool) : seq<AST.Range> =
         try
             match ExcelParser.ParseFormula(formula, path, workbook, worksheet),ignore_parse_errors with

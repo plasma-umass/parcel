@@ -161,7 +161,7 @@
             Some(reference)
         | Failure(errorMsg, _, _) -> None
 
-    let ParseFormula(str, path, wb, ws): Expression option =
+    let ParseFormula(str: string, path: string option, wb: Workbook, ws: Worksheet): Expression option =
         match run Formula str with
         | Success(formula, _, _) ->
             ExprAddrResolve formula path wb ws
