@@ -1,59 +1,10 @@
 ﻿module AST
     open System
     open System.Diagnostics
-    open Microsoft.Office.Interop.Excel
     open System.Collections.Generic
-
-    type Application = Microsoft.Office.Interop.Excel.Application
-    type Workbook = Microsoft.Office.Interop.Excel.Workbook
-    type Worksheet = Microsoft.Office.Interop.Excel.Worksheet
-    type XLRange = Microsoft.Office.Interop.Excel.Range
-    type XLRefStyle = Microsoft.Office.Interop.Excel.XlReferenceStyle
 
     type IndirectAddressingNotSupportedException(expression: string) =
         inherit Exception(expression)
-
-    type COMRef(unique_id: string,
-                wb: Workbook,
-                ws: Worksheet,
-                range: XLRange,
-                path: string option,           // path excluding final separator and filename; option type because in-memory workbooks have no path
-                workbook_name: string,
-                worksheet_name: string,
-                formula: string option,
-                width: int,
-                height: int) =
-        let _wb = wb
-        let _ws = ws
-        let _r = range
-        let _is_cell = width = 1 && height = 1
-        let _interned_unique_id = String.Intern(unique_id)
-        let _width = width
-        let _height = height
-        let _path = path
-        let _workbook_name = workbook_name
-        let _worksheet_name = worksheet_name
-        let _formula = formula
-        let mutable _do_not_perturb = match formula with | Some(f) -> true | None -> false
-
-        member self.Width = _width
-        member self.Height = _height
-        member self.Workbook = _wb
-        member self.Worksheet = _ws
-        member self.Range = _r
-        member self.IsFormula = match _formula with | Some(f) -> true | None -> false
-        member self.Formula = match _formula with
-            | Some(f) -> f
-            | None -> failwith "Not a formula reference."
-        member self.IsCell = _is_cell
-        member self.UniqueID = _interned_unique_id
-        member self.Path = _path
-        member self.WorkbookName = _workbook_name
-        member self.WorksheetName = _worksheet_name
-        member self.DoNotPerturb
-            with get() = _do_not_perturb
-            and set(value) = _do_not_perturb <- value
-        override self.GetHashCode() = _interned_unique_id.GetHashCode()
 
     [<Serializable>]
     type Address() =
@@ -142,11 +93,6 @@
                  self.Y > rng.getYBottom())
         member self.InsideAddr(addr: Address) : bool =
             self.X = addr.X && self.Y = addr.Y
-        member self.GetCOMObject(app: Application) : XLRange =
-            let wb: Workbook = app.Workbooks.Item(self.A1Workbook())
-            let ws: Worksheet = wb.Worksheets.Item(self.A1Worksheet()) :?> Worksheet
-            let cell: XLRange = ws.Range(self.A1Local())
-            cell
         override self.ToString() =
             "(" + self.Y.ToString() + "," + self.X.ToString() + ")"
         static member CharColToInt(col: string) : int =
@@ -158,12 +104,6 @@
                 else
                     num + ccti(idx - 1)
             ccti(col.Length - 1)
-        static member AddressFromCOMObject(com: Microsoft.Office.Interop.Excel.Range, wb: Microsoft.Office.Interop.Excel.Workbook) : Address =
-            let wsname = com.Worksheet.Name
-            let wbname = wb.Name
-            let path = System.IO.Path.GetDirectoryName(wb.FullName)
-            let addr = com.get_Address(true, true, Microsoft.Office.Interop.Excel.XlReferenceStyle.xlR1C1, Type.Missing, Type.Missing)
-            Address.FromString(addr, Some(wsname), Some(wbname), Some(path))
         static member FromString(addr: string, wsname: string option, wbname: string option, path: string option) : Address =
             let reg = System.Text.RegularExpressions.Regex("R(?<row>[0-9]+)C(?<column>[0-9]+)")
             let m = reg.Match(addr)
@@ -231,12 +171,6 @@
             [_tl.WorkbookName; _br.WorkbookName] |> List.choose id |> List.toSeq
         member self.GetPathNames() : seq<string option> =
             [_tl.Path; _br.Path] |> List.toSeq
-        member self.GetCOMObject(app: Application) : XLRange =
-            // tl and br must share workbook and worksheet (I think)
-            let wb: Workbook = app.Workbooks.Item(_tl.A1Workbook())
-            let ws: Worksheet = wb.Worksheets.Item(_tl.A1Worksheet()) :?> Worksheet
-            let range: XLRange = ws.Range(_tl.A1Local(), _br.A1Local())
-            range
         member self.Addresses() : Address[] =
             Array.map (fun c ->
                 Array.map (fun r ->
@@ -266,7 +200,6 @@
         let mutable _wsn: string option = wsname
         abstract member InsideRef: Reference -> bool
         abstract member Path: string option with get, set
-        abstract member Resolve: string option -> Workbook -> Worksheet -> unit
         abstract member WorkbookName: string option with get, set
         abstract member WorksheetName: string option with get, set
         abstract member Type: ReferenceType
@@ -280,19 +213,6 @@
             with get() = _wsn
             and set(value) = _wsn <- value
         default self.InsideRef(ref: Reference) = false
-        default self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) : unit =
-            // we assume that missing workbook and worksheet
-            // names mean that the address is local to the current
-            // workbook and worksheet
-            _path <- match self.Path with
-                     | Some(pth) -> Some pth
-                     | None -> path
-            _wbn <- match self.WorkbookName with
-                    | Some(wbn) -> Some wbn
-                    | None -> Some wb.Name
-            _wsn <- match self.WorksheetName with
-                    | Some(wsn) -> Some wsn
-                    | None -> Some ws.Name
 
     and ReferenceRange(path: string option, wbname: string option, wsname: string option, rng: Range) =
         inherit Reference(path, wbname, wsname)
@@ -318,33 +238,6 @@
             | :? ReferenceRange as rr -> rng.InsideRange(rr.Range)
             | _ -> failwith "Unknown Reference subclass."
         member self.Range = rng
-        override self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
-            // we assume that missing workbook and worksheet
-            // names mean that the address is local to the current
-            // workbook and worksheet
-            self.Path <- match self.Path with
-                         | Some(pth) ->
-                            rng.SetPathName(Some pth)
-                            Some pth
-                         | None ->
-                            rng.SetPathName(path)
-                            path
-            self.WorkbookName <- match self.WorkbookName with
-                                 // If we know it, we also pass the wbname
-                                 // down to ranges and addresses
-                                 | Some(wbn) ->
-                                      rng.SetWorkbookName(Some wbn)
-                                      Some wbn
-                                 | None ->
-                                      rng.SetWorkbookName(Some wb.Name)
-                                      Some wb.Name
-            self.WorksheetName <- match self.WorksheetName with
-                                  | Some(wsn) ->
-                                      rng.SetWorksheetName(Some wsn)
-                                      Some wsn
-                                  | None ->
-                                      rng.SetWorksheetName(Some ws.Name)
-                                      Some ws.Name
         override self.Equals(obj: obj) : bool =
             let rr = obj :?> ReferenceRange
             self.Path = rr.Path &&
@@ -376,33 +269,6 @@
             | :? ReferenceAddress as ar -> addr.InsideAddr(ar.Address)
             | :? ReferenceRange as rr -> addr.InsideRange(rr.Range)
             | _ -> failwith "Invalid Reference subclass."
-        override self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
-            // always resolve the workbook name when it is missing
-            // but only resolve the worksheet name when the
-            // workbook name is not set
-            self.Path <- match self.Path with
-                         | Some(pth) ->
-                            addr.Path <- Some pth
-                            Some pth
-                         | None ->
-                            addr.Path <- path
-                            path
-            self.WorkbookName <- match self.WorkbookName with
-                                 // If we know it, we also pass the wbname
-                                 // down to ranges and addresses
-                                 | Some(wbn) ->
-                                      addr.WorkbookName <- Some wbn
-                                      Some wbn
-                                 | None ->
-                                      addr.WorkbookName <- Some wb.Name
-                                      Some wb.Name
-            self.WorksheetName <- match self.WorksheetName with
-                                  | Some(wsn) ->
-                                      addr.WorksheetName <- Some wsn
-                                      Some wsn
-                                  | None ->
-                                      addr.WorksheetName <- Some ws.Name
-                                      Some ws.Name
         override self.Equals(obj: obj) : bool =
             let ra = obj :?> ReferenceAddress
             self.Path = ra.Path &&
@@ -417,11 +283,6 @@
         member self.FunctionName = fnname
         override self.ToString() =
             fnname + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
-        override self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
-            // pass wb and ws information down to arguments
-            // wb and ws names do not matter for functions
-            for expr in arglist do
-                expr.Resolve path wb ws
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction
             self.Path = rf.Path &&
@@ -475,16 +336,6 @@
     | BinOpExpr of string * Expression * Expression
     | UnaryOpExpr of char * Expression
     | ParensExpr of Expression
-        member self.Resolve(path: string option)(wb: Workbook)(ws: Worksheet) =
-            match self with
-            | ReferenceExpr(r) -> r.Resolve path wb ws
-            | BinOpExpr(op,e1,e2) ->
-                e1.Resolve path wb ws
-                e2.Resolve path wb ws
-            | UnaryOpExpr(op, e) ->
-                e.Resolve path wb ws
-            | ParensExpr(e) ->
-                e.Resolve path wb ws
         override self.ToString() =
             match self with
             | ReferenceExpr(r) -> "ReferenceExpr(" + r.ToString() + ")"

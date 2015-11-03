@@ -51,8 +51,11 @@
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
   <ItemGroup>
     <Compile Include="AST.fs" />
-    <Compile Include="Parser.fs" />
-    <Compile Include="ExcelParserUtility.fs" />
+    <Compile Include="Grammar.fs" />
+    <Compile Include="UglyHacks.fs" />
+    <Compile Include="CellVisitor.fs" />
+    <Compile Include="RangeVisitor.fs" />
+    <Compile Include="Parcel.fs" />
     <Content Include="packages.config" />
     <Content Include="app.config" />
   </ItemGroup>
@@ -66,9 +69,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" />
     <Reference Include="System" />
-    <Reference Include="System.Numerics" />
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.

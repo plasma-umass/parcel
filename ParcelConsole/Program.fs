@@ -1,5 +1,5 @@
 ﻿open System
-open ExcelParser
+open Parcel
 
 printfn "Excel Parser Console"
 printfn "Type a formula expression or 'quit'."
@@ -11,7 +11,7 @@ let rec readAndProcess() =
     | expr ->
         try
             printfn "Parsing..."
-            ExcelParser.ConsoleTest expr
+            Parcel.consoleParser expr
             
         with
         | :? AST.IndirectAddressingNotSupportedException as ex ->

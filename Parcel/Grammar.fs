@@ -1,14 +1,37 @@
-﻿module ExcelParser
+﻿module Grammar
     open FParsec
     open AST
-    open Microsoft.Office.Interop.Excel
     open System.Text.RegularExpressions
 
-    type Workbook = Microsoft.Office.Interop.Excel.Workbook
-    type Worksheet = Microsoft.Office.Interop.Excel.Worksheet
-    type Name = Microsoft.Office.Interop.Excel.Name
-    type UserState = unit
-    type Parser<'t> = Parser<'t, UserState>
+    (*
+     * FPARSEC CHEAT SHEET
+     * -------------------
+     *
+     * <|>      The infix choice combinator <|> applies the parser on the right side if the parser on the left side fails.
+     * |>>      The infix pipeline combinator |>> applies the function on the right side to the result of the parser on the left side.
+     * >>.      p1 >>. p2 parses p1 and p2 in sequence and returns the result of p2. 
+     * .>>      p1 .>> p2 also parses p1 and p2 in sequence, but it returns the result of p1 instead of p2.
+     * .>>.     An infix synonym for tuple2
+     * tuple2   tuple2 p1 p2 returns a tuple consisting of the result of p1 (first) and the result of p2 (second)
+     * pipe2    pipe2 p1 p2 f sequentially applies the two parsers p1 and p2 and then returns the result of the function
+     *          application f x1 x2, where x1 and x2 are the results returned by p1 and p2.
+     * sepBy    sepBy p1 p2 takes an "element" parser (p1) and a "separator" parser (p2) as the arguments and returns
+     *          a parser for a list of elements separated by separators. 
+     * createParserForwardedToRef
+     *          let p, pRef = createParserForwardedToRef() creates a parser p that forwards all calls to the parser in
+     *          the reference cell pRef. Initially, pRef holds a reference to a dummy parser that raises an exception on
+     *          any invocation.
+     * do ... :=
+     *          do pRef :=, instead of let p =, lets us overwrite the implementation of parser p using the reference to p, pRef.
+     *)
+
+    // The Defaults object is threaded through all combinators so that
+    // parsers always have the path, workbook name, and worksheet name
+    // so that they can be inserted into the AST nodes as needed.
+    type Defaults(path: string, wbname: string, wsname: string) = class end
+    // a simple typedef
+    type P<'t> = Parser<'t, Defaults>
+
     
     // custom character classes
     let isWSChar(c: char) : bool =
@@ -21,15 +44,15 @@
 
     let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
         fun stream ->
-//            printfn "%A: Entering %s" stream.Position label
+            printfn "%A: Entering %s" stream.Position label
             let reply = p stream
-//            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
+            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
             reply
 
     // Grammar forward references
-    let ArgumentList, ArgumentListImpl = createParserForwardedToRef()
-    let ExpressionSimple, ExpressionSimpleImpl = createParserForwardedToRef()
-    let (ExpressionDecl: Parser<Expression,unit>, ExpressionDeclImpl) = createParserForwardedToRef()
+    let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
+    let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
+    let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
 
     // Addresses
     // We treat relative and absolute addresses the same-- they behave
@@ -103,82 +126,20 @@
     // Binary arithmetic operators
     let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^' || c = '&') .>> spaces
     let BinOp2Char = spaces >>. ((attempt (regex "<=")) <|> (attempt (regex ">=")) <|> regex "<>") .>> spaces
-    let BinOpLong: Parser<string*Expression,unit> = pipe2 BinOp2Char ExpressionDecl (fun op rhs -> (op, rhs))
-    let BinOpShort: Parser<string*Expression,unit> = pipe2 BinOpChar ExpressionDecl (fun op rhs -> (op.ToString(), rhs))
-    let BinOp: Parser<string*Expression,unit> = (attempt BinOpLong) <|> BinOpShort
+    let BinOpLong: P<string*Expression> = pipe2 BinOp2Char ExpressionDecl (fun op rhs -> (op, rhs))
+    let BinOpShort: P<string*Expression> = pipe2 BinOpChar ExpressionDecl (fun op rhs -> (op.ToString(), rhs))
+    let BinOp: P<string*Expression> = (attempt BinOpLong) <|> BinOpShort
 
     // Unary operators
     let UnaryOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces
 
     // Expressions
-    let ParensExpr: Parser<Expression,unit> = (between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr
-    let ExpressionAtom: Parser<Expression,unit> = ((attempt Function) <|> Reference) |>> ReferenceExpr
+    let ParensExpr: P<Expression> = (between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr
+    let ExpressionAtom: P<Expression> = ((attempt Function) <|> Reference) |>> ReferenceExpr
     do ExpressionSimpleImpl := ExpressionAtom <|> ParensExpr
-    let UnaryOpExpr: Parser<Expression,unit> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs))
-    let BinOpExpr: Parser<Expression,unit> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs))
+    let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs))
+    let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs))
     do ExpressionDeclImpl := (attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)
 
     // Formulas
     let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
-
-    // Resolve all undefined references to the current worksheet and workbook
-    let RefAddrResolve(ref: Reference)(path: string option)(wb: Workbook)(ws: Worksheet) = ref.Resolve path wb ws
-    let rec ExprAddrResolve(expr: Expression)(path: string option)(wb: Workbook)(ws: Worksheet) =
-        match expr with
-        | ReferenceExpr(r) ->
-            RefAddrResolve r path wb ws
-        | BinOpExpr(op,e1,e2) ->
-            ExprAddrResolve e1 path wb ws
-            ExprAddrResolve e2 path wb ws
-        | UnaryOpExpr(op, e) ->
-            ExprAddrResolve e path wb ws
-        | ParensExpr(e) ->
-            ExprAddrResolve e path wb ws
-
-    // wrapper for success/failure
-    let test p str =
-        match run p str with
-        | Success(result, _, _)   -> printfn "Success: %A" result
-        | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
-
-    let GetAddress(str: string, wb: Workbook, ws: Worksheet): Address =
-        match run (AddrR1C1 .>> eof) str with
-        | Success(addr, _, _) ->
-            addr.WorkbookName <- Some wb.Name
-            addr.WorksheetName <- Some ws.Name
-            addr
-        | Failure(errorMsg, _, _) -> failwith errorMsg
-
-    let GetRange str: AST.Range option =
-        match run (RangeR1C1 .>> eof) str with
-        | Success(range, _, _) -> Some(range)
-        | Failure(errorMsg, _, _) -> None
-
-    let GetReference str path wb ws: Reference option =
-        match run (Reference .>> eof) str with
-        | Success(reference, _, _) ->
-            RefAddrResolve reference path wb ws
-            Some(reference)
-        | Failure(errorMsg, _, _) -> None
-
-    let ParseFormula(str: string, path: string option, wb: Workbook, ws: Worksheet): Expression option =
-        match run Formula str with
-        | Success(formula, _, _) ->
-            ExprAddrResolve formula path wb ws
-            Some(formula)
-        | Failure(errorMsg, _, _) -> None
-
-    let isNumeric(str): bool =
-        match run (pfloat .>> eof) str with
-        | Success(number, _, _) -> true
-        | Failure(errorMsg, _, _) -> false
-
-    // The parser REPL calls this; note that the
-    // Formula parser looks for EOF
-    let ConsoleTest(s: string) = test Formula s
-
-    // Call this for simple address parsing
-    let SimpleReferenceParser(s: string) : AST.Reference =
-        match run Reference s with
-        | Success(result, _, _) -> result
-        | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
