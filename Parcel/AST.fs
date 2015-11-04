@@ -154,10 +154,13 @@
                 ) [|self.getYTop()..self.getYBottom()|]
             ) [|self.getXLeft()..self.getXRight()|] |>
             Array.concat
+        override self.GetHashCode() : int =
+            _tl.GetHashCode() ||| _br.GetHashCode()
         override self.Equals(obj: obj) : bool =
             let r = obj :?> Range
-            topleft = r.TopLeft &&
-            bottomright = r.BottomRight
+            let a = topleft = r.TopLeft
+            let b = bottomright = r.BottomRight
+            a && b
 
     type ReferenceType =
     | ReferenceAddress  = 0
@@ -195,6 +198,8 @@
             self.WorkbookName = rr.WorkbookName &&
             self.WorksheetName = rr.WorksheetName &&
             self.Range = rr.Range
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| rng.GetHashCode()
 
     and ReferenceAddress(env: Env, addr: Address) =
         inherit Reference(env)
@@ -214,6 +219,8 @@
             self.WorkbookName = ra.WorkbookName &&
             self.WorksheetName = ra.WorksheetName &&
             self.Address = ra.Address
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| addr.GetHashCode()
 
     and ReferenceFunction(env: Env, fnname: string, arglist: Expression list) =
         inherit Reference(env)
@@ -231,6 +238,8 @@
             self.FunctionName = rf.FunctionName &&
             // and recursively compare arglists
             List.fold (fun acc (ethis, ethat) -> acc && ethis = ethat) true arglists
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| fnname.GetHashCode() ||| arglist.GetHashCode()
 
     and ReferenceConstant(env: Env, value: double) =
         inherit Reference(env)
@@ -243,6 +252,8 @@
             self.WorkbookName = rc.WorkbookName &&
             self.WorksheetName = rc.WorksheetName &&
             self.Value = rc.Value
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| value.GetHashCode()
 
     and ReferenceString(env: Env, value: string) =
         inherit Reference(env)
@@ -255,6 +266,8 @@
             self.WorkbookName = rs.WorkbookName &&
             self.WorksheetName = rs.WorksheetName &&
             self.Value = rs.Value
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| value.GetHashCode()
 
     and ReferenceNamed(env: Env, varname: string) =
         inherit Reference(env)
@@ -267,6 +280,8 @@
             self.WorkbookName = rn.WorkbookName &&
             self.WorksheetName = rn.WorksheetName &&
             self.Name = rn.Name
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| varname.GetHashCode()
 
     // TODO: implement .Equals!
     and Expression =
