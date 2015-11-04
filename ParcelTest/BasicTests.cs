@@ -231,7 +231,7 @@ namespace ParcelTest
             var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "One Country Charts", "One Country Data" });
             var f = "=IF('One Country Charts'!F17=\"\",VLOOKUP('One Country Charts'!F11,'One Country Data'!M5:O187,3,FALSE),VLOOKUP('One Country Charts'!F17,'One Country Data'!M5:O187,3,FALSE))";
 
-            var data_env = mwb.envForSheet(2);
+            var data_env = mwb.envForSheet(3);
 
             var rng = new AST.Range(makeAddressForA1("M", 5, data_env), makeAddressForA1("O", 187, data_env));
 
