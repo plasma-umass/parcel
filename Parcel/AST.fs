@@ -119,6 +119,8 @@
             tlstr + "," + brstr
         member self.copyWithNewEnv(envnew: Env) =
             Range(_tl.copyWithNewEnv(envnew), _br.copyWithNewEnv(envnew))
+        member self.TopLeft = _tl
+        member self.BottomRight = _br
         member self.A1Local() : string =
             _tl.A1Local() + ":" + _br.A1Local()
         member self.getUniqueID() : string =
@@ -154,10 +156,8 @@
             Array.concat
         override self.Equals(obj: obj) : bool =
             let r = obj :?> Range
-            self.getXLeft() = r.getXLeft() &&
-            self.getXRight() = r.getXRight() &&
-            self.getYTop() = r.getYTop() &&
-            self.getYBottom() = r.getYBottom()
+            topleft = r.TopLeft &&
+            bottomright = r.BottomRight
 
     type ReferenceType =
     | ReferenceAddress  = 0

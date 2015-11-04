@@ -19,7 +19,7 @@ namespace ParcelTest
         }
         public AST.Env envForSheet(int idx)
         {
-            return new AST.Env(_path, _workbook_name, _sheet_names[idx + 1]);
+            return new AST.Env(_path, _workbook_name, _sheet_names[idx]);
         }
         public string Path { 
             get { return _path; }

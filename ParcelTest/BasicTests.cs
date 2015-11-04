@@ -8,14 +8,14 @@ namespace ParcelTest
     [TestClass]
     public class BasicTests
     {
-        private AST.Address makeAddressForA1(string col, int row, MockWorkbook mwb)
+        private AST.Address makeAddressForA1(string col, int row, AST.Env env)
         {
             return AST.Address.fromA1(
                 row,
                 col,
-                mwb.worksheetName(1),
-                mwb.WorkbookName,
-                mwb.Path
+                env.WorksheetName,
+                env.WorkbookName,
+                env.Path
             );
         }
         
@@ -40,8 +40,8 @@ namespace ParcelTest
 
             AST.Reference r = Parcel.simpleReferenceParser(s, e);
             AST.Reference correct = new AST.ReferenceRange(e,
-                                                           new AST.Range(makeAddressForA1("A", 3, mwb),
-                                                                         makeAddressForA1("B", 22, mwb))
+                                                           new AST.Range(makeAddressForA1("A", 3, e),
+                                                                         makeAddressForA1("B", 22, e))
                                                           );
             Assert.AreEqual(r, correct);
         }
@@ -86,8 +86,8 @@ namespace ParcelTest
 
             Assert.AreEqual(2, addrs.Count());
 
-            var a1 = makeAddressForA1("E", 6, mwb);
-            var a2 = makeAddressForA1("E", 7, mwb);
+            var a1 = makeAddressForA1("E", 6, mwb.envForSheet(1));
+            var a2 = makeAddressForA1("E", 7, mwb.envForSheet(1));
 
             Assert.AreEqual(true, addrs.Contains(a1));
             Assert.AreEqual(true, addrs.Contains(a2));
@@ -191,8 +191,8 @@ namespace ParcelTest
             var xmwb = new MockWorkbook("C:\\FINRES\\FIRMAS\\FORCASTS\\MODELS\\", "models.xls", new[] { "Forecast Assumptions" });
 
             var f1 = "=L66*('C:\\FINRES\\FIRMAS\\FORCASTS\\MODELS\\[models.xls]Forecast Assumptions'!J27)^0.25";
-            var f1a1 = makeAddressForA1("L", 66, mwb);
-            var f1a2 = makeAddressForA1("J", 27, xmwb);
+            var f1a1 = makeAddressForA1("L", 66, mwb.envForSheet(1));
+            var f1a2 = makeAddressForA1("J", 27, xmwb.envForSheet(1));
 
             // extract
             try
@@ -211,13 +211,35 @@ namespace ParcelTest
         {
             var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "budget" });
             var f = "=budget!A43";
-            var addr = makeAddressForA1("A", 43, mwb);
+            var addr = makeAddressForA1("A", 43, mwb.envForSheet(1));
 
             // extract
             try
             {
                 var addrs = Parcel.addrReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
                 Assert.IsTrue(addrs.Contains(addr));
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
+
+        [TestMethod]
+        public void crossWorksheetRangeExtraction()
+        {
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "One Country Charts", "One Country Data" });
+            var f = "=IF('One Country Charts'!F17=\"\",VLOOKUP('One Country Charts'!F11,'One Country Data'!M5:O187,3,FALSE),VLOOKUP('One Country Charts'!F17,'One Country Data'!M5:O187,3,FALSE))";
+
+            var data_env = mwb.envForSheet(2);
+
+            var rng = new AST.Range(makeAddressForA1("M", 5, data_env), makeAddressForA1("O", 187, data_env));
+
+            // extract
+            try
+            {
+                var rngs = Parcel.rangeReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
+                Assert.IsTrue(rngs.Contains(rng));
             }
             catch (Parcel.ParseException e)
             {
