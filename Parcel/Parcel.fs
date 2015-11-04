@@ -56,21 +56,22 @@
         | Success(result, _, _) -> result
         | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
 
-    let rangeReferencesFromFormula(formula: string, path: string, workbook: string, worksheet: string, ignore_parse_errors: bool) : seq<AST.Range> =
+    let rangeReferencesFromFormula(formula: string, path: string, workbook: string, worksheet: string, ignore_parse_errors: bool) : AST.Range[] =
         try
             match (parseFormula formula path workbook worksheet),ignore_parse_errors with
-            | Some(tree),_ -> RangeVisitor.rangesFromExpr(tree) |> Seq.ofList
+            | Some(tree),_ -> RangeVisitor.rangesFromExpr(tree) |> Seq.distinct |> Seq.toArray
             | None,false -> raise (ParseException(formula))
-            | None,true -> Seq.empty    // just ignore parse exceptions for now
+            | None,true -> [||]    // just ignore parse exceptions for now
         with
-        // right now, we recognize indirect addresses but do not correctly dereference them
-        | :? AST.IndirectAddressingNotSupportedException -> seq[]
+        // right now, we recognize indirect addresses but do not correctly dereference them,
+        // which requires a program interpreter and input spreadsheet :(
+        | :? AST.IndirectAddressingNotSupportedException -> [||]
 
-    let addrReferencesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : seq<AST.Address> =
+    let addrReferencesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : AST.Address[] =
         match (parseFormula formula path wb ws),ignore_parse_errors with
-        | Some(ast),_ -> CellVisitor.addrsFromExpr(ast) |> Seq.ofList
+        | Some(ast),_ -> CellVisitor.addrsFromExpr(ast) |> Seq.distinct |> Seq.toArray
         | None,false -> raise (ParseException formula)
-        | None,true -> Seq.empty    // just ignore parse exceptions for now
+        | None,true -> [||]    // just ignore parse exceptions for now
 
     let rec formulaNamesFromExpr(ast: AST.Expression): string list =
         match ast with
