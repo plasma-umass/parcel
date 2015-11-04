@@ -258,7 +258,7 @@
         inherit Reference(env)
         override self.Type = ReferenceType.ReferenceNamed
         member self.Name = varname
-        override self.ToString() = "ReferenceName(" + env.Path + ",[" + env.WorkbookName + "]," + env.WorksheetName + "," + varname + ")"
+        override self.ToString() = "ReferenceName(" + varname + ")"
         override self.Equals(obj: obj) : bool =
             let rn = obj :?> ReferenceNamed
             self.Path = rn.Path &&
