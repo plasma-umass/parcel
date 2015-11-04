@@ -14,22 +14,22 @@
 
     // wrapper for success/failure
     let private test p str =
-        match runParserOnString p (Grammar.Defaults("", "", "")) "" str with
+        match runParserOnString p (AST.Defaults("", "", "")) "" str with
         | Success(result, _, _)     -> printfn "Success: %A" result
         | Failure(errorMsg, _, _)   -> printfn "Failure: %s" errorMsg
 
     let private getAddress(formula: string)(path: string)(wbname: string)(wsname: string): AST.Address =
-        match runParserOnString (Grammar.AddrR1C1 .>> eof) (Grammar.Defaults(path, wbname, wsname)) "" formula with
+        match runParserOnString (Grammar.AddrR1C1 .>> eof) (AST.Defaults(path, wbname, wsname)) "" formula with
         | Success(addr, _, _)       -> addr
         | Failure(errorMsg, _, _)   -> failwith errorMsg
 
     let private getRange(formula: string)(path: string)(wbname: string)(wsname: string): AST.Range option =
-        match runParserOnString (Grammar.RangeR1C1 .>> eof) (Grammar.Defaults(path, wbname, wsname)) "" formula with
+        match runParserOnString (Grammar.RangeR1C1 .>> eof) (AST.Defaults(path, wbname, wsname)) "" formula with
         | Success(range, _, _)      -> Some(range)
         | Failure(errorMsg, _, _)   -> None
 
     let private getReference(formula: string)(path: string)(wbname: string)(wsname: string): AST.Reference option =
-        match runParserOnString (Grammar.Reference .>> eof) (Grammar.Defaults(path, wbname, wsname)) "" formula with
+        match runParserOnString (Grammar.Reference .>> eof) (AST.Defaults(path, wbname, wsname)) "" formula with
         | Success(reference, _, _)  -> Some(reference)
         | Failure(errorMsg, _, _)   -> None
 
@@ -42,7 +42,7 @@
      * PUBLIC API
      *)
     let parseFormula(formula: string)(path: string)(wbname: string)(wsname: string): AST.Expression option =
-        match runParserOnString Grammar.Formula (Grammar.Defaults(path, wbname, wsname)) "" formula with
+        match runParserOnString Grammar.Formula (AST.Defaults(path, wbname, wsname)) "" formula with
         | Success(formula, _, _) -> Some(formula)
         | Failure(errorMsg, _, _) -> None
 
@@ -52,7 +52,7 @@
 
     // Call this for simple address parsing
     let simpleReferenceParser(s: string) : AST.Reference =
-        match runParserOnString Grammar.Reference (Grammar.Defaults("", "", "")) "" s with
+        match runParserOnString Grammar.Reference (AST.Defaults("", "", "")) "" s with
         | Success(result, _, _) -> result
         | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
 

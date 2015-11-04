@@ -16,6 +16,10 @@ namespace ParcelTest
             _workbook_name = workbook_name;
             _sheet_names = sheet_names;
         }
+        public AST.Defaults defaultsForSheet(int idx)
+        {
+            return new AST.Defaults(_path, _workbook_name, _sheet_names[idx + 1]);
+        }
         public string Path { 
             get { return _path; }
         }
@@ -33,7 +37,7 @@ namespace ParcelTest
             var mwb = standardMockWorkbook();
             var ranges = Parcel.rangeReferencesFromFormula(
                 formula,
-                FSCore.FSharpOption<string>.Some(mwb.Path),
+                mwb.Path,
                 mwb.WorkbookName,
                 mwb.worksheetName(1),
                 false

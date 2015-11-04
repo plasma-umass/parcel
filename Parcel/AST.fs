@@ -6,74 +6,40 @@
     type IndirectAddressingNotSupportedException(expression: string) =
         inherit Exception(expression)
 
+    // The Defaults object is threaded through grammar combinators (via UserState)
+    // so that parsers always have the path, workbook name, and worksheet name
+    // in order to construct AST nodes.
     [<Serializable>]
-    type Address() =
-        let mutable R: int = 0
-        let mutable C: int = 0
-        let mutable _wsn = None
-        let mutable _wbn = None
-        let mutable _path = None
-        static member FromR1C1(R: int, C: int, wsname: string, wbname: string, path: string) : Address =
-            let addr = Address()
-            addr.Row <- R
-            addr.Col <- C
-            addr.WorksheetName <- Some(wsname)
-            addr.WorkbookName <- Some(wbname)
-            addr.Path <- Some(System.IO.Path.GetDirectoryName(path))
-            addr
-        static member NewFromR1C1(R: int, C: int, wsname: string option, wbname: string option, path: string option) : Address =
-            let addr = Address()
-            addr.Row <- R
-            addr.Col <- C
-            addr.WorksheetName <- wsname
-            addr.WorkbookName <- wbname
-            addr.Path <- match path with | Some(p) -> Some(System.IO.Path.GetDirectoryName(p)) | None -> None
-            addr
-        static member NewFromA1(row: int, col: string, wsname: string option, wbname: string option, path: string option) : Address =
-            let addr = Address()
-            addr.Row <- row
-            addr.Col <- Address.CharColToInt(col)
-            addr.WorksheetName <- wsname
-            addr.WorkbookName <- wbname
-            addr.Path <- match path with | Some(p) -> Some(System.IO.Path.GetDirectoryName(p)) | None -> None
-            addr
+    type Defaults(path: string, wbname: string, wsname: string) =
+        member self.Path = path
+        member self.WorkbookName = wbname
+        member self.WorksheetName = wsname
+
+    [<Serializable>]
+    type Address(R: int, C: int, defaults: Defaults) =
+        static member fromR1C1(R: int, C: int, wsname: string, wbname: string, path: string) : Address =
+            Address(R, C, Defaults(path, wbname, wsname))
+        static member fromA1(row: int, col: string, wsname: string, wbname: string, path: string) : Address =
+            Address(row, Address.CharColToInt(col), Defaults(path, wbname, wsname))
+
         member self.A1Local() : string = Address.IntToColChars(self.X) + self.Y.ToString()
-        member self.A1Path() : string =
-            match _path with
-            | Some(pth) -> pth
-            | None -> failwith "Path string should never be unset."
-        member self.A1Worksheet() : string =
-            match _wsn with
-            | Some(ws) -> ws
-            | None -> failwith "Worksheet string should never be unset."
-        member self.A1Workbook() : string =
-            match _wbn with
-            | Some(wb) -> wb
-            | None -> failwith "Workbook string should never be unset."
+        member self.A1Path() : string = defaults.Path
+        member self.A1Worksheet() : string = defaults.WorksheetName
+        member self.A1Workbook() : string = defaults.WorkbookName
         member self.A1FullyQualified() : string =
             "[" + self.A1Workbook() + "]" + self.A1Worksheet() + "!" + self.A1Local()
         member self.R1C1 =
-            let wsstr = match _wsn with | Some(ws) -> ws + "!" | None -> ""
-            let wbstr = match _wbn with | Some(wb) -> "[" + wb + "]" | None -> ""
-            let pstr = match _path with | Some(pth) -> pth | None -> ""
+            let wsstr = defaults.WorksheetName + "!"
+            let wbstr = "[" + defaults.WorkbookName + "]"
+            let pstr = defaults.Path
             pstr + wbstr + wsstr + "R" + R.ToString() + "C" + C.ToString()
         member self.X: int = C
         member self.Y: int = R
-        member self.Row
-            with get() = R
-            and set(value) = R <- value
-        member self.Col
-            with get() = C
-            and set(value) = C <- value
-        member self.Path
-            with get() = _path
-            and set(value) = _path <- value
-        member self.WorksheetName
-            with get() = _wsn
-            and set(value) = _wsn <- value
-        member self.WorkbookName
-            with get() = _wbn
-            and set(value) = _wbn <- value
+        member self.Row = R
+        member self.Col = C
+        member self.Path = defaults.Path
+        member self.WorksheetName = defaults.WorksheetName
+        member self.WorkbookName = defaults.WorkbookName
         // Address is used as a Dictionary key, and reference equality
         // does not suffice, therefore GetHashCode and Equals are provided
         override self.GetHashCode() : int = String.Intern(self.A1FullyQualified()).GetHashCode()
@@ -104,12 +70,12 @@
                 else
                     num + ccti(idx - 1)
             ccti(col.Length - 1)
-        static member FromString(addr: string, wsname: string option, wbname: string option, path: string option) : Address =
+        static member FromString(addr: string, wsname: string, wbname: string, path: string) : Address =
             let reg = System.Text.RegularExpressions.Regex("R(?<row>[0-9]+)C(?<column>[0-9]+)")
             let m = reg.Match(addr)
             let r = System.Convert.ToInt32(m.Groups.["row"].Value)
             let c = System.Convert.ToInt32(m.Groups.["column"].Value)
-            Address.NewFromR1C1(r, c, wsname, wbname, path)
+            Address.fromR1C1(r, c, wsname, wbname, path)
         static member IntToColChars(dividend: int) : string =
             let mutable quot = dividend / 26
             let rem = dividend % 26
@@ -124,10 +90,10 @@
             else
                 Address.IntToColChars(quot) + ltr.ToString()
 
-    and IndirectAddress(expr: string) =
-        inherit Address()
-        do
-            raise(IndirectAddressingNotSupportedException(expr))
+//    and IndirectAddress(expr: string) =
+//        inherit Address()
+//        do
+//            raise(IndirectAddressingNotSupportedException(expr))
         
     and Range(topleft: Address, bottomright: Address) =
         let _tl = topleft
@@ -156,25 +122,16 @@
                  self.getYTop() < addr.Y ||
                  self.getXRight() > addr.X ||
                  self.getYBottom() > addr.Y)
-        member self.SetPathName(path: string option) : unit =
-            _tl.Path <- path
-            _br.Path <- path
-        member self.SetWorksheetName(wsname: string option) : unit =
-            _tl.WorksheetName <- wsname
-            _br.WorksheetName <- wsname
-        member self.SetWorkbookName(wbname: string option) : unit =
-            _tl.WorkbookName <- wbname
-            _br.WorkbookName <- wbname
         member self.GetWorksheetNames() : seq<string> =
-            [_tl.WorksheetName; _br.WorksheetName] |> List.choose id |> List.toSeq
+            [_tl.WorksheetName; _br.WorksheetName] |> List.toSeq |> Seq.distinct
         member self.GetWorkbookNames() : seq<string> =
-            [_tl.WorkbookName; _br.WorkbookName] |> List.choose id |> List.toSeq
-        member self.GetPathNames() : seq<string option> =
+            [_tl.WorkbookName; _br.WorkbookName] |> List.toSeq |> Seq.distinct
+        member self.GetPathNames() : seq<string> =
             [_tl.Path; _br.Path] |> List.toSeq
         member self.Addresses() : Address[] =
             Array.map (fun c ->
                 Array.map (fun r ->
-                    Address.NewFromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
+                    Address.fromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
                 ) [|self.getYTop()..self.getYBottom()|]
             ) [|self.getXLeft()..self.getXRight()|] |>
             Array.concat
@@ -194,44 +151,19 @@
     | ReferenceNamed    = 5
 
     [<AbstractClass>]
-    type Reference(path: string option, wbname: string option, wsname: string option) =
-        let mutable _path: string option = path
-        let mutable _wbn: string option = wbname
-        let mutable _wsn: string option = wsname
+    type Reference(defaults: Defaults) =
         abstract member InsideRef: Reference -> bool
-        abstract member Path: string option with get, set
-        abstract member WorkbookName: string option with get, set
-        abstract member WorksheetName: string option with get, set
         abstract member Type: ReferenceType
-        default self.Path
-            with get() = _path
-            and set(value) = _path <- value
-        default self.WorkbookName
-            with get() = _wbn
-            and set(value) = _wbn <- value
-        default self.WorksheetName
-            with get() = _wsn
-            and set(value) = _wsn <- value
+        member self.Path = defaults.Path
+        member self.WorkbookName = defaults.WorkbookName
+        member self.WorksheetName = defaults.WorksheetName
         default self.InsideRef(ref: Reference) = false
 
-    and ReferenceRange(path: string option, wbname: string option, wsname: string option, rng: Range) =
-        inherit Reference(path, wbname, wsname)
-        do
-            // also set the Workbook and Worksheet for the Range object itself
-            rng.SetWorkbookName(wbname)
-            rng.SetWorksheetName(wsname)
+    and ReferenceRange(defaults: Defaults, rng: Range) =
+        inherit Reference(defaults)
         override self.Type = ReferenceType.ReferenceRange
         override self.ToString() =
-            let pth = match self.Path with
-                      | Some(pth) -> pth
-                      | None -> ""
-            let wbn = match self.WorkbookName with
-                      | Some(wbn) -> wbn
-                      | None -> ""
-            let wsn = match self.WorksheetName with
-                      | Some(wsn) -> wsn
-                      | None -> ""
-            "ReferenceRange(" + pth + ",[" + wbn + "]," + wsn + "," + rng.ToString() + ")"
+            "ReferenceRange(" + defaults.Path + ",[" + defaults.WorkbookName + "]," + defaults.WorksheetName + "," + rng.ToString() + ")"
         override self.InsideRef(ref: Reference) : bool =
             match ref with
             | :? ReferenceAddress as ar -> rng.InsideAddr(ar.Address)
@@ -245,24 +177,11 @@
             self.WorksheetName = rr.WorksheetName &&
             self.Range = rr.Range
 
-    and ReferenceAddress(path: string option, wbname: string option, wsname: string option, addr: Address) =
-        inherit Reference(path, wbname, wsname)
-        do
-            // also set the Workbook and Worksheet for the Address object itself
-            addr.WorkbookName <- wbname
-            addr.WorksheetName <- wsname
+    and ReferenceAddress(defaults: Defaults, addr: Address) =
+        inherit Reference(defaults)
         override self.Type = ReferenceType.ReferenceAddress
         override self.ToString() =
-            let pth = match self.Path with
-                      | Some(pth) -> pth
-                      | None -> ""
-            let wbn = match self.WorkbookName with
-                      | Some(wbn) -> wbn
-                      | None -> ""
-            let wsn = match self.WorksheetName with
-                      | Some(wsn) -> wsn
-                      | None -> ""
-            "ReferenceAddress(" + pth + ",[" + wbn + "]," + wsn + "," + addr.ToString() + ")"
+            "ReferenceAddress(" + defaults.Path + ",[" + defaults.WorkbookName + "]," + defaults.WorksheetName + "," + addr.ToString() + ")"
         member self.Address = addr
         override self.InsideRef(ref: Reference) =
             match ref with
@@ -276,13 +195,13 @@
             self.WorksheetName = ra.WorksheetName &&
             self.Address = ra.Address
 
-    and ReferenceFunction(wsname: string option, fnname: string, arglist: Expression list) =
-        inherit Reference(None, None, wsname)
+    and ReferenceFunction(defaults: Defaults, fnname: string, arglist: Expression list) =
+        inherit Reference(defaults)
         override self.Type = ReferenceType.ReferenceFunction
         member self.ArgumentList = arglist
-        member self.FunctionName = fnname
+        member self.FunctionName = fnname.ToUpper()
         override self.ToString() =
-            fnname + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            self.FunctionName + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction
             self.Path = rf.Path &&
@@ -291,8 +210,8 @@
             self.FunctionName = rf.FunctionName
             // TODO: should also check ArgumentList here!
 
-    and ReferenceConstant(wsname: string option, value: double) =
-        inherit Reference(None, None, wsname)
+    and ReferenceConstant(defaults: Defaults, value: double) =
+        inherit Reference(defaults)
         override self.Type = ReferenceType.ReferenceConstant
         member self.Value = value
         override self.ToString() = "Constant(" + value.ToString() + ")"
@@ -303,8 +222,8 @@
             self.WorksheetName = rc.WorksheetName &&
             self.Value = rc.Value
 
-    and ReferenceString(wsname: string option, value: string) =
-        inherit Reference(None, None, wsname)
+    and ReferenceString(defaults: Defaults, value: string) =
+        inherit Reference(defaults)
         override self.Type = ReferenceType.ReferenceString
         member self.Value = value
         override self.ToString() = "String(" + value + ")"
@@ -315,14 +234,11 @@
             self.WorksheetName = rs.WorksheetName &&
             self.Value = rs.Value
 
-    and ReferenceNamed(wsname: string option, varname: string) =
-        inherit Reference(None, None, wsname)
+    and ReferenceNamed(defaults: Defaults, varname: string) =
+        inherit Reference(defaults)
         override self.Type = ReferenceType.ReferenceNamed
         member self.Name = varname
-        override self.ToString() =
-            match self.WorksheetName with
-            | Some(wsn) -> "ReferenceName(" + wsn + ", " + varname + ")"
-            | None -> "ReferenceName(None, " + varname + ")"
+        override self.ToString() = "ReferenceName(" + defaults.Path + ",[" + defaults.WorkbookName + "]," + defaults.WorksheetName + "," + varname + ")"
         override self.Equals(obj: obj) : bool =
             let rn = obj :?> ReferenceNamed
             self.Path = rn.Path &&

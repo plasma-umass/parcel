@@ -9,43 +9,40 @@ namespace ParcelTest
     [TestClass]
     public class BasicTests
     {
-        // "macros"
-        Func<string, FSharpOption<string>> SOMESTR = s => FSharpOption<string>.Some(s);
-        FSharpOption<string> NONESTR = FSharpOption<string>.None;
-
         private AST.Address makeAddressForA1(string col, int row, MockWorkbook mwb)
         {
-            return AST.Address.NewFromA1(
+            return AST.Address.fromA1(
                 row,
                 col,
-                FSharpOption<string>.Some(mwb.worksheetName(1)),
-                FSharpOption<string>.Some(mwb.WorkbookName),
-                FSharpOption<string>.Some(mwb.Path)
+                mwb.worksheetName(1),
+                mwb.WorkbookName,
+                mwb.Path
             );
         }
         
         [TestMethod]
         public void standardAddress()
         {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var d = mwb.defaultsForSheet(1);
             String s = "A3";
 
             AST.Reference r = Parcel.simpleReferenceParser(s);
-            AST.Reference correct = new AST.ReferenceAddress(NONESTR, NONESTR, NONESTR, AST.Address.NewFromA1(3, "A", NONESTR, NONESTR, NONESTR));
+            AST.Reference correct = new AST.ReferenceAddress(d, AST.Address.fromA1(3, "A", d.WorksheetName, d.WorkbookName, d.Path));
             Assert.AreEqual(r, correct);
         }
 
         [TestMethod]
         public void standardRange()
         {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var d = mwb.defaultsForSheet(1);
             String s = "A3:B22";
 
             AST.Reference r = Parcel.simpleReferenceParser(s);
-            AST.Reference correct = new AST.ReferenceRange(NONESTR,
-                                                           NONESTR,
-                                                           NONESTR,
-                                                           new AST.Range(AST.Address.NewFromA1(3, "A", NONESTR, NONESTR, NONESTR),
-                                                                         AST.Address.NewFromA1(22, "B", NONESTR, NONESTR, NONESTR)
-                                                                        )
+            AST.Reference correct = new AST.ReferenceRange(d,
+                                                           new AST.Range(makeAddressForA1("A", 3, mwb),
+                                                                         makeAddressForA1("B", 22, mwb))
                                                           );
             Assert.AreEqual(r, correct);
         }
@@ -59,7 +56,7 @@ namespace ParcelTest
             IEnumerable<AST.Range> rngs = new List<AST.Range>();
             try
             {
-                rngs = Parcel.rangeReferencesFromFormula(s, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1), false);
+                rngs = Parcel.rangeReferencesFromFormula(s, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
             }
             catch (Parcel.ParseException e)
             {
@@ -81,7 +78,7 @@ namespace ParcelTest
             IEnumerable<AST.Address> addrs = new List<AST.Address>();
             try
             {
-                addrs = Parcel.addrReferencesFromFormula(formula, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1), false);
+                addrs = Parcel.addrReferencesFromFormula(formula, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
             }
             catch (Parcel.ParseException e)
             {
@@ -111,7 +108,7 @@ namespace ParcelTest
             {
                 try
                 {
-                    Parcel.parseFormula(f, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1));
+                    Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
                 }
                 catch (Exception e)
                 {
@@ -141,7 +138,7 @@ namespace ParcelTest
             String formula = "=TRANSPOSE(INDIRECT(ADDRESS(1,4,3,1,Menus!$K$10)):INDIRECT(ADDRESS(1,256,3,1,Menus!$K$10)))";
             try
             {
-                Parcel.parseFormula(formula, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1));
+                Parcel.parseFormula(formula, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
             }
             catch (Exception e)
             {
@@ -168,9 +165,9 @@ namespace ParcelTest
             // first, the good ones
             try
             {
-                Parcel.parseFormula(formula1, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1));
-                Parcel.parseFormula(formula2, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1));
-                Parcel.parseFormula(formula3, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1));
+                Parcel.parseFormula(formula1, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Parcel.parseFormula(formula2, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Parcel.parseFormula(formula3, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
             }
             catch (Parcel.ParseException e)
             {
@@ -180,7 +177,7 @@ namespace ParcelTest
             // a bad one
             try
             {
-                Parcel.parseFormula(formula4, SOMESTR(mwb.Path), mwb.WorkbookName, mwb.worksheetName(1));
+                Parcel.parseFormula(formula4, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
             }
             catch (Parcel.ParseException e)
             {
