@@ -205,5 +205,25 @@ namespace ParcelTest
                 Assert.Fail(e.Message);
             }
         }
+
+        [TestMethod]
+        public void missingWorkbookAddrExtraction()
+        {
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "budget" });
+            var f = "=budget!A43";
+            var addr = makeAddressForA1("A", 43, mwb);
+
+            // extract
+            try
+            {
+                var addrs = Parcel.addrReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
+                Assert.IsTrue(addrs.Contains(addr));
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
+
     }
 }
