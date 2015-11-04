@@ -18,7 +18,7 @@ namespace ParcelTest
                 env.Path
             );
         }
-        
+
         [TestMethod]
         public void standardAddress()
         {
@@ -200,7 +200,9 @@ namespace ParcelTest
                 var addrs = Parcel.addrReferencesFromFormula(f1, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
                 Assert.IsTrue(addrs.Contains(f1a1));
                 Assert.IsTrue(addrs.Contains(f1a2));
-            } catch (Parcel.ParseException e)
+                Assert.IsTrue(addrs.Length == 2);
+            }
+            catch (Parcel.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -218,6 +220,7 @@ namespace ParcelTest
             {
                 var addrs = Parcel.addrReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
                 Assert.IsTrue(addrs.Contains(addr));
+                Assert.IsTrue(addrs.Length == 1);
             }
             catch (Parcel.ParseException e)
             {
@@ -240,6 +243,7 @@ namespace ParcelTest
             {
                 var rngs = Parcel.rangeReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
                 Assert.IsTrue(rngs.Contains(rng));
+                Assert.IsTrue(rngs.Length == 1);
             }
             catch (Parcel.ParseException e)
             {
@@ -247,5 +251,33 @@ namespace ParcelTest
             }
         }
 
+        [TestMethod]
+        public void multipleRangeExtraction()
+        {
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "Calculations", "Status" });
+            var f = "=IF(Status!G11=\"stand-alone hub\",SUMIF(Calculations!B7:P7,\"include\",Calculations!B163:P163),IF(Status!G11=\"remote\",SUMIF(Calculations!B7:P7,\"include\",Calculations!B184:P184),SUMIF(Calculations!B7:P7,\"include\",Calculations!B205:P205)))";
+
+            var calc_env = mwb.envForSheet(2);
+
+            var rng1 = new AST.Range(makeAddressForA1("B", 7, calc_env), makeAddressForA1("P", 7, calc_env));
+            var rng2 = new AST.Range(makeAddressForA1("B", 163, calc_env), makeAddressForA1("P", 163, calc_env));
+            var rng3 = new AST.Range(makeAddressForA1("B", 184, calc_env), makeAddressForA1("P", 184, calc_env));
+            var rng4 = new AST.Range(makeAddressForA1("B", 205, calc_env), makeAddressForA1("P", 205, calc_env));
+
+            // extract
+            try
+            {
+                var rngs = Parcel.rangeReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
+                Assert.IsTrue(rngs.Contains(rng1));
+                Assert.IsTrue(rngs.Contains(rng2));
+                Assert.IsTrue(rngs.Contains(rng3));
+                Assert.IsTrue(rngs.Contains(rng4));
+                Assert.IsTrue(rngs.Length == 4);
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
     }
 }
