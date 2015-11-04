@@ -51,8 +51,8 @@
     let consoleParser(s: string) = test Grammar.Formula s
 
     // Call this for simple address parsing
-    let simpleReferenceParser(s: string) : AST.Reference =
-        match runParserOnString Grammar.Reference (AST.Defaults("", "", "")) "" s with
+    let simpleReferenceParser(s: string, d: AST.Defaults) : AST.Reference =
+        match runParserOnString Grammar.Reference d "" s with
         | Success(result, _, _) -> result
         | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.FSharp.Core;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,7 +26,7 @@ namespace ParcelTest
             var d = mwb.defaultsForSheet(1);
             String s = "A3";
 
-            AST.Reference r = Parcel.simpleReferenceParser(s);
+            AST.Reference r = Parcel.simpleReferenceParser(s, d);
             AST.Reference correct = new AST.ReferenceAddress(d, AST.Address.fromA1(3, "A", d.WorksheetName, d.WorkbookName, d.Path));
             Assert.AreEqual(r, correct);
         }
@@ -39,7 +38,7 @@ namespace ParcelTest
             var d = mwb.defaultsForSheet(1);
             String s = "A3:B22";
 
-            AST.Reference r = Parcel.simpleReferenceParser(s);
+            AST.Reference r = Parcel.simpleReferenceParser(s, d);
             AST.Reference correct = new AST.ReferenceRange(d,
                                                            new AST.Range(makeAddressForA1("A", 3, mwb),
                                                                          makeAddressForA1("B", 22, mwb))

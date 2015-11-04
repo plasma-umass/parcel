@@ -57,16 +57,21 @@
     // exactly the same way unless you copy and paste them.
     let AddrR = pstring "R" >>. pint32
     let AddrC = pstring "C" >>. pint32
-//    let AddrIndirect = between (pstring "INDIRECT(") (pstring ")") (manySatisfy ((<>) ')')) |>> (fun exprstr -> IndirectAddress(exprstr) :> Address)
+    let AddrIndirect = getUserState >>=
+                        fun us ->
+                            between
+                                (pstring "INDIRECT(")
+                                (pstring ")")
+                                (manySatisfy ((<>) ')'))
+                            |>> (fun expr -> IndirectAddress(expr, us) :> Address)
     let AddrR1C1 = getUserState >>=
                     fun (us: Defaults) ->
-//                        (attempt AddrIndirect)
-//                        <|> pipe2
-                        (pipe2
-                            AddrR
-                            AddrC
-                            (fun row col ->
-                                Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
+                        (attempt AddrIndirect)
+                        <|> (pipe2
+                                AddrR
+                                AddrC
+                                (fun row col ->
+                                    Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
                         <!> "AddrR1C1"
     let AddrA = many1Satisfy isAsciiUpper
     let AddrAAbs = (pstring "$" <|> pstring "") >>. AddrA
@@ -74,19 +79,17 @@
     let Addr1Abs = (pstring "$" <|> pstring "") >>. Addr1
     let AddrA1 = getUserState >>=
                     fun (us: Defaults) ->
-//                        (attempt AddrIndirect)
-//                        <|> (pipe2
-                        (pipe2
+                        (attempt AddrIndirect)
+                        <|> (pipe2
                             AddrAAbs
                             Addr1Abs
                             (fun col row ->
                                 Address.fromA1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
                         <!> "AddrA1"
-    let AnyAddr = (
-//        ((attempt AddrIndirect) <|>
-                    (attempt AddrR1C1)
-                    <|> AddrA1)
-                    <!> "AnyAddr"
+    let AnyAddr = ((attempt AddrIndirect)
+                  <|> (attempt AddrR1C1)
+                  <|> AddrA1)
+                  <!> "AnyAddr"
 
     // Ranges
     let MoreAddrR1C1 = pstring ":" >>. AddrR1C1

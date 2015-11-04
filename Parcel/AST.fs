@@ -90,10 +90,12 @@
             else
                 Address.IntToColChars(quot) + ltr.ToString()
 
-//    and IndirectAddress(expr: string) =
-//        inherit Address()
-//        do
-//            raise(IndirectAddressingNotSupportedException(expr))
+    and IndirectAddress(expr: string, defaults: Defaults) =
+        inherit Address(0,0,defaults)
+        do
+            // indirect references are essentially lambdas for
+            // constructing addresses
+            raise(IndirectAddressingNotSupportedException(expr))
         
     and Range(topleft: Address, bottomright: Address) =
         let _tl = topleft
