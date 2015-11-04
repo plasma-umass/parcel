@@ -2,10 +2,7 @@
     let rec rangesFromRangeRef(ref: AST.ReferenceRange) : AST.Range list = [ref.Range]
 
     and rangesFromFunctionRef(ref: AST.ReferenceFunction) : AST.Range list =
-        if UglyHacks.isIgnored(ref.FunctionName) then
-            []
-        else
-            List.map (fun arg -> rangesFromExpr(arg)) ref.ArgumentList |> List.concat
+        List.map (fun arg -> rangesFromExpr(arg)) ref.ArgumentList |> List.concat
         
     and rangesFromExpr(expr: AST.Expression) : AST.Range list =
         match expr with

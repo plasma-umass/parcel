@@ -52,7 +52,6 @@
   <ItemGroup>
     <Compile Include="AST.fs" />
     <Compile Include="Grammar.fs" />
-    <Compile Include="UglyHacks.fs" />
     <Compile Include="CellVisitor.fs" />
     <Compile Include="RangeVisitor.fs" />
     <Compile Include="Parcel.fs" />

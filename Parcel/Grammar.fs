@@ -99,7 +99,6 @@
     let RangeAny = ((attempt RangeR1C1) <|> RangeA1) <!> "RangeAny"
 
     // Worksheet Names
-
     let WorksheetNameQuoted =
         let NormalChar = satisfy ((<>) '\'')
         let EscapedChar = pstring "''" |>> (fun s -> ''')

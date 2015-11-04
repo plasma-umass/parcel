@@ -19,7 +19,4 @@
     and addrsFromAddrRef(ref: AST.ReferenceAddress) : AST.Address list = [ref.Address]
 
     and addrsFromFunctionRef(ref: AST.ReferenceFunction) : AST.Address list =
-        if UglyHacks.isIgnored(ref.FunctionName) then
-            []
-        else
-            List.map (fun arg -> addrsFromExpr(arg)) ref.ArgumentList |> List.concat
+        List.map (fun arg -> addrsFromExpr(arg)) ref.ArgumentList |> List.concat
