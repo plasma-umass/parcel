@@ -14,11 +14,12 @@ namespace ParcelTest
         {
             _path = path;
             _workbook_name = workbook_name;
-            _sheet_names = sheet_names;
+            // mimic an Excel one-based array
+            _sheet_names = (new string[] { "inaccessible" }).Concat(sheet_names).ToArray();
         }
-        public AST.Defaults defaultsForSheet(int idx)
+        public AST.Env envForSheet(int idx)
         {
-            return new AST.Defaults(_path, _workbook_name, _sheet_names[idx + 1]);
+            return new AST.Env(_path, _workbook_name, _sheet_names[idx + 1]);
         }
         public string Path { 
             get { return _path; }
@@ -28,8 +29,7 @@ namespace ParcelTest
             get { return _workbook_name; }
         }
         public string worksheetName(int idx) {
-            // mimic an Excel one-based array
-            return _sheet_names[idx + 1];
+            return _sheet_names[idx];
         }
         public static int testGetRanges(string formula)
         {

@@ -23,11 +23,11 @@ namespace ParcelTest
         public void standardAddress()
         {
             var mwb = MockWorkbook.standardMockWorkbook();
-            var d = mwb.defaultsForSheet(1);
+            var e = mwb.envForSheet(1);
             String s = "A3";
 
-            AST.Reference r = Parcel.simpleReferenceParser(s, d);
-            AST.Reference correct = new AST.ReferenceAddress(d, AST.Address.fromA1(3, "A", d.WorksheetName, d.WorkbookName, d.Path));
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            AST.Reference correct = new AST.ReferenceAddress(e, AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path));
             Assert.AreEqual(r, correct);
         }
 
@@ -35,11 +35,11 @@ namespace ParcelTest
         public void standardRange()
         {
             var mwb = MockWorkbook.standardMockWorkbook();
-            var d = mwb.defaultsForSheet(1);
+            var e = mwb.envForSheet(1);
             String s = "A3:B22";
 
-            AST.Reference r = Parcel.simpleReferenceParser(s, d);
-            AST.Reference correct = new AST.ReferenceRange(d,
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            AST.Reference correct = new AST.ReferenceRange(e,
                                                            new AST.Range(makeAddressForA1("A", 3, mwb),
                                                                          makeAddressForA1("B", 22, mwb))
                                                           );
@@ -181,6 +181,28 @@ namespace ParcelTest
             catch (Parcel.ParseException e)
             {
                 // OK
+            }
+        }
+
+        [TestMethod]
+        public void crossWorkbookAddrExtraction()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var xmwb = new MockWorkbook("C:\\FINRES\\FIRMAS\\FORCASTS\\MODELS\\", "models.xls", new[] { "Forecast Assumptions" });
+
+            var f1 = "=L66*('C:\\FINRES\\FIRMAS\\FORCASTS\\MODELS\\[models.xls]Forecast Assumptions'!J27)^0.25";
+            var f1a1 = makeAddressForA1("L", 66, mwb);
+            var f1a2 = makeAddressForA1("J", 27, xmwb);
+
+            // extract
+            try
+            {
+                var addrs = Parcel.addrReferencesFromFormula(f1, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
+                Assert.IsTrue(addrs.Contains(f1a1));
+                Assert.IsTrue(addrs.Contains(f1a2));
+            } catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
             }
         }
     }

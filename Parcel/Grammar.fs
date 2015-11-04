@@ -29,7 +29,7 @@
      *)
 
     // a simple typedef
-    type P<'t> = Parser<'t, Defaults>
+    type P<'t> = Parser<'t, Env>
     
     // custom character classes
     let isWSChar(c: char) : bool =
@@ -65,7 +65,7 @@
                                 (manySatisfy ((<>) ')'))
                             |>> (fun expr -> IndirectAddress(expr, us) :> Address)
     let AddrR1C1 = getUserState >>=
-                    fun (us: Defaults) ->
+                    fun (us: Env) ->
                         (attempt AddrIndirect)
                         <|> (pipe2
                                 AddrR
@@ -78,7 +78,7 @@
     let Addr1 = pint32
     let Addr1Abs = (pstring "$" <|> pstring "") >>. Addr1
     let AddrA1 = getUserState >>=
-                    fun (us: Defaults) ->
+                    fun (us: Env) ->
                         (attempt AddrIndirect)
                         <|> (pipe2
                             AddrAAbs
@@ -110,8 +110,17 @@
 
     // Workbook Names (this may be too restrictive)
     let Path = many1Satisfy ((<>) '[') <!> "Path"
-    let WorkbookName = between (pstring "[") (pstring "]") (many1Satisfy (fun c -> c <> '[' && c <> ']')) <!> "WorkbookName"
-    let Workbook = ((Path |>> Some) <|> ((pstring "") >>% None)) .>>. WorkbookName <!> "Workbook"
+    let WorkbookName = between
+                        (pstring "[")
+                        (pstring "]")
+                        (many1Satisfy (fun c -> c <> '[' && c <> ']'))
+                       <!> "WorkbookName"
+    let Workbook = (
+                        (Path |>> Some)
+                        <|> ((pstring "") >>% None)
+                   )
+                   .>>. WorkbookName
+                   <!> "Workbook"
 
     // References
     // References consist of the following parts:
@@ -125,14 +134,18 @@
                                             (RRWQuoted .>> pstring "!")
                                             RangeAny
                                             (fun ((wbpath, wbname), wsname) rng ->
-                                                ReferenceRange(us, rng) :> Reference))
+                                                match wbpath with
+                                                | Some(pth) -> ReferenceRange(Env(pth, wbname, wsname), rng) :> Reference
+                                                | None      -> ReferenceRange(Env(us.Path, wbname, wsname), rng) :> Reference
+                                            )
+                                        )
                                         <!> "RangeReferenceWorkbook"
     let RangeReferenceWorksheet = getUserState >>=
                                     fun us ->
                                         pipe2
                                             (WorksheetName .>> pstring "!")
                                             RangeAny
-                                            (fun wsname rng -> ReferenceRange(us, rng) :> Reference)
+                                            (fun wsname rng -> ReferenceRange(Env(us.Path, us.WorkbookName, wsname), rng) :> Reference)
     let RangeReferenceNoWorksheet = getUserState >>=
                                         fun us ->
                                             RangeAny
@@ -151,15 +164,19 @@
                                         (pipe2
                                             (ARWQuoted .>> pstring "!")
                                             AnyAddr
-                                            (fun ((wbpath, wbname), wsname) addr -> 
-                                                ReferenceAddress(us, addr) :> Reference))
+                                            (fun ((wbpath, wbname), wsname) addr ->
+                                                match wbpath with
+                                                | Some(pth) -> ReferenceAddress(Env(pth, wbname, wsname), addr) :> Reference
+                                                | None      -> ReferenceAddress(Env(us.Path, wbname, wsname), addr) :> Reference
+                                            )
+                                        )
                                         <!> "AddressReferenceWorkbook"
     let AddressReferenceWorksheet = getUserState >>=
                                         fun us ->
                                             pipe2
                                                 (WorksheetName .>> pstring "!")
                                                 AnyAddr
-                                                (fun wsname addr -> ReferenceAddress(us, addr) :> Reference)
+                                                (fun wsname addr -> ReferenceAddress(Env(us.Path, us.WorkbookName, wsname), addr) :> Reference)
     let AddressReferenceNoWorksheet = getUserState >>=
                                         fun us ->
                                             AnyAddr
@@ -223,4 +240,4 @@
     do ExpressionDeclImpl := (attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)
 
     // Formulas
-    let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
+    let Formula = BP (pstring "=" .>> spaces >>. ExpressionDecl .>> eof)
