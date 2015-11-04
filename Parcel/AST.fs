@@ -224,11 +224,13 @@
             self.FunctionName + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction
+            let arglists = List.zip arglist rf.ArgumentList
             self.Path = rf.Path &&
             self.WorkbookName = rf.WorkbookName &&
             self.WorksheetName = rf.WorksheetName &&
-            self.FunctionName = rf.FunctionName
-            // TODO: should also check ArgumentList here!
+            self.FunctionName = rf.FunctionName &&
+            // and recursively compare arglists
+            List.fold (fun acc (ethis, ethat) -> acc && ethis = ethat) true arglists
 
     and ReferenceConstant(env: Env, value: double) =
         inherit Reference(env)
