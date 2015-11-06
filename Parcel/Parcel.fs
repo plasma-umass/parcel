@@ -33,14 +33,14 @@
         | Success(reference, _, _)  -> Some(reference)
         | Failure(errorMsg, _, _)   -> None
 
-    let private isNumeric(str: string): bool =
+    (*
+     * PUBLIC API
+     *)
+    let isNumeric(str: string): bool =
         match run (pfloat .>> eof) str with
         | Success(number, _, _)     -> true
         | Failure(errorMsg, _, _)   -> false
 
-    (*
-     * PUBLIC API
-     *)
     let parseFormula(formula: string)(path: string)(wbname: string)(wsname: string): AST.Expression option =
         match runParserOnString Grammar.Formula (AST.Env(path, wbname, wsname)) "" formula with
         | Success(formula, _, _) -> Some(formula)
