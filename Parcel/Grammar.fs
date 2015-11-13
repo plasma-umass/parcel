@@ -36,16 +36,16 @@
         isDigit(c) || isLetter(c) || c = '-' || c = ' '
 
     // Special breakpoint-friendly parser
-    let BP (p: Parser<_,_>)(stream: CharStream<'b>) =
-        printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
-        p stream // set a breakpoint here
-
-    let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
-        fun stream ->
-            printfn "%A: Entering %s" stream.Position label
-            let reply = p stream
-            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
-            reply
+//    let BP (p: Parser<_,_>)(stream: CharStream<'b>) =
+//        printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
+//        p stream // set a breakpoint here
+//
+//    let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
+//        fun stream ->
+//            printfn "%A: Entering %s" stream.Position label
+//            let reply = p stream
+//            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
+//            reply
 
     // Grammar forward references
     let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
@@ -72,7 +72,6 @@
                                 AddrC
                                 (fun row col ->
                                     Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
-                        <!> "AddrR1C1"
     let AddrA = many1Satisfy isAsciiUpper
     let AddrAAbs = (pstring "$" <|> pstring "") >>. AddrA
     let Addr1 = pint32
@@ -85,18 +84,16 @@
                             Addr1Abs
                             (fun col row ->
                                 Address.fromA1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
-                        <!> "AddrA1"
     let AnyAddr = ((attempt AddrIndirect)
                   <|> (attempt AddrR1C1)
                   <|> AddrA1)
-                  <!> "AnyAddr"
 
     // Ranges
     let MoreAddrR1C1 = pstring ":" >>. AddrR1C1
     let RangeR1C1 = pipe2 AddrR1C1 MoreAddrR1C1 (fun r1 r2 -> Range(r1, r2))
     let MoreAddrA1 = pstring ":" >>. AddrA1
     let RangeA1 = pipe2 AddrA1 MoreAddrA1 (fun r1 r2 -> Range(r1, r2))
-    let RangeAny = ((attempt RangeR1C1) <|> RangeA1) <!> "RangeAny"
+    let RangeAny = (attempt RangeR1C1) <|> RangeA1
 
     // Worksheet Names
     let WorksheetNameQuoted =
@@ -104,29 +101,26 @@
         let EscapedChar = pstring "''" |>> (fun s -> ''')
         between (pstring "'") (pstring "'")
                 (many1Chars (NormalChar <|> EscapedChar))
-    let WorksheetNameUnquoted = (many1Satisfy (fun c -> isWSChar(c))) <!> "WorksheetNameUnquoted"
-    let WorksheetName = (WorksheetNameQuoted <|> WorksheetNameUnquoted) <!> "WorksheetName"
-
+    let WorksheetNameUnquoted = (many1Satisfy (fun c -> isWSChar(c)))
+    let WorksheetName = (WorksheetNameQuoted <|> WorksheetNameUnquoted)
     // Workbook Names (this may be too restrictive)
-    let Path = many1Satisfy ((<>) '[') <!> "Path"
+    let Path = many1Satisfy ((<>) '[')
     let WorkbookName = between
                         (pstring "[")
                         (pstring "]")
                         (many1Satisfy (fun c -> c <> '[' && c <> ']'))
-                       <!> "WorkbookName"
     let Workbook = (
                         (Path |>> Some)
                         <|> ((pstring "") >>% None)
                    )
                    .>>. WorkbookName
-                   <!> "Workbook"
 
     // References
     // References consist of the following parts:
     //   A workbook name prefix
     //   A worksheet name prefix
     //   A single-cell address ("Address") or multi-cell address ("Range")
-    let RRWQuoted = (between (pstring "'") (pstring "'") (Workbook .>>. WorksheetNameUnquoted)) <!> "RRWQuoted"
+    let RRWQuoted = (between (pstring "'") (pstring "'") (Workbook .>>. WorksheetNameUnquoted))
     let RangeReferenceWorkbook = getUserState >>=
                                     fun us ->
                                         (pipe2
@@ -138,7 +132,6 @@
                                                 | None      -> ReferenceRange(Env(us.Path, wbname, wsname), rng) :> Reference
                                             )
                                         )
-                                        <!> "RangeReferenceWorkbook"
     let RangeReferenceWorksheet = getUserState >>=
                                     fun us ->
                                         pipe2
@@ -157,7 +150,6 @@
                         (pstring "'")
                         (pstring "'")
                         (Workbook .>>. WorksheetNameUnquoted))
-                    <!> "ARWQuoted"
     let AddressReferenceWorkbook = getUserState >>=
                                     fun us ->
                                         (pipe2
@@ -169,7 +161,6 @@
                                                 | None      -> ReferenceAddress(Env(us.Path, wbname, wsname), addr) :> Reference
                                             )
                                         )
-                                        <!> "AddressReferenceWorkbook"
     let AddressReferenceWorksheet = getUserState >>=
                                         fun us ->
                                             pipe2
@@ -239,4 +230,4 @@
     do ExpressionDeclImpl := (attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)
 
     // Formulas
-    let Formula = BP (pstring "=" .>> spaces >>. ExpressionDecl .>> eof)
+    let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
