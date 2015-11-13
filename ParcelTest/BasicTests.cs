@@ -279,5 +279,29 @@ namespace ParcelTest
                 Assert.Fail(e.Message);
             }
         }
+
+        [TestMethod]
+        public void testHLOOKUP()
+        {
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "Calculations", "Status" });
+
+            var f = "=HLOOKUP(J9,$C$45:$AH$46,2,TRUE)";
+
+            // parse
+            try
+            {
+                var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Assert.IsTrue(Microsoft.FSharp.Core.FSharpOption<AST.Expression>.get_IsSome(ast));
+                var expr = (AST.Expression.ReferenceExpr)ast.Value;
+                var formula = (AST.ReferenceFunction)expr.Item;
+
+                Assert.IsTrue(formula.FunctionName == "HLOOKUP");
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
+
+        }
     }
 }
