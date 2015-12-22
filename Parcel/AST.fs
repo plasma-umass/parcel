@@ -51,9 +51,29 @@
         member self.Path = env.Path
         member self.WorksheetName = env.WorksheetName
         member self.WorkbookName = env.WorkbookName
-        // Address is used as a Dictionary key, and reference equality
-        // does not suffice, therefore GetHashCode and Equals are provided
-        override self.GetHashCode() : int = String.Intern(self.A1FullyQualified()).GetHashCode()
+        static member addressHash(R: int)(C: int)(sheetname: string) : int =
+            // 2^m = w = expected maximum number of worksheets
+            // the following is Cantor's pairing function mod w;
+            // for signed int, that gives us 2^(32 - m) cells per
+            // sheet without collisions.
+            assert(R >= 0)
+            assert(C >= 0)
+            let m = 4u
+            let w = 2u <<< int32 (m - 1u) // there are rarely more than 16 worksheets
+            let r = (2u <<< int32 (32u - m - 1u)) // the total number of distinct integers allowed from pi
+            let k_1 = System.Convert.ToUInt32(R)
+            let k_2 = System.Convert.ToUInt32(C)
+            // get uint from pairing function
+            let pi = (((k_1 + k_2) * (k_1 + k_2 + 1u))/2u + k_2) % r
+            // shift pi depending on the worksheet 'index'
+            // (we don't have access to the real index here; getting the
+            //  sheet name's last digit is an approximation)
+            let lastLetter = (uint32 sheetname.[sheetname.Length - 1]) % w
+            let hashcode = pi + lastLetter * r
+            int32 hashcode // this casts; it does not convert
+        // necessary because Address is used as a Dictionary key
+        override self.GetHashCode() : int =
+            Address.addressHash R C self.WorksheetName
         override self.Equals(obj: obj) : bool =
             let addr = obj :?> Address
             self.SameAs addr
@@ -155,7 +175,7 @@
             ) [|self.getXLeft()..self.getXRight()|] |>
             Array.concat
         override self.GetHashCode() : int =
-            _tl.GetHashCode() ||| _br.GetHashCode()
+            _tl.GetHashCode() ^^^ _br.GetHashCode()
         override self.Equals(obj: obj) : bool =
             let r = obj :?> Range
             let a = topleft = r.TopLeft
