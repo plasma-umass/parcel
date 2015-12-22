@@ -46,6 +46,11 @@
         | Success(formula, _, _) -> Some(formula)
         | Failure(errorMsg, _, _) -> None
 
+    let parseFormulaAtAddress(fAddr: AST.Address)(formula: string): AST.Expression =
+        match parseFormula formula fAddr.Path fAddr.WorkbookName fAddr.WorksheetName with
+        | Some ast -> ast
+        | None -> failwith ("Parse error on formula: " + formula)
+
     // The parser REPL calls this; note that the
     // Formula parser looks for EOF
     let consoleParser(s: string) = test Grammar.Formula s
