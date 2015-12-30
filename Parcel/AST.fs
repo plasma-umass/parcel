@@ -143,8 +143,6 @@
         member self.BottomRight = _br
         member self.A1Local() : string =
             _tl.A1Local() + ":" + _br.A1Local()
-        member self.getUniqueID() : string =
-            topleft.ToString() + "," + bottomright.ToString()
         member self.getXLeft() : int = _tl.X
         member self.getXRight() : int = _br.X
         member self.getYTop() : int = _tl.Y
