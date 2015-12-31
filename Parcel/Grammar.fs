@@ -89,10 +89,16 @@
                   <|> AddrA1)
 
     // Ranges
+
+    // contigious ranges
     let MoreAddrR1C1 = pstring ":" >>. AddrR1C1
     let RangeR1C1 = pipe2 AddrR1C1 MoreAddrR1C1 (fun r1 r2 -> Range(r1, r2))
     let MoreAddrA1 = pstring ":" >>. AddrA1
     let RangeA1 = pipe2 AddrA1 MoreAddrA1 (fun r1 r2 -> Range(r1, r2))
+    // discontiguous ranges
+    let DiscontRangeA1 = pipe2 RangeA1 RangeA1 (fun r1 r2 -> DRange(r1,r2))
+
+    //// top-level range
     let RangeAny = (attempt RangeR1C1) <|> RangeA1
 
     // Worksheet Names

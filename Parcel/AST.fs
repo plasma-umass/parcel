@@ -2,6 +2,7 @@
     open System
     open System.Diagnostics
     open System.Collections.Generic
+    open System.Text
 
     type IndirectAddressingNotSupportedException(expression: string) =
         inherit Exception(expression)
@@ -27,6 +28,19 @@
 
     [<Serializable>]
     type Address(R: int, C: int, env: Env) =
+        interface IComparable with
+            member self.CompareTo(obj) =
+                let addr = obj :?> Address
+                match env.WorksheetName.CompareTo(addr.WorksheetName) with
+                | -1 -> -1
+                | 1  -> 1
+                | _  ->
+                    // this guarantees a consistent total order, but if used in user-facing
+                    // contexts, it might not be very intuitive to end-users.
+                    let c = Hash.cantorPair (System.Convert.ToUInt32 R) (System.Convert.ToUInt32 R) System.UInt32.MaxValue
+                    let c' = Hash.cantorPair (System.Convert.ToUInt32 addr.Row) (System.Convert.ToUInt32 addr.Col) System.UInt32.MaxValue
+                    c.CompareTo c'
+
         static member fromR1C1(R: int, C: int, wsname: string, wbname: string, path: string) : Address =
             Address(R, C, Env(path, wbname, wsname))
         static member fromA1(row: int, col: string, wsname: string, wbname: string, path: string) : Address =
@@ -64,12 +78,12 @@
             let k_1 = System.Convert.ToUInt32(R)
             let k_2 = System.Convert.ToUInt32(C)
             // get uint from pairing function
-            let pi = (((k_1 + k_2) * (k_1 + k_2 + 1u))/2u + k_2) % r
-            // shift pi depending on the worksheet 'index'
+            let pi = Hash.cantorPair k_1 k_2 r
+            // shift pi depending on the worksheet hashcode
             // (we don't have access to the real index here; getting the
-            //  sheet name's last digit is an approximation)
-            let lastLetter = (uint32 sheetname.[sheetname.Length - 1]) % w
-            let hashcode = pi + lastLetter * r
+            //  sheet's hashcode mod w is an approximation)
+            let sheet_hc = (uint32 sheetname.[sheetname.Length - 1]) % w
+            let hashcode = pi + sheet_hc * r
             int32 hashcode // this casts; it does not convert
         // necessary because Address is used as a Dictionary key
         override self.GetHashCode() : int =
@@ -85,13 +99,6 @@
             let d = self.WorkbookName = addr.WorkbookName
             let e = self.Path = self.Path
             a && b && c && d && e
-        member self.InsideRange(rng: Range) : bool =
-            not (self.X < rng.getXLeft() ||
-                 self.Y < rng.getYTop() ||
-                 self.X > rng.getXRight() ||
-                 self.Y > rng.getYBottom())
-        member self.InsideAddr(addr: Address) : bool =
-            self.X = addr.X && self.Y = addr.Y
         override self.ToString() =
             "(" + self.Y.ToString() + "," + self.X.ToString() + ")"
         static member CharColToInt(col: string) : int =
@@ -129,56 +136,115 @@
             // indirect references are essentially lambdas for
             // constructing addresses
             raise(IndirectAddressingNotSupportedException(expr))
-        
-    and Range(topleft: Address, bottomright: Address) =
-        let _tl = topleft
-        let _br = bottomright
+
+    and Range(regions: (Address * Address) list) =
+        let _regions = regions
         override self.ToString() =
-            let tlstr = topleft.ToString()
-            let brstr = bottomright.ToString()
-            tlstr + "," + brstr
+            let sregs = List.map (fun (tl, br) -> "(" + tl.ToString() + "," + br.ToString() + ")") _regions
+            String.Join(",", sregs)
         member self.copyWithNewEnv(envnew: Env) =
-            Range(_tl.copyWithNewEnv(envnew), _br.copyWithNewEnv(envnew))
-        member self.TopLeft = _tl
-        member self.BottomRight = _br
+            Range(List.map (fun (tl: Address, br: Address) ->
+                    tl.copyWithNewEnv(envnew), br.copyWithNewEnv(envnew)) _regions
+                 )
         member self.A1Local() : string =
-            _tl.A1Local() + ":" + _br.A1Local()
-        member self.getXLeft() : int = _tl.X
-        member self.getXRight() : int = _br.X
-        member self.getYTop() : int = _tl.Y
-        member self.getYBottom() : int = _br.Y
-        member self.InsideRange(rng: Range) : bool =
-            not (self.getXLeft() < rng.getXLeft() ||
-                 self.getYTop() < rng.getYTop() ||
-                 self.getXRight() > rng.getXRight() ||
-                 self.getYBottom() > rng.getYBottom())
-        // Yup, weird case.  This is because we actually
-        // distinguish between addresses and ranges, unlike Excel.
-        member self.InsideAddr(addr: Address) : bool =
-            not (self.getXLeft() < addr.X ||
-                 self.getYTop() < addr.Y ||
-                 self.getXRight() > addr.X ||
-                 self.getYBottom() > addr.Y)
+            let sregs = List.map (fun (tl: Address, br: Address) ->
+                            "(" + tl.A1Local() + "," + br.A1Local() + ")"
+                        ) _regions
+            String.Join(",", sregs)
         member self.GetWorksheetNames() : seq<string> =
-            [_tl.WorksheetName; _br.WorksheetName] |> List.toSeq |> Seq.distinct
+            List.fold (fun wss (tl: Address, br: Address) ->
+                        tl.WorksheetName :: br.WorksheetName :: wss
+                      ) [] _regions |>
+            List.toSeq |>
+            Seq.distinct
         member self.GetWorkbookNames() : seq<string> =
-            [_tl.WorkbookName; _br.WorkbookName] |> List.toSeq |> Seq.distinct
+            List.fold (fun wss (tl: Address, br: Address) ->
+                        tl.WorkbookName :: br.WorkbookName :: wss
+                      ) [] _regions |>
+            List.toSeq |>
+            Seq.distinct
         member self.GetPathNames() : seq<string> =
-            [_tl.Path; _br.Path] |> List.toSeq
+            List.fold (fun wss (tl: Address, br: Address) ->
+                        tl.Path :: br.Path :: wss
+                      ) [] _regions |>
+            List.toSeq |>
+            Seq.distinct
         member self.Addresses() : Address[] =
-            Array.map (fun c ->
-                Array.map (fun r ->
-                    Address.fromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
-                ) [|self.getYTop()..self.getYBottom()|]
-            ) [|self.getXLeft()..self.getXRight()|] |>
-            Array.concat
+            // for every contigious region
+            List.map (fun (tl: Address, br: Address) ->
+                // for every column in that region
+                Array.map (fun c ->
+                    // and every row in that region
+                    Array.map (fun r ->
+                        // get the address of the cell contained
+                        Address.fromR1C1(r, c, tl.WorksheetName, tl.WorkbookName, tl.Path)
+                    ) [|tl.Y..br.Y|]
+                ) [|tl.X..br.X|] |>
+                Array.concat
+            ) _regions |>
+            Array.ofList |>
+            Array.concat |>
+            // ensure that we only enumerate overlapping cells once
+            Seq.distinct |>
+            Array.ofSeq
+            
         override self.GetHashCode() : int =
-            _tl.GetHashCode() ^^^ _br.GetHashCode()
+            Hash.jenkinsOneAtATimeHash _regions
         override self.Equals(obj: obj) : bool =
             let r = obj :?> Range
-            let a = topleft = r.TopLeft
-            let b = bottomright = r.BottomRight
-            a && b
+            let r_set = Set.ofArray(r.Addresses())
+            let self_set = Set.ofArray(self.Addresses())
+            self_set = r_set
+
+//    and Range(topleft: Address, bottomright: Address) =
+//        let _tl = topleft
+//        let _br = bottomright
+//        override self.ToString() =
+//            let tlstr = topleft.ToString()
+//            let brstr = bottomright.ToString()
+//            tlstr + "," + brstr
+//        member self.copyWithNewEnv(envnew: Env) =
+//            Range(_tl.copyWithNewEnv(envnew), _br.copyWithNewEnv(envnew))
+//        member self.TopLeft = _tl
+//        member self.BottomRight = _br
+//        member self.A1Local() : string =
+//            _tl.A1Local() + ":" + _br.A1Local()
+//        member self.getXLeft() : int = _tl.X
+//        member self.getXRight() : int = _br.X
+//        member self.getYTop() : int = _tl.Y
+//        member self.getYBottom() : int = _br.Y
+//        member self.InsideRange(rng: Range) : bool =
+//            not (self.getXLeft() < rng.getXLeft() ||
+//                 self.getYTop() < rng.getYTop() ||
+//                 self.getXRight() > rng.getXRight() ||
+//                 self.getYBottom() > rng.getYBottom())
+//        // Yup, weird case.  This is because we actually
+//        // distinguish between addresses and ranges, unlike Excel.
+//        member self.InsideAddr(addr: Address) : bool =
+//            not (self.getXLeft() < addr.X ||
+//                 self.getYTop() < addr.Y ||
+//                 self.getXRight() > addr.X ||
+//                 self.getYBottom() > addr.Y)
+//        member self.GetWorksheetNames() : seq<string> =
+//            [_tl.WorksheetName; _br.WorksheetName] |> List.toSeq |> Seq.distinct
+//        member self.GetWorkbookNames() : seq<string> =
+//            [_tl.WorkbookName; _br.WorkbookName] |> List.toSeq |> Seq.distinct
+//        member self.GetPathNames() : seq<string> =
+//            [_tl.Path; _br.Path] |> List.toSeq
+//        member self.Addresses() : Address[] =
+//            Array.map (fun c ->
+//                Array.map (fun r ->
+//                    Address.fromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
+//                ) [|self.getYTop()..self.getYBottom()|]
+//            ) [|self.getXLeft()..self.getXRight()|] |>
+//            Array.concat
+//        override self.GetHashCode() : int =
+//            _tl.GetHashCode() ^^^ _br.GetHashCode()
+//        override self.Equals(obj: obj) : bool =
+//            let r = obj :?> Range
+//            let a = topleft = r.TopLeft
+//            let b = bottomright = r.BottomRight
+//            a && b
 
     type ReferenceType =
     | ReferenceAddress  = 0
