@@ -256,12 +256,12 @@
 
     [<AbstractClass>]
     type Reference(env: Env) =
-        abstract member InsideRef: Reference -> bool
+//        abstract member InsideRef: Reference -> bool
         abstract member Type: ReferenceType
         member self.Path = env.Path
         member self.WorkbookName = env.WorkbookName
         member self.WorksheetName = env.WorksheetName
-        default self.InsideRef(ref: Reference) = false
+//        default self.InsideRef(ref: Reference) = false
 
     and ReferenceRange(env: Env, rng: Range) =
         inherit Reference(env)
@@ -270,11 +270,11 @@
         override self.Type = ReferenceType.ReferenceRange
         override self.ToString() =
             "ReferenceRange(" + env.Path + ",[" + env.WorkbookName + "]," + env.WorksheetName + "," + _rng.ToString() + ")"
-        override self.InsideRef(ref: Reference) : bool =
-            match ref with
-            | :? ReferenceAddress as ar -> _rng.InsideAddr(ar.Address)
-            | :? ReferenceRange as rr -> _rng.InsideRange(rr.Range)
-            | _ -> failwith "Unknown Reference subclass."
+//        override self.InsideRef(ref: Reference) : bool =
+//            match ref with
+//            | :? ReferenceAddress as ar -> _rng.InsideAddr(ar.Address)
+//            | :? ReferenceRange as rr -> _rng.InsideRange(rr.Range)
+//            | _ -> failwith "Unknown Reference subclass."
         member self.Range = _rng
         override self.Equals(obj: obj) : bool =
             let rr = obj :?> ReferenceRange
@@ -292,11 +292,11 @@
         override self.ToString() =
             "ReferenceAddress(" + env.Path + ",[" + env.WorkbookName + "]," + env.WorksheetName + "," + _addr.ToString() + ")"
         member self.Address = _addr
-        override self.InsideRef(ref: Reference) =
-            match ref with
-            | :? ReferenceAddress as ar -> _addr.InsideAddr(ar.Address)
-            | :? ReferenceRange as rr -> _addr.InsideRange(rr.Range)
-            | _ -> failwith "Invalid Reference subclass."
+//        override self.InsideRef(ref: Reference) =
+//            match ref with
+//            | :? ReferenceAddress as ar -> _addr.InsideAddr(ar.Address)
+//            | :? ReferenceRange as rr -> _addr.InsideRange(rr.Range)
+//            | _ -> failwith "Invalid Reference subclass."
         override self.Equals(obj: obj) : bool =
             let ra = obj :?> ReferenceAddress
             self.Path = ra.Path &&

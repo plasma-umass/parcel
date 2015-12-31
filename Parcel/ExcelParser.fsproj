@@ -50,6 +50,7 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
   <ItemGroup>
+    <Compile Include="Hash.fs" />
     <Compile Include="AST.fs" />
     <Compile Include="Grammar.fs" />
     <Compile Include="CellVisitor.fs" />
