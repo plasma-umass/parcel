@@ -137,11 +137,15 @@
             // constructing addresses
             raise(IndirectAddressingNotSupportedException(expr))
 
+    // note that regions may overlap; be careful not to double-count cells!
     and Range(regions: (Address * Address) list) =
         let _regions = regions
+        new(range1: Range, range2: Range) = Range(range1.Ranges() @ range2.Ranges())
+        new(addr1: Address, addr2: Address) = Range([(addr1,addr2)])
         override self.ToString() =
-            let sregs = List.map (fun (tl, br) -> "(" + tl.ToString() + "," + br.ToString() + ")") _regions
-            String.Join(",", sregs)
+            let sregs = List.map (fun (tl: Address, br: Address) ->
+                tl.ToString() + ":" + br.ToString()) _regions
+            "List(" + String.Join(",", sregs) + ")"
         member self.copyWithNewEnv(envnew: Env) =
             Range(List.map (fun (tl: Address, br: Address) ->
                     tl.copyWithNewEnv(envnew), br.copyWithNewEnv(envnew)) _regions
@@ -169,6 +173,8 @@
                       ) [] _regions |>
             List.toSeq |>
             Seq.distinct
+        member self.Ranges() : (Address*Address) list = _regions
+        // regions may overlap; thus we only return distinct cell addresses
         member self.Addresses() : Address[] =
             // for every contigious region
             List.map (fun (tl: Address, br: Address) ->

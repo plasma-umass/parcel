@@ -51,6 +51,8 @@
     let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
     let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
     let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
+    let (RangesR1C1: P<Expression>, RangesR1C1Impl) = createParserForwardedToRef()
+    let (RangesA1: P<Expression>, RangesA1Impl) = createParserForwardedToRef()
 
     // Addresses
     // We treat relative and absolute addresses the same-- they behave
@@ -91,15 +93,33 @@
     // Ranges
 
     // contiguous ranges
-    let MoreAddrR1C1 = pstring ":" >>. AddrR1C1
-    let RangeR1C1 = pipe2 AddrR1C1 MoreAddrR1C1 (fun a1 a2 -> Range([a1, a2]))
-    let MoreAddrA1 = pstring ":" >>. AddrA1
-    let RangeA1 = pipe2 AddrA1 MoreAddrA1 (fun a1 a2 -> Range([a1, a2]))
-    // discontiguous ranges
-    let DiscontRangeA1 = pipe2 RangeA1 RangeA1 (fun r1 r2 -> DRange(r1,r2))
+//    let RangeR1C1 = pipe2 AddrR1C1 (pstring ":" >>. AddrR1C1) (fun a1 a2 -> Range([a1, a2]))
+//    let RangeA1 = pipe2 AddrA1 (pstring ":" >>. AddrA1) (fun a1 a2 -> Range([a1, a2]))
+//    // discontiguous ranges
+//    let DRangeCellFirstR1C1 = pipe2 AddrR1C1 (pstring "," >>. RangesR1C1) (fun r1 r2 -> Range(r1, r2))
+////    let DiscontRangeR1C1 = pipe2 (RangeR1C1 .>> pstring ",") RangeR1C1 (fun r1 r2 -> Range(r1,r2))
+////    let DiscontRangeA1 = pipe2 (RangeA1 .>> pstring ",") RangeA1 (fun r1 r2 -> Range(r1,r2))
+//   
+//
+//    let RangesR1C1Impl = RangeR1C1
+//    let RangesA1Impl = RangeA1
+//
+//    //// top-level range
+//    let RangeAny = (attempt RangesR1C1) <|> RangesA1
 
-    //// top-level range
-    let RangeAny = (attempt RangeR1C1) <|> RangeA1
+    let RA1TO = (attempt (pstring ":" >>. AddrA1 .>> pstring ","))
+                <|> (pstring ":" >>. AddrA1)
+    let RA1TC = (attempt (pstring "," >>. AddrA1 .>> pstring ","))
+                <|> (pstring "," >>. AddrA1)
+    let RA1_1 = pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2))
+    let RA1_2 = pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2))
+    let RA1_3 = pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)]))
+    let RA1_4 = failwith "no"
+    let RA1_5 = failwith "no"
+    let RA1 = (attempt RA1_1) <|> (attempt RA1_2) <|> (attempt RA1_3) <|> (attempt RA1_4) <|> (attempt RA1_5)
+    let RR1C1 = failwith "nope"
+
+    let R = (attempt RR1C1) <|> RA1
 
     // Worksheet Names
     let WorksheetNameQuoted =
