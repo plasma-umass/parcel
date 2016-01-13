@@ -29,7 +29,7 @@
      *)
 
     // a simple typedef
-    type P<'t> = Parser<'t, Env>
+    type P<'t> = Parser<'t, Env>   
     
     // custom character classes
     let isWSChar(c: char) : bool =
@@ -51,8 +51,7 @@
     let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
     let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
     let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
-    let (RangesR1C1: P<Expression>, RangesR1C1Impl) = createParserForwardedToRef()
-    let (RangesA1: P<Expression>, RangesA1Impl) = createParserForwardedToRef()
+    let (RA1: P<Expression>, RA1Impl) = createParserForwardedToRef()
 
     // Addresses
     // We treat relative and absolute addresses the same-- they behave
@@ -114,9 +113,9 @@
     let RA1_1 = pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2))
     let RA1_2 = pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2))
     let RA1_3 = pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)]))
-    let RA1_4 = failwith "no"
-    let RA1_5 = failwith "no"
-    let RA1 = (attempt RA1_1) <|> (attempt RA1_2) <|> (attempt RA1_3) <|> (attempt RA1_4) <|> (attempt RA1_5)
+    let RA1_4 = pipe2 (AddrA1 .>> (pstring ",")) RA1 (fun a1 r1 -> Range(r1.Regions @ [(a1, a1)]))
+    let RA1_5 = pipe3 AddrA1 RA1TO RA1 (fun a r1 r2 -> Range (r1.Regions @ r2.Regions @ [(a, a)]))
+    let RA1Impl = (attempt RA1_1) <|> (attempt RA1_2) <|> (attempt RA1_3) <|> (attempt RA1_4) <|> (attempt RA1_5)
     let RR1C1 = failwith "nope"
 
     let R = (attempt RR1C1) <|> RA1
