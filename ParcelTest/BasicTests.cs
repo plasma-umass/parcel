@@ -8,17 +8,6 @@ namespace ParcelTest
     [TestClass]
     public class BasicTests
     {
-        private AST.Address makeAddressForA1(string col, int row, AST.Env env)
-        {
-            return AST.Address.fromA1(
-                row,
-                col,
-                env.WorksheetName,
-                env.WorkbookName,
-                env.Path
-            );
-        }
-
         [TestMethod]
         public void standardAddress()
         {
@@ -40,8 +29,8 @@ namespace ParcelTest
 
             AST.Reference r = Parcel.simpleReferenceParser(s, e);
             AST.Reference correct = new AST.ReferenceRange(e,
-                                                           new AST.Range(makeAddressForA1("A", 3, e),
-                                                                         makeAddressForA1("B", 22, e))
+                                                           new AST.Range(Utility.makeAddressForA1("A", 3, e),
+                                                                         Utility.makeAddressForA1("B", 22, e))
                                                           );
             Assert.AreEqual(r, correct);
         }
@@ -86,8 +75,8 @@ namespace ParcelTest
 
             Assert.AreEqual(2, addrs.Count());
 
-            var a1 = makeAddressForA1("E", 6, mwb.envForSheet(1));
-            var a2 = makeAddressForA1("E", 7, mwb.envForSheet(1));
+            var a1 = Utility.makeAddressForA1("E", 6, mwb.envForSheet(1));
+            var a2 = Utility.makeAddressForA1("E", 7, mwb.envForSheet(1));
 
             Assert.AreEqual(true, addrs.Contains(a1));
             Assert.AreEqual(true, addrs.Contains(a2));
@@ -191,8 +180,8 @@ namespace ParcelTest
             var xmwb = new MockWorkbook("C:\\FINRES\\FIRMAS\\FORCASTS\\MODELS\\", "models.xls", new[] { "Forecast Assumptions" });
 
             var f1 = "=L66*('C:\\FINRES\\FIRMAS\\FORCASTS\\MODELS\\[models.xls]Forecast Assumptions'!J27)^0.25";
-            var f1a1 = makeAddressForA1("L", 66, mwb.envForSheet(1));
-            var f1a2 = makeAddressForA1("J", 27, xmwb.envForSheet(1));
+            var f1a1 = Utility.makeAddressForA1("L", 66, mwb.envForSheet(1));
+            var f1a2 = Utility.makeAddressForA1("J", 27, xmwb.envForSheet(1));
 
             // extract
             try
@@ -213,7 +202,7 @@ namespace ParcelTest
         {
             var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "budget" });
             var f = "=budget!A43";
-            var addr = makeAddressForA1("A", 43, mwb.envForSheet(1));
+            var addr = Utility.makeAddressForA1("A", 43, mwb.envForSheet(1));
 
             // extract
             try
@@ -236,7 +225,7 @@ namespace ParcelTest
 
             var data_env = mwb.envForSheet(3);
 
-            var rng = new AST.Range(makeAddressForA1("M", 5, data_env), makeAddressForA1("O", 187, data_env));
+            var rng = new AST.Range(Utility.makeAddressForA1("M", 5, data_env), Utility.makeAddressForA1("O", 187, data_env));
 
             // extract
             try
@@ -259,10 +248,10 @@ namespace ParcelTest
 
             var calc_env = mwb.envForSheet(2);
 
-            var rng1 = new AST.Range(makeAddressForA1("B", 7, calc_env), makeAddressForA1("P", 7, calc_env));
-            var rng2 = new AST.Range(makeAddressForA1("B", 163, calc_env), makeAddressForA1("P", 163, calc_env));
-            var rng3 = new AST.Range(makeAddressForA1("B", 184, calc_env), makeAddressForA1("P", 184, calc_env));
-            var rng4 = new AST.Range(makeAddressForA1("B", 205, calc_env), makeAddressForA1("P", 205, calc_env));
+            var rng1 = new AST.Range(Utility.makeAddressForA1("B", 7, calc_env), Utility.makeAddressForA1("P", 7, calc_env));
+            var rng2 = new AST.Range(Utility.makeAddressForA1("B", 163, calc_env), Utility.makeAddressForA1("P", 163, calc_env));
+            var rng3 = new AST.Range(Utility.makeAddressForA1("B", 184, calc_env), Utility.makeAddressForA1("P", 184, calc_env));
+            var rng4 = new AST.Range(Utility.makeAddressForA1("B", 205, calc_env), Utility.makeAddressForA1("P", 205, calc_env));
 
             // extract
             try

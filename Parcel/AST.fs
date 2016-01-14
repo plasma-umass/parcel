@@ -140,6 +140,7 @@
     // note that regions may overlap; be careful not to double-count cells!
     and Range(regions: (Address * Address) list) =
         let _regions = regions
+        new(regions: (Address * Address)[]) = Range(List.ofArray regions)
         new(range1: Range, range2: Range) = Range(range1.Ranges() @ range2.Ranges())
         new(addr1: Address, addr2: Address) = Range([(addr1,addr2)])
         override self.ToString() =
