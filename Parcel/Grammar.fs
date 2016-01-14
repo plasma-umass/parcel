@@ -109,11 +109,11 @@
     let RA1_3 = (* AddrA1 RTO RTC *) pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])) <!> "AddrA1 RTO RTC"
     let RA1_4 = (* AddrA1 "," R *) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R"""
     let RA1_5 = (* AddrA1 RTO R *) pipe3 AddrA1 RA1TO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R"
-    do RangeA1Impl :=   (attempt RA1_3)
+    do RangeA1Impl :=   (attempt RA1_4)
+                        <|> (attempt RA1_5)
+                        <|> (attempt RA1_3)
                         <|> (attempt RA1_1)
                         <|> (attempt RA1_2)
-                        <|> (attempt RA1_4)
-                        <|> (attempt RA1_5)
                         
     do RangeR1C1Impl := RangeA1
 
