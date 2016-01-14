@@ -152,7 +152,7 @@
                  )
         member self.A1Local() : string =
             let sregs = List.map (fun (tl: Address, br: Address) ->
-                            "(" + tl.A1Local() + "," + br.A1Local() + ")"
+                            tl.A1Local() + ":" + br.A1Local()
                         ) _regions
             String.Join(",", sregs)
         member self.GetWorksheetNames() : seq<string> =
