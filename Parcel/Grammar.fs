@@ -75,6 +75,7 @@
                                 AddrC
                                 (fun row col ->
                                     Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
+                    <!> "AddrR1C1"
     let AddrA = many1Satisfy isAsciiUpper
     let AddrAAbs = (pstring "$" <|> pstring "") >>. AddrA
     let Addr1 = pint32
@@ -87,47 +88,33 @@
                             Addr1Abs
                             (fun col row ->
                                 Address.fromA1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
+                    <!> "AddrA1"
     let AnyAddr = ((attempt AddrIndirect)
                   <|> (attempt AddrR1C1)
                   <|> AddrA1)
+                  <!> "AnyAddr"
 
     // Ranges
-
-    // contiguous ranges
-//    let RangeR1C1 = pipe2 AddrR1C1 (pstring ":" >>. AddrR1C1) (fun a1 a2 -> Range([a1, a2]))
-//    let RangeA1 = pipe2 AddrA1 (pstring ":" >>. AddrA1) (fun a1 a2 -> Range([a1, a2]))
-//    // discontiguous ranges
-//    let DRangeCellFirstR1C1 = pipe2 AddrR1C1 (pstring "," >>. RangesR1C1) (fun r1 r2 -> Range(r1, r2))
-////    let DiscontRangeR1C1 = pipe2 (RangeR1C1 .>> pstring ",") RangeR1C1 (fun r1 r2 -> Range(r1,r2))
-////    let DiscontRangeA1 = pipe2 (RangeA1 .>> pstring ",") RangeA1 (fun r1 r2 -> Range(r1,r2))
-//   
-//
-//    let RangesR1C1Impl = RangeR1C1
-//    let RangesA1Impl = RangeA1
-//
-//    //// top-level range
-//    let RangeAny = (attempt RangesR1C1) <|> RangesA1
-
     let RA1TO = (* RTO *)
-                (attempt (pstring ":" >>. AddrA1 .>> pstring ",") <!> """":" A "," """)
-                <|> (pstring ":" >>. AddrA1 <!> """":" A""")
+                (attempt (pstring ":" >>. AddrA1) <!> "RTO (first)")
+                <|> ((pstring ":" >>. AddrA1 .>> pstring ",") <!> "RTO (second)")
     let RA1TC = (* RTC *)
-                (attempt (pstring "," >>. AddrA1 .>> pstring ","))
-                <|> (pstring "," >>. AddrA1)
+                (attempt (pstring "," >>. AddrA1) <!> "RTC (first)")
+                <|> ((pstring "," >>. AddrA1 .>> pstring ",") <!> "RTC (second)")
     let RA1_1 = (* A RTC *) pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2)) <!> "A RTC"
     let RA1_2 = (* A RTO *) pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2)) <!> "A RTO"
     let RA1_3 = (* A RTO RTC *) pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])) <!> "A RTO RTC"
     let RA1_4 = (* A "," R *) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """A "," R"""
     let RA1_5 = (* A RTO R *) pipe3 AddrA1 RA1TO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "A RTO R"
-    do RangeA1Impl :=   (attempt RA1_1)
+    do RangeA1Impl :=   (attempt RA1_3)
+                        <|> (attempt RA1_1)
                         <|> (attempt RA1_2)
-                        <|> (attempt RA1_3)
                         <|> (attempt RA1_4)
                         <|> RA1_5
                         
     do RangeR1C1Impl := RangeA1
 
-    let R = RangeA1
+    let R = RangeA1 <!> "Range"
 //    let R = (attempt RangeR1C1) <|> RangeA1
 
     // Worksheet Names
@@ -167,24 +154,29 @@
                                                 | None      -> ReferenceRange(Env(us.Path, wbname, wsname), rng) :> Reference
                                             )
                                         )
+                                        <!> "RangeReferenceWorkbook"
     let RangeReferenceWorksheet = getUserState >>=
                                     fun us ->
                                         pipe2
                                             (WorksheetName .>> pstring "!")
                                             R
                                             (fun wsname rng -> ReferenceRange(Env(us.Path, us.WorkbookName, wsname), rng) :> Reference)
+                                    <!> "RangeReferenceWorksheet"
     let RangeReferenceNoWorksheet = getUserState >>=
                                         fun us ->
                                             R
                                             |>> (fun rng -> ReferenceRange(us, rng) :> Reference)
+                                    <!> "RangeReferenceNOWorksheet"
     let RangeReference = (attempt RangeReferenceWorkbook)
                          <|> (attempt RangeReferenceWorksheet)
                          <|> RangeReferenceNoWorksheet
+                         <!> "RangeReference"
 
     let ARWQuoted = (between
                         (pstring "'")
                         (pstring "'")
                         (Workbook .>>. WorksheetNameUnquoted))
+                    <!> "ARWQuoted"
     let AddressReferenceWorkbook = getUserState >>=
                                     fun us ->
                                         (pipe2
@@ -196,19 +188,23 @@
                                                 | None      -> ReferenceAddress(Env(us.Path, wbname, wsname), addr) :> Reference
                                             )
                                         )
+                                    <!> "AddressReferenceWorkbook"
     let AddressReferenceWorksheet = getUserState >>=
                                         fun us ->
                                             pipe2
                                                 (WorksheetName .>> pstring "!")
                                                 AnyAddr
                                                 (fun wsname addr -> ReferenceAddress(Env(us.Path, us.WorkbookName, wsname), addr) :> Reference)
+                                    <!> "AddressReferenceWorksheet"
     let AddressReferenceNoWorksheet = getUserState >>=
                                         fun us ->
                                             AnyAddr
                                             |>> (fun addr -> ReferenceAddress(us, addr) :> Reference)
+                                      <!> "AddressReferenceNOWorksheet"
     let AddressReference = (attempt AddressReferenceWorkbook)
                            <|> (attempt AddressReferenceWorksheet)
                            <|> AddressReferenceNoWorksheet
+                           <!> "AddressReference"
 
     let NamedReferenceFirstChar = satisfy (fun c -> c = '_' || isLetter(c))
     let NamedReferenceLastChars = manySatisfy (fun c -> c = '_' || isLetter(c) || isDigit(c))
@@ -218,7 +214,7 @@
                                     NamedReferenceFirstChar
                                     NamedReferenceLastChars
                                     (fun c s -> ReferenceNamed(us, c.ToString() + s) :> Reference)
-
+                         <!> "NamedReference"
     let StringReference = getUserState >>=
                             fun us ->
                                 between
@@ -226,43 +222,45 @@
                                     (pstring "\"")
                                     (manySatisfy ((<>) '"'))
                                 |>> (fun s -> ReferenceString(us, s) :> Reference)
-
+                          <!> "StringReference"
     let ConstantReference = getUserState >>= 
                                 fun us ->
                                     (attempt
                                         (pfloat .>> pstring "%"
                                         |>> fun r -> ReferenceConstant(us, r / 100.0) :> Reference))
                                     <|> (pfloat |>> (fun r -> ReferenceConstant(us, r) :> Reference))
-
+                            <!> "ConstantReference"
     let Reference = (attempt RangeReference) <|> (attempt AddressReference) <|> (attempt ConstantReference) <|> (attempt StringReference) <|> NamedReference
-
+                    <!> "Reference"
     // Functions
     let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
+                       <!> "FunctionName"
     let Function = getUserState >>=
                     fun us ->
                         pipe2
                             (FunctionName .>> pstring "(")
                             (ArgumentList .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist) :> Reference)
-    do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces)
+                   <!> "Function"
+    do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
 
     // Binary arithmetic operators
     let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^' || c = '&') .>> spaces
     let BinOp2Char = spaces >>. ((attempt (regex "<=")) <|> (attempt (regex ">=")) <|> regex "<>") .>> spaces
     let BinOpLong: P<string*Expression> = pipe2 BinOp2Char ExpressionDecl (fun op rhs -> (op, rhs))
     let BinOpShort: P<string*Expression> = pipe2 BinOpChar ExpressionDecl (fun op rhs -> (op.ToString(), rhs))
-    let BinOp: P<string*Expression> = (attempt BinOpLong) <|> BinOpShort
+    let BinOp: P<string*Expression> = ((attempt BinOpLong) <|> BinOpShort) <!> "BinaryOp"
 
     // Unary operators
-    let UnaryOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces
+    let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
 
     // Expressions
-    let ParensExpr: P<Expression> = (between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr
-    let ExpressionAtom: P<Expression> = ((attempt Function) <|> Reference) |>> ReferenceExpr
-    do ExpressionSimpleImpl := ExpressionAtom <|> ParensExpr
-    let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs))
-    let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs))
-    do ExpressionDeclImpl := (attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)
+    let ParensExpr: P<Expression> = ((between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr) <!> "ParensExpr"
+    let ExpressionAtom: P<Expression> = (((attempt Function) <|> Reference) |>> ReferenceExpr) <!> "ExpressionAtom"
+    do ExpressionSimpleImpl := (ExpressionAtom <|> ParensExpr) <!> "ExpressionSimple"
+    let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
+    let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
+    do ExpressionDeclImpl := ((attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)) <!> "Expression"
 
     // Formulas
-    let Formula = pstring "=" .>> spaces >>. ExpressionDecl .>> eof
+    let Formula = (pstring "=" .>> spaces >>. ExpressionDecl .>> eof) <!> "Formula"
