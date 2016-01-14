@@ -40,18 +40,20 @@
 //        printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
 //        p stream // set a breakpoint here
 //
-//    let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
-//        fun stream ->
-//            printfn "%A: Entering %s" stream.Position label
-//            let reply = p stream
-//            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
-//            reply
+    let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
+        fun stream ->
+            printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
+            printfn "%A: Entering %s" stream.Position label
+            let reply = p stream
+            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
+            reply
 
     // Grammar forward references
     let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
     let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
     let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
-    let (RA1: P<Expression>, RA1Impl) = createParserForwardedToRef()
+    let (RangeA1: P<Range>, RangeA1Impl) = createParserForwardedToRef()
+    let (RangeR1C1: P<Range>, RangeR1C1Impl) = createParserForwardedToRef()
 
     // Addresses
     // We treat relative and absolute addresses the same-- they behave
@@ -106,19 +108,27 @@
 //    //// top-level range
 //    let RangeAny = (attempt RangesR1C1) <|> RangesA1
 
-    let RA1TO = (attempt (pstring ":" >>. AddrA1 .>> pstring ","))
-                <|> (pstring ":" >>. AddrA1)
-    let RA1TC = (attempt (pstring "," >>. AddrA1 .>> pstring ","))
+    let RA1TO = (* RTO *)
+                (attempt (pstring ":" >>. AddrA1 .>> pstring ",") <!> """":" A "," """)
+                <|> (pstring ":" >>. AddrA1 <!> """":" A""")
+    let RA1TC = (* RTC *)
+                (attempt (pstring "," >>. AddrA1 .>> pstring ","))
                 <|> (pstring "," >>. AddrA1)
-    let RA1_1 = pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2))
-    let RA1_2 = pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2))
-    let RA1_3 = pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)]))
-    let RA1_4 = pipe2 (AddrA1 .>> (pstring ",")) RA1 (fun a1 r1 -> Range(r1.Regions @ [(a1, a1)]))
-    let RA1_5 = pipe3 AddrA1 RA1TO RA1 (fun a r1 r2 -> Range (r1.Regions @ r2.Regions @ [(a, a)]))
-    let RA1Impl = (attempt RA1_1) <|> (attempt RA1_2) <|> (attempt RA1_3) <|> (attempt RA1_4) <|> (attempt RA1_5)
-    let RR1C1 = failwith "nope"
+    let RA1_1 = (* A RTC *) pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2)) <!> "A RTC"
+    let RA1_2 = (* A RTO *) pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2)) <!> "A RTO"
+    let RA1_3 = (* A RTO RTC *) pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])) <!> "A RTO RTC"
+    let RA1_4 = (* A "," R *) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """A "," R"""
+    let RA1_5 = (* A RTO R *) pipe3 AddrA1 RA1TO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "A RTO R"
+    do RangeA1Impl :=   (attempt RA1_1)
+                        <|> (attempt RA1_2)
+                        <|> (attempt RA1_3)
+                        <|> (attempt RA1_4)
+                        <|> RA1_5
+                        
+    do RangeR1C1Impl := RangeA1
 
-    let R = (attempt RR1C1) <|> RA1
+    let R = RangeA1
+//    let R = (attempt RangeR1C1) <|> RangeA1
 
     // Worksheet Names
     let WorksheetNameQuoted =
@@ -150,7 +160,7 @@
                                     fun us ->
                                         (pipe2
                                             (RRWQuoted .>> pstring "!")
-                                            RangeAny
+                                            R
                                             (fun ((wbpath, wbname), wsname) rng ->
                                                 match wbpath with
                                                 | Some(pth) -> ReferenceRange(Env(pth, wbname, wsname), rng) :> Reference
@@ -161,11 +171,11 @@
                                     fun us ->
                                         pipe2
                                             (WorksheetName .>> pstring "!")
-                                            RangeAny
+                                            R
                                             (fun wsname rng -> ReferenceRange(Env(us.Path, us.WorkbookName, wsname), rng) :> Reference)
     let RangeReferenceNoWorksheet = getUserState >>=
                                         fun us ->
-                                            RangeAny
+                                            R
                                             |>> (fun rng -> ReferenceRange(us, rng) :> Reference)
     let RangeReference = (attempt RangeReferenceWorkbook)
                          <|> (attempt RangeReferenceWorksheet)
