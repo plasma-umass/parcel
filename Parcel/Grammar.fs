@@ -42,10 +42,13 @@
 //
     let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
         fun stream ->
-            printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
-            printfn "%A: Entering %s" stream.Position label
+//            printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
+//            printfn "%A: Entering %s" stream.Position label
+            let s = String.replicate (int (stream.Position.Column)) " "
+            printfn "%d%sTrying %s(\"%s\")" (stream.Index) s label (stream.PeekString 1000)
             let reply = p stream
-            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
+            printfn "%d%s%s(\"%s\") (%A)" (stream.Index) s label (stream.PeekString 1000) reply.Status
+//            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
             reply
 
     // Grammar forward references
@@ -110,7 +113,7 @@
                         <|> (attempt RA1_1)
                         <|> (attempt RA1_2)
                         <|> (attempt RA1_4)
-                        <|> RA1_5
+                        <|> (attempt RA1_5)
                         
     do RangeR1C1Impl := RangeA1
 
