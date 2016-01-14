@@ -104,11 +104,11 @@
     let RA1TC = (* RTC *)
                 (attempt (pstring "," >>. AddrA1) <!> "RTC (first)")
                 <|> ((pstring "," >>. AddrA1 .>> pstring ",") <!> "RTC (second)")
-    let RA1_1 = (* A RTC *) pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2)) <!> "A RTC"
-    let RA1_2 = (* A RTO *) pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2)) <!> "A RTO"
-    let RA1_3 = (* A RTO RTC *) pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])) <!> "A RTO RTC"
-    let RA1_4 = (* A "," R *) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """A "," R"""
-    let RA1_5 = (* A RTO R *) pipe3 AddrA1 RA1TO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "A RTO R"
+    let RA1_1 = (* AddrA1 RTC *) pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTC"
+    let RA1_2 = (* AddrA1 RTO *) pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTO"
+    let RA1_3 = (* AddrA1 RTO RTC *) pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])) <!> "AddrA1 RTO RTC"
+    let RA1_4 = (* AddrA1 "," R *) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R"""
+    let RA1_5 = (* AddrA1 RTO R *) pipe3 AddrA1 RA1TO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R"
     do RangeA1Impl :=   (attempt RA1_3)
                         <|> (attempt RA1_1)
                         <|> (attempt RA1_2)
