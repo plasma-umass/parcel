@@ -80,9 +80,9 @@
                                     Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
                     <!> "AddrR1C1"
     let AddrA = many1Satisfy isAsciiUpper
-    let AddrAAbs = (pstring "$" <|> pstring "") >>. AddrA
+    let AddrAAbs = (attempt (pstring "$") <|> pstring "") >>. AddrA
     let Addr1 = pint32
-    let Addr1Abs = (pstring "$" <|> pstring "") >>. Addr1
+    let Addr1Abs = (attempt (pstring "$") <|> pstring "") >>. Addr1
     let AddrA1 = getUserState >>=
                     fun (us: Env) ->
                         (attempt AddrIndirect)
@@ -91,29 +91,39 @@
                             Addr1Abs
                             (fun col row ->
                                 Address.fromA1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
-                    <!> "AddrA1"
+                    
     let AnyAddr = ((attempt AddrIndirect)
                   <|> (attempt AddrR1C1)
                   <|> AddrA1)
                   <!> "AnyAddr"
 
     // Ranges
-    let RA1TO = (* RTO *)
-                (attempt (pstring ":" >>. AddrA1) <!> "RTO (first)")
-                <|> ((pstring ":" >>. AddrA1 .>> pstring ",") <!> "RTO (second)")
-    let RA1TC = (* RTC *)
-                (attempt (pstring "," >>. AddrA1) <!> "RTC (first)")
-                <|> ((pstring "," >>. AddrA1 .>> pstring ",") <!> "RTC (second)")
-    let RA1_1 = (* AddrA1 RTC *) pipe2 AddrA1 RA1TC (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTC"
-    let RA1_2 = (* AddrA1 RTO *) pipe2 AddrA1 RA1TO (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTO"
-    let RA1_3 = (* AddrA1 RTO RTC *) pipe3 AddrA1 RA1TO RA1TC (fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])) <!> "AddrA1 RTO RTC"
-    let RA1_4 = (* AddrA1 "," R *) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R"""
-    let RA1_5 = (* AddrA1 RTO R *) pipe3 AddrA1 RA1TO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R"
-    do RangeA1Impl :=   (attempt RA1_4)
-                        <|> (attempt RA1_5)
+    let RA1TO_1 = pstring ":" >>. AddrA1 .>> pstring "," <!> "RTO1"
+    let RA1TO_2 = pstring ":" >>. AddrA1 <!> "RTO2"
+    let RTO = (attempt RA1TO_1) <|> RA1TO_2
+
+    let RA1TC_1 = pstring "," >>. AddrA1 .>> pstring "," <!> "RTC1"
+    let RA1TC_2 = pstring "," >>. AddrA1 <!> "RTC2"
+    let RTC = (attempt RA1TC_1) <|> RA1TC_2
+
+    let RA1_1 = (* AddrA1 RTC (1)*) pipe2 AddrA1 RTC (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTC ==(1)=="
+    let RA1_2 = (* AddrA1 RTO (2)*) pipe2 AddrA1 RTO (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTO ==(2)=="
+
+    let rat_fun = fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])
+    let RA1_3a = pipe3 AddrA1 RA1TO_1 RA1TC_1 rat_fun <!> "AddrA1 RTO1 RTC1 ===(3a)==="
+    let RA1_3b = pipe3 AddrA1 RA1TO_1 RA1TC_2 rat_fun <!> "AddrA1 RTO1 RTC2 ===(3b)==="
+    let RA1_3c = pipe3 AddrA1 RA1TO_2 RA1TC_1 rat_fun <!> "AddrA1 RTO2 RTC1 ===(3c)==="
+    let RA1_3d = pipe3 AddrA1 RA1TO_2 RA1TC_2 rat_fun <!> "AddrA1 RTO2 RTC2 ===(3d)==="
+    let RA1_3 = (* AddrA1 RTO RTC (3)*) 
+                (attempt RA1_3a) <|> (attempt RA1_3b) <|> (attempt RA1_3c) <|> RA1_3d <!> "AddrA1 RTO RTC ==(3)=="
+
+    let RA1_4 = (* AddrA1 "," R (4)*) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R ==(4)=="""
+    let RA1_5 = (* AddrA1 RTO R (5)*) pipe3 AddrA1 RTO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R ==(5)=="
+    do RangeA1Impl :=   (attempt RA1_5)
+                        <|> (attempt RA1_4)
                         <|> (attempt RA1_3)
                         <|> (attempt RA1_1)
-                        <|> (attempt RA1_2)
+                        <|> RA1_2
                         
     do RangeR1C1Impl := RangeA1
 
@@ -260,7 +270,7 @@
     // Expressions
     let ParensExpr: P<Expression> = ((between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr) <!> "ParensExpr"
     let ExpressionAtom: P<Expression> = (((attempt Function) <|> Reference) |>> ReferenceExpr) <!> "ExpressionAtom"
-    do ExpressionSimpleImpl := (ExpressionAtom <|> ParensExpr) <!> "ExpressionSimple"
+    do ExpressionSimpleImpl := ((attempt ExpressionAtom) <|> ParensExpr) <!> "ExpressionSimple"
     let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
     let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
     do ExpressionDeclImpl := ((attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)) <!> "Expression"
