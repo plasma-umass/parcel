@@ -127,7 +127,7 @@
                         
     do RangeR1C1Impl := RangeA1
 
-    let R = RangeA1 <!> "Range"
+    let R = (attempt RangeA1) <!> "Range"
 //    let R = (attempt RangeR1C1) <|> RangeA1
 
     // Worksheet Names
@@ -273,7 +273,7 @@
     do ExpressionSimpleImpl := ((attempt ExpressionAtom) <|> ParensExpr) <!> "ExpressionSimple"
     let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
     let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
-    do ExpressionDeclImpl := ((attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> (attempt ExpressionSimple)) <!> "Expression"
+    do ExpressionDeclImpl := ((attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> ExpressionSimple) <!> "Expression"
 
     // Formulas
     let Formula = (pstring "=" .>> spaces >>. ExpressionDecl .>> eof) <!> "Formula"
