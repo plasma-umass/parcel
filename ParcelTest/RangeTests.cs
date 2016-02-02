@@ -136,24 +136,24 @@ namespace ParcelTest
 
             AddrPair[] addrpairs = {
                                     new AddrPair(
-                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path)
-                                    ),
-                                    new AddrPair(
-                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
-                                    ),
-                                    new AddrPair(
-                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1(5, "A", e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1(5, "A", e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
                                         AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path),
                                         AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(5, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(5, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                    ),
+                                    new AddrPair(
+                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                    ),
+                                    new AddrPair(
+                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path)
                                     )
                                    };
 
@@ -187,6 +187,25 @@ namespace ParcelTest
             AST.Reference r = Parcel.simpleReferenceParser(s, e);
             AST.Reference correct = new AST.ReferenceRange(e, new AST.Range(addrpairs));
             Assert.AreEqual(r, correct);
+        }
+
+        [TestMethod]
+        public void rangeCase8Test()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+
+            String s = "A1:B1";
+
+            AST.Range range = new AST.Range(
+                AST.Address.fromA1(1, "A", e.WorkbookName, e.WorkbookName, e.Path),
+                AST.Address.fromA1(1, "B", e.WorkbookName, e.WorkbookName, e.Path)
+                );
+
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            AST.Reference correct = new AST.ReferenceRange(e, range);
+            Assert.AreEqual(r, correct);
+              
         }
     }
 }

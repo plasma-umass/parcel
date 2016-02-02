@@ -138,10 +138,13 @@
             raise(IndirectAddressingNotSupportedException(expr))
 
     // note that regions may overlap; be careful not to double-count cells!
+    // Default constructor -- each address-address pair corresponds to top-left
+    // and bottom right of a region
     and Range(regions: (Address * Address) list) =
         let _regions = regions
         new(regions: (Address * Address)[]) = Range(List.ofArray regions)
         new(range1: Range, range2: Range) = Range(range1.Ranges() @ range2.Ranges())
+     
         new(addr1: Address, addr2: Address) = Range([(addr1,addr2)])
         override self.ToString() =
             let sregs = List.map (fun (tl: Address, br: Address) ->

@@ -106,7 +106,7 @@
     let RA1TC_2 = pstring "," >>. AddrA1 <!> "RTC2"
     let RTC = (attempt RA1TC_1) <|> RA1TC_2
 
-    let RA1_1 = (* AddrA1 RTC (1)*) pipe2 AddrA1 RTC (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTC ==(1)=="
+    let RA1_1 = (* AddrA1 RTC (1)*) pipe2 AddrA1 RTC (fun a1 a2 -> Range([(a2,a2); (a1,a1)])) <!> "AddrA1 RTC ==(1)=="
     let RA1_2 = (* AddrA1 RTO (2)*) pipe2 AddrA1 RTO (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTO ==(2)=="
 
     let rat_fun = fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])
