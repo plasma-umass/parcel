@@ -55,7 +55,8 @@
     let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
     let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
     let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
-    let (RangeA1: P<Range>, RangeA1Impl) = createParserForwardedToRef()
+    let (RangeA1Union: P<Range>, RangeA1UnionImpl) = createParserForwardedToRef()
+    let (RangeA1NoUnion: P<Range>, RangeA1NoUnionImpl) = createParserForwardedToRef()
     let (RangeR1C1: P<Range>, RangeR1C1Impl) = createParserForwardedToRef()
 
     // Addresses
@@ -117,18 +118,19 @@
     let RA1_3 = (* AddrA1 RTO RTC (3)*) 
                 (attempt RA1_3a) <|> (attempt RA1_3b) <|> (attempt RA1_3c) <|> RA1_3d <!> "AddrA1 RTO RTC ==(3)=="
 
-    let RA1_4 = (* AddrA1 "," R (4)*) pipe2 (AddrA1 .>> (pstring ",")) RangeA1 (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R ==(4)=="""
-    let RA1_5 = (* AddrA1 RTO R (5)*) pipe3 AddrA1 RTO RangeA1 (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R ==(5)=="
-    do RangeA1Impl :=   (attempt RA1_5)
-                        <|> (attempt RA1_4)
+    let RA1_4_UNION = (* AddrA1 "," R (4)*) pipe2 (AddrA1 .>> (pstring ",")) RangeA1Union (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R ==(4)=="""
+    let RA1_5_UNION = (* AddrA1 RTO R (5)*) pipe3 AddrA1 RTO RangeA1Union (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R ==(5)=="
+    do RangeA1UnionImpl :=   (attempt RA1_5_UNION)
+                        <|> (attempt RA1_4_UNION)
                         <|> (attempt RA1_3)
                         <|> (attempt RA1_1)
                         <|> RA1_2
+    do RangeA1NoUnionImpl := pipe2 AddrA1 RA1TO_2 (fun a1 a2 -> Range(a1, a2))
                         
-    do RangeR1C1Impl := RangeA1
+    do RangeR1C1Impl := RangeA1Union
 
-    let R = (attempt RangeA1) <!> "Range"
-//    let R = (attempt RangeR1C1) <|> RangeA1
+    let RangeWithUnion = (attempt RangeA1Union) <!> "Union Range"
+    let RangeNoUnion = (attempt RangeA1NoUnion) <!> "No-Union Range"
 
     // Worksheet Names
     let WorksheetNameQuoted =
@@ -248,13 +250,42 @@
     // Functions
     let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
                        <!> "FunctionName"
-    let Function = getUserState >>=
+
+    let Arity1FunctionName: Parser<string,Env> = (pstring "SUM") <!> "Arity1FunctionName"
+    let Arity2FunctionName: Parser<string,Env> = (pstring "SUMX2MY2") <!> "Arity2FunctionName"
+    let Arguments1 = (ExpressionDecl |>> (fun expr -> [expr])) <!> "Arguments1"
+    let Arguments2 = (pipe2
+                        (ExpressionDecl .>> pstring ",")
+                        ExpressionDecl
+                        (fun e1 e2 -> [e1; e2])
+                     ) <!> "Arguments2"
+    let Arity2Function =
+                  getUserState >>=
+                    fun us ->
+                        pipe2
+                            (Arity2FunctionName .>> pstring "(")
+                            (Arguments2 .>> pstring ")")
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, 2) :> Reference)
+                   <!> "Arity2Function"
+    let Arity1Function =
+                  getUserState >>=
+                    fun us ->
+                        pipe2
+                            (Arity1FunctionName .>> pstring "(")
+                            (Arguments1 .>> pstring ")")
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, 1) :> Reference)
+                   <!> "Arity1Function"
+    // a catch-all function parser
+    let AnyFunction =
+                  getUserState >>=
                     fun us ->
                         pipe2
                             (FunctionName .>> pstring "(")
                             (ArgumentList .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist) :> Reference)
-                   <!> "Function"
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, arglist.Length) :> Reference)
+                   <!> "AnyFunction"
+    let Function = ((attempt Arity1Function) <|> (attempt Arity2Function) <|> AnyFunction) <!> "Function"
+
     do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
 
     // Binary arithmetic operators
@@ -269,7 +300,7 @@
 
     // Expressions
     let ParensExpr: P<Expression> = ((between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr) <!> "ParensExpr"
-    let ExpressionAtom: P<Expression> = (((attempt Function) <|> Reference) |>> ReferenceExpr) <!> "ExpressionAtom"
+    let ExpressionAtom: P<Expression>= (((attempt Function) <|> Reference) |>> ReferenceExpr) <!> "ExpressionAtom"
     do ExpressionSimpleImpl := ((attempt ExpressionAtom) <|> ParensExpr) <!> "ExpressionSimple"
     let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
     let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"

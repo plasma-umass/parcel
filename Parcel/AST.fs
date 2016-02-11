@@ -316,13 +316,13 @@
         override self.GetHashCode() : int =
             env.GetHashCode() ||| addr.GetHashCode()
 
-    and ReferenceFunction(env: Env, fnname: string, arglist: Expression list) =
+    and ReferenceFunction(env: Env, fnname: string, arglist: Expression list, arity: int) =
         inherit Reference(env)
         override self.Type = ReferenceType.ReferenceFunction
         member self.ArgumentList = arglist
         member self.FunctionName = fnname.ToUpper()
         override self.ToString() =
-            self.FunctionName + "[function](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            self.FunctionName + "[function" + arity.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction
             let arglists = List.zip arglist rf.ArgumentList
