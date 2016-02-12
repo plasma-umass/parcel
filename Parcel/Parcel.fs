@@ -29,7 +29,7 @@
         | Failure(errorMsg, _, _)   -> None
 
     let private getReference(formula: string)(path: string)(wbname: string)(wsname: string): AST.Reference option =
-        match runParserOnString (Grammar.Reference .>> eof) (AST.Env(path, wbname, wsname)) "" formula with
+        match runParserOnString (Grammar.Reference Grammar.RangeAny .>> eof) (AST.Env(path, wbname, wsname)) "" formula with
         | Success(reference, _, _)  -> Some(reference)
         | Failure(errorMsg, _, _)   -> None
 
@@ -57,7 +57,7 @@
 
     // Call this for simple address parsing
     let simpleReferenceParser(s: string, e: AST.Env) : AST.Reference =
-        match runParserOnString Grammar.Reference e "" s with
+        match runParserOnString (Grammar.Reference Grammar.RangeAny) e "" s with
         | Success(result, _, _) -> result
         | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
 

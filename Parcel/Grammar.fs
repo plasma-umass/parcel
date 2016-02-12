@@ -3,6 +3,13 @@
     open AST
     open System.Text.RegularExpressions
 
+    // This is a version of the forwarding parser that
+    // also takes a generic argument.
+    let createParserForwardedToRefWithArguments() =
+        let dummyParser = fun x y -> failwith "a parser created with createParserForwardedToRefWithArguments was not initialized"
+        let r = ref dummyParser
+        (fun arg stream -> !r arg stream), r : ('t -> Parser<'a, 'u>) * ('t -> Parser<'a, 'u>) ref
+
     (*
      * FPARSEC CHEAT SHEET
      * -------------------
@@ -52,9 +59,10 @@
             reply
 
     // Grammar forward references
-    let (ArgumentList: P<Expression list>, ArgumentListImpl) = createParserForwardedToRef()
-    let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
-    let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
+    let (ArgumentList: P<Range> -> P<Expression list>, ArgumentListImpl) = createParserForwardedToRefWithArguments()
+//    let (ExpressionSimple: P<Expression>, ExpressionSimpleImpl) = createParserForwardedToRef()
+//    let (ExpressionDecl: P<Expression>, ExpressionDeclImpl) = createParserForwardedToRef()
+    let (ExpressionDecl: P<Range> -> P<Expression>, ExpressionDeclImpl) = createParserForwardedToRefWithArguments()
     let (RangeA1Union: P<Range>, RangeA1UnionImpl) = createParserForwardedToRef()
     let (RangeA1NoUnion: P<Range>, RangeA1NoUnionImpl) = createParserForwardedToRef()
     let (RangeR1C1: P<Range>, RangeR1C1Impl) = createParserForwardedToRef()
@@ -132,6 +140,8 @@
     let RangeWithUnion = (attempt RangeA1Union) <!> "Union Range"
     let RangeNoUnion = (attempt RangeA1NoUnion) <!> "No-Union Range"
 
+    let RangeAny = ((attempt RangeWithUnion) <|> RangeWithUnion) <!> "RangeAny"
+
     // Worksheet Names
     let WorksheetNameQuoted =
         let NormalChar = satisfy ((<>) '\'')
@@ -158,8 +168,8 @@
     //   A worksheet name prefix
     //   A single-cell address ("Address") or multi-cell address ("Range")
     let RRWQuoted = (between (pstring "'") (pstring "'") (Workbook .>>. WorksheetNameUnquoted))
-    let RangeReferenceWorkbook = getUserState >>=
-                                    fun us ->
+    let RangeReferenceWorkbook R = getUserState >>=
+                                    fun (us: Env) ->
                                         (pipe2
                                             (RRWQuoted .>> pstring "!")
                                             R
@@ -170,21 +180,21 @@
                                             )
                                         )
                                         <!> "RangeReferenceWorkbook"
-    let RangeReferenceWorksheet = getUserState >>=
-                                    fun us ->
+    let RangeReferenceWorksheet R = getUserState >>=
+                                    fun (us: Env) ->
                                         pipe2
                                             (WorksheetName .>> pstring "!")
                                             R
                                             (fun wsname rng -> ReferenceRange(Env(us.Path, us.WorkbookName, wsname), rng) :> Reference)
                                     <!> "RangeReferenceWorksheet"
-    let RangeReferenceNoWorksheet = getUserState >>=
-                                        fun us ->
+    let RangeReferenceNoWorksheet R = getUserState >>=
+                                        fun (us: Env) ->
                                             R
                                             |>> (fun rng -> ReferenceRange(us, rng) :> Reference)
                                     <!> "RangeReferenceNOWorksheet"
-    let RangeReference = (attempt RangeReferenceWorkbook)
-                         <|> (attempt RangeReferenceWorksheet)
-                         <|> RangeReferenceNoWorksheet
+    let RangeReference R = (attempt (RangeReferenceWorkbook R))
+                         <|> (attempt (RangeReferenceWorksheet R))
+                         <|> RangeReferenceNoWorksheet R
                          <!> "RangeReference"
 
     let ARWQuoted = (between
@@ -245,7 +255,11 @@
                                         |>> fun r -> ReferenceConstant(us, r / 100.0) :> Reference))
                                     <|> (pfloat |>> (fun r -> ReferenceConstant(us, r) :> Reference))
                             <!> "ConstantReference"
-    let Reference = (attempt RangeReference) <|> (attempt AddressReference) <|> (attempt ConstantReference) <|> (attempt StringReference) <|> NamedReference
+    let Reference R = (attempt (RangeReference R))
+                        <|> (attempt AddressReference)
+                        <|> (attempt ConstantReference)
+                        <|> (attempt StringReference)
+                        <|> NamedReference
                     <!> "Reference"
     // Functions
     let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
@@ -253,58 +267,76 @@
 
     let Arity1FunctionName: Parser<string,Env> = (pstring "SUM") <!> "Arity1FunctionName"
     let Arity2FunctionName: Parser<string,Env> = (pstring "SUMX2MY2") <!> "Arity2FunctionName"
-    let Arguments1 = (ExpressionDecl |>> (fun expr -> [expr])) <!> "Arguments1"
-    let Arguments2 = (pipe2
-                        (ExpressionDecl .>> pstring ",")
-                        ExpressionDecl
-                        (fun e1 e2 -> [e1; e2])
-                     ) <!> "Arguments2"
-    let Arity2Function =
+    let Arguments1 R = ((ExpressionDecl R) |>> (fun expr -> [expr])) <!> "Arguments1"
+    let Arguments2 R = (pipe2
+                         ((ExpressionDecl R) .>> pstring ",")
+                         (ExpressionDecl R)
+                         (fun e1 e2 -> [e1; e2])
+                       ) <!> "Arguments2"
+    let Arity2Function R =
                   getUserState >>=
                     fun us ->
                         pipe2
                             (Arity2FunctionName .>> pstring "(")
-                            (Arguments2 .>> pstring ")")
+                            ((Arguments2 R) .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, 2) :> Reference)
                    <!> "Arity2Function"
-    let Arity1Function =
+    let Arity1Function R =
                   getUserState >>=
                     fun us ->
                         pipe2
                             (Arity1FunctionName .>> pstring "(")
-                            (Arguments1 .>> pstring ")")
+                            ((Arguments1 R) .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, 1) :> Reference)
                    <!> "Arity1Function"
     // a catch-all function parser
-    let AnyFunction =
+    let AnyFunction R =
                   getUserState >>=
                     fun us ->
                         pipe2
                             (FunctionName .>> pstring "(")
-                            (ArgumentList .>> pstring ")")
+                            ((ArgumentList R) .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, arglist.Length) :> Reference)
                    <!> "AnyFunction"
-    let Function = ((attempt Arity1Function) <|> (attempt Arity2Function) <|> AnyFunction) <!> "Function"
+    let Function R = (
+                        ((attempt (Arity1Function R))
+                        <|> (attempt (Arity2Function R))
+                        <|> (AnyFunction R))
+                     ) <!> "Function"
 
-    do ArgumentListImpl := sepBy ExpressionDecl (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
+    do ArgumentListImpl := fun (R: P<Range>) -> sepBy (ExpressionDecl R) (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
 
     // Binary arithmetic operators
     let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^' || c = '&') .>> spaces
     let BinOp2Char = spaces >>. ((attempt (regex "<=")) <|> (attempt (regex ">=")) <|> regex "<>") .>> spaces
-    let BinOpLong: P<string*Expression> = pipe2 BinOp2Char ExpressionDecl (fun op rhs -> (op, rhs))
-    let BinOpShort: P<string*Expression> = pipe2 BinOpChar ExpressionDecl (fun op rhs -> (op.ToString(), rhs))
-    let BinOp: P<string*Expression> = ((attempt BinOpLong) <|> BinOpShort) <!> "BinaryOp"
+    let BinOpLong R: P<string*Expression> = pipe2 BinOp2Char (ExpressionDecl R) (fun op rhs -> (op, rhs))
+    let BinOpShort R: P<string*Expression> = pipe2 BinOpChar (ExpressionDecl R) (fun op rhs -> (op.ToString(), rhs))
+    let BinOp R: P<string*Expression> = ((attempt (BinOpLong R)) <|> (BinOpShort R)) <!> "BinaryOp"
 
     // Unary operators
     let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
 
     // Expressions
-    let ParensExpr: P<Expression> = ((between (pstring "(") (pstring ")") ExpressionDecl) |>> ParensExpr) <!> "ParensExpr"
-    let ExpressionAtom: P<Expression>= (((attempt Function) <|> Reference) |>> ReferenceExpr) <!> "ExpressionAtom"
-    do ExpressionSimpleImpl := ((attempt ExpressionAtom) <|> ParensExpr) <!> "ExpressionSimple"
-    let UnaryOpExpr: P<Expression> = pipe2 UnaryOpChar ExpressionDecl (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
-    let BinOpExpr: P<Expression> = pipe2 ExpressionSimple BinOp (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
-    do ExpressionDeclImpl := ((attempt UnaryOpExpr) <|> (attempt BinOpExpr) <|> ExpressionSimple) <!> "Expression"
+    let ParensExpr(R: P<Range>): P<Expression> = ((between (pstring "(") (pstring ")") (ExpressionDecl R)) |>> ParensExpr) <!> "ParensExpr"
+    let ExpressionAtom(R: P<Range>): P<Expression> = (((attempt (Function R)) <|> (Reference R)) |>> ReferenceExpr) <!> "ExpressionAtom"
+    let ExpressionSimple(R: P<Range>): P<Expression> = ((attempt (ExpressionAtom R)) <|> (ParensExpr R)) <!> "ExpressionSimple"
+    let UnaryOpExpr(R: P<Range>): P<Expression> = pipe2 UnaryOpChar (ExpressionDecl R) (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
+    let BinOpExpr(R: P<Range>): P<Expression> = pipe2 (ExpressionSimple R) (BinOp R) (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
+    
+    // This is very confusing without some context:
+    // BASICALLY, parsing Excel argument lists is ambiguous without knowing
+    // the arity of the function that you are parsing.  Thus the Expression parser
+    // takes a Range parser that either parses a Range with or without union semantics.
+    // The appropriate parser is chosen by the Function parser.
+    // Note that the top-level Formula parser tries to parse both (RangeAny).
+    do ExpressionDeclImpl :=
+        fun (R: P<Range>) ->
+            (
+                ((attempt (UnaryOpExpr R))
+                <|> (attempt (BinOpExpr R))
+                <|> (ExpressionSimple R))
+            )
+            <!> "Expression"
 
     // Formulas
-    let Formula = (pstring "=" .>> spaces >>. ExpressionDecl .>> eof) <!> "Formula"
+    let Formula = (pstring "=" .>> spaces >>. (ExpressionDecl RangeAny) .>> eof) <!> "Formula"
