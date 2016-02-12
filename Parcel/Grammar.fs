@@ -274,28 +274,34 @@
                          (fun e1 e2 -> [e1; e2])
                        ) <!> "Arguments2"
     let Arity2Function R =
+                  // here, we ignore whatever Range context we are given
+                  // and use RangeNoUnion instead
                   getUserState >>=
                     fun us ->
                         pipe2
                             (Arity2FunctionName .>> pstring "(")
-                            ((Arguments2 R) .>> pstring ")")
+                            ((Arguments2 RangeNoUnion) .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, 2) :> Reference)
                    <!> "Arity2Function"
     let Arity1Function R =
+                  // here, we ignore whatever Range context we are given
+                  // and use RangeWithUnion instead
                   getUserState >>=
                     fun us ->
                         pipe2
                             (Arity1FunctionName .>> pstring "(")
-                            ((Arguments1 R) .>> pstring ")")
+                            ((Arguments1 RangeWithUnion) .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, 1) :> Reference)
                    <!> "Arity1Function"
     // a catch-all function parser
     let AnyFunction R =
+                  // here, we ignore whatever Range context we are given
+                  // and use RangeAnyUnion instead (i.e., try both)
                   getUserState >>=
                     fun us ->
                         pipe2
                             (FunctionName .>> pstring "(")
-                            ((ArgumentList R) .>> pstring ")")
+                            ((ArgumentList RangeAny) .>> pstring ")")
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, arglist.Length) :> Reference)
                    <!> "AnyFunction"
     let Function R = (
