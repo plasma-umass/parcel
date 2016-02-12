@@ -206,56 +206,6 @@
             let self_set = Set.ofArray(self.Addresses())
             self_set = r_set
 
-//    and Range(topleft: Address, bottomright: Address) =
-//        let _tl = topleft
-//        let _br = bottomright
-//        override self.ToString() =
-//            let tlstr = topleft.ToString()
-//            let brstr = bottomright.ToString()
-//            tlstr + "," + brstr
-//        member self.copyWithNewEnv(envnew: Env) =
-//            Range(_tl.copyWithNewEnv(envnew), _br.copyWithNewEnv(envnew))
-//        member self.TopLeft = _tl
-//        member self.BottomRight = _br
-//        member self.A1Local() : string =
-//            _tl.A1Local() + ":" + _br.A1Local()
-//        member self.getXLeft() : int = _tl.X
-//        member self.getXRight() : int = _br.X
-//        member self.getYTop() : int = _tl.Y
-//        member self.getYBottom() : int = _br.Y
-//        member self.InsideRange(rng: Range) : bool =
-//            not (self.getXLeft() < rng.getXLeft() ||
-//                 self.getYTop() < rng.getYTop() ||
-//                 self.getXRight() > rng.getXRight() ||
-//                 self.getYBottom() > rng.getYBottom())
-//        // Yup, weird case.  This is because we actually
-//        // distinguish between addresses and ranges, unlike Excel.
-//        member self.InsideAddr(addr: Address) : bool =
-//            not (self.getXLeft() < addr.X ||
-//                 self.getYTop() < addr.Y ||
-//                 self.getXRight() > addr.X ||
-//                 self.getYBottom() > addr.Y)
-//        member self.GetWorksheetNames() : seq<string> =
-//            [_tl.WorksheetName; _br.WorksheetName] |> List.toSeq |> Seq.distinct
-//        member self.GetWorkbookNames() : seq<string> =
-//            [_tl.WorkbookName; _br.WorkbookName] |> List.toSeq |> Seq.distinct
-//        member self.GetPathNames() : seq<string> =
-//            [_tl.Path; _br.Path] |> List.toSeq
-//        member self.Addresses() : Address[] =
-//            Array.map (fun c ->
-//                Array.map (fun r ->
-//                    Address.fromR1C1(r, c, _tl.WorksheetName, _tl.WorkbookName, _tl.Path)
-//                ) [|self.getYTop()..self.getYBottom()|]
-//            ) [|self.getXLeft()..self.getXRight()|] |>
-//            Array.concat
-//        override self.GetHashCode() : int =
-//            _tl.GetHashCode() ^^^ _br.GetHashCode()
-//        override self.Equals(obj: obj) : bool =
-//            let r = obj :?> Range
-//            let a = topleft = r.TopLeft
-//            let b = bottomright = r.BottomRight
-//            a && b
-
     type ReferenceType =
     | ReferenceAddress  = 0
     | ReferenceRange    = 1
@@ -280,11 +230,6 @@
         override self.Type = ReferenceType.ReferenceRange
         override self.ToString() =
             "ReferenceRange(" + env.Path + ",[" + env.WorkbookName + "]," + env.WorksheetName + "," + _rng.ToString() + ")"
-//        override self.InsideRef(ref: Reference) : bool =
-//            match ref with
-//            | :? ReferenceAddress as ar -> _rng.InsideAddr(ar.Address)
-//            | :? ReferenceRange as rr -> _rng.InsideRange(rr.Range)
-//            | _ -> failwith "Unknown Reference subclass."
         member self.Range = _rng
         override self.Equals(obj: obj) : bool =
             let rr = obj :?> ReferenceRange
@@ -302,11 +247,6 @@
         override self.ToString() =
             "ReferenceAddress(" + env.Path + ",[" + env.WorkbookName + "]," + env.WorksheetName + "," + _addr.ToString() + ")"
         member self.Address = _addr
-//        override self.InsideRef(ref: Reference) =
-//            match ref with
-//            | :? ReferenceAddress as ar -> _addr.InsideAddr(ar.Address)
-//            | :? ReferenceRange as rr -> _addr.InsideRange(rr.Range)
-//            | _ -> failwith "Invalid Reference subclass."
         override self.Equals(obj: obj) : bool =
             let ra = obj :?> ReferenceAddress
             self.Path = ra.Path &&
