@@ -263,7 +263,7 @@
         member self.FunctionName = fnname.ToUpper()
         override self.ToString() =
             match arity with
-            | Some a -> self.FunctionName + "[function" + arity.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            | Some a -> self.FunctionName + "[function" + a.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
             | None -> self.FunctionName + "[functionVarArgs](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction

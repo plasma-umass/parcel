@@ -263,38 +263,31 @@
 //    let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
 //                       <!> "FunctionName"
 
-    let Arity1FunctionName: P<string> = ["ABS"] |> List.map (fun name -> pstring name) |> choice <!> "Arity1FunctionName"
-    let Arity2FunctionName: P<string> = ["SUMX2MY2"] |> List.map (fun name -> pstring name) |> choice <!> "Arity2FunctionName"
+    let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
+    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"]
+    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["SUMX2MY2"]
+
+    let arityNameArr: P<string>[] = [|Arity1FunctionName; Arity2FunctionName|]
+    let FunctionNamesForArity i: P<string> = arityNameArr.[i-1]
+
     let VarArgsFunctionName: P<string> = ["SUM"] |> List.map (fun name -> pstring name) |> choice <!> "VarArgsFunctionName"
 
-    let Arguments1 R = ((ExpressionDecl R) |>> (fun expr -> [expr])) <!> "Arguments1"
-    let Arguments2 R = (pipe2
-                         ((ExpressionDecl R) .>> pstring ",")
-                         (ExpressionDecl R)
-                         (fun e1 e2 -> [e1; e2])
-                       ) <!> "Arguments2"
+    let ArgumentsN R n = (pipe2
+                            (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
+                            (ExpressionDecl R)
+                            (fun exprArr expr -> Array.toList exprArr @ [expr] ) <!> ("Arguments" + n.ToString())
+                          )
 
-    let Arity1Function R =
-                  // here, we ignore whatever Range context we are given
-                  // and use RangeWithUnion instead
-                  getUserState >>=
-                    fun us ->
-                        pipe2
-                            (Arity1FunctionName .>> pstring "(")
-                            ((Arguments1 RangeWithUnion) .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, Some(1)) :> Reference)
-                   <!> "Arity1Function"
-
-    let Arity2Function R =
-                  // here, we ignore whatever Range context we are given
-                  // and use RangeNoUnion instead
-                  getUserState >>=
-                    fun us ->
-                        pipe2
-                            (Arity2FunctionName .>> pstring "(")
-                            ((Arguments2 RangeNoUnion) .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, Some(2)) :> Reference)
-                   <!> "Arity2Function"
+    let ArityNFunction n R =
+                // here, we ignore whatever Range context we are given
+                // and use RangeNoUnion instead
+                getUserState >>=
+                fun us ->
+                    pipe2
+                        (FunctionNamesForArity(n) .>> pstring "(")
+                        ((ArgumentsN RangeNoUnion n) .>> pstring ")")
+                        (fun fname arglist -> ReferenceFunction(us, fname, arglist, Some(n)) :> Reference)
+                <!> ("Arity" + n.ToString() + "Function")
 
     let VarArgsFunction R =
                   // here, we ignore whatever Range context we are given
@@ -307,12 +300,10 @@
                             (fun fname arglist -> ReferenceFunction(us, fname, arglist, None) :> Reference)
                    <!> "VarArgsFunction"
 
-    let Function R = (
-                        (attempt (Arity1Function R))
-                        <|> (attempt (Arity2Function R))
-                        <|> VarArgsFunction R
-                     ) <!> "Function"
-
+    let Function R: P<Reference> = (arityNameArr |> Array.mapi (fun i _ -> (attempt (ArityNFunction (i + 1) R))) |> choice
+                                    <|> VarArgsFunction R
+                                    ) <!> "Function"
+    
     do ArgumentListImpl := fun (R: P<Range>) -> sepBy (ExpressionDecl R) (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
 
     // Binary arithmetic operators
