@@ -260,27 +260,20 @@
                         <|> NamedReference
                     <!> "Reference"
     // Functions
-    let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
-                       <!> "FunctionName"
+//    let FunctionName = (pstring "INDIRECT" >>. pzero) <|> many1Satisfy (fun c -> isLetter(c))
+//                       <!> "FunctionName"
 
-    let Arity1FunctionName: Parser<string,Env> = (pstring "SUM") <!> "Arity1FunctionName"
-    let Arity2FunctionName: Parser<string,Env> = (pstring "SUMX2MY2") <!> "Arity2FunctionName"
+    let Arity1FunctionName: P<string> = ["ABS"] |> List.map (fun name -> pstring name) |> choice <!> "Arity1FunctionName"
+    let Arity2FunctionName: P<string> = ["SUMX2MY2"] |> List.map (fun name -> pstring name) |> choice <!> "Arity2FunctionName"
+    let VarArgsFunctionName: P<string> = ["SUM"] |> List.map (fun name -> pstring name) |> choice <!> "VarArgsFunctionName"
+
     let Arguments1 R = ((ExpressionDecl R) |>> (fun expr -> [expr])) <!> "Arguments1"
     let Arguments2 R = (pipe2
                          ((ExpressionDecl R) .>> pstring ",")
                          (ExpressionDecl R)
                          (fun e1 e2 -> [e1; e2])
                        ) <!> "Arguments2"
-    let Arity2Function R =
-                  // here, we ignore whatever Range context we are given
-                  // and use RangeNoUnion instead
-                  getUserState >>=
-                    fun us ->
-                        pipe2
-                            (Arity2FunctionName .>> pstring "(")
-                            ((Arguments2 RangeNoUnion) .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, 2) :> Reference)
-                   <!> "Arity2Function"
+
     let Arity1Function R =
                   // here, we ignore whatever Range context we are given
                   // and use RangeWithUnion instead
@@ -289,23 +282,35 @@
                         pipe2
                             (Arity1FunctionName .>> pstring "(")
                             ((Arguments1 RangeWithUnion) .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, 1) :> Reference)
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, Some(1)) :> Reference)
                    <!> "Arity1Function"
-    // a catch-all function parser
-    let AnyFunction R =
+
+    let Arity2Function R =
+                  // here, we ignore whatever Range context we are given
+                  // and use RangeNoUnion instead
+                  getUserState >>=
+                    fun us ->
+                        pipe2
+                            (Arity2FunctionName .>> pstring "(")
+                            ((Arguments2 RangeNoUnion) .>> pstring ")")
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, Some(2)) :> Reference)
+                   <!> "Arity2Function"
+
+    let VarArgsFunction R =
                   // here, we ignore whatever Range context we are given
                   // and use RangeAnyUnion instead (i.e., try both)
                   getUserState >>=
                     fun us ->
                         pipe2
-                            (FunctionName .>> pstring "(")
+                            (VarArgsFunctionName .>> pstring "(")
                             ((ArgumentList RangeAny) .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, arglist.Length) :> Reference)
-                   <!> "AnyFunction"
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, None) :> Reference)
+                   <!> "VarArgsFunction"
+
     let Function R = (
-                        ((attempt (Arity1Function R))
+                        (attempt (Arity1Function R))
                         <|> (attempt (Arity2Function R))
-                        <|> (AnyFunction R))
+                        <|> VarArgsFunction R
                      ) <!> "Function"
 
     do ArgumentListImpl := fun (R: P<Range>) -> sepBy (ExpressionDecl R) (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"

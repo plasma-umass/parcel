@@ -256,13 +256,15 @@
         override self.GetHashCode() : int =
             env.GetHashCode() ||| addr.GetHashCode()
 
-    and ReferenceFunction(env: Env, fnname: string, arglist: Expression list, arity: int) =
+    and ReferenceFunction(env: Env, fnname: string, arglist: Expression list, arity: int option) =
         inherit Reference(env)
         override self.Type = ReferenceType.ReferenceFunction
         member self.ArgumentList = arglist
         member self.FunctionName = fnname.ToUpper()
         override self.ToString() =
-            self.FunctionName + "[function" + arity.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            match arity with
+            | Some a -> self.FunctionName + "[function" + arity.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            | None -> self.FunctionName + "[functionVarArgs](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction
             let arglists = List.zip arglist rf.ArgumentList
