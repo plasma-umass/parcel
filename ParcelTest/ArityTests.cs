@@ -12,7 +12,7 @@ namespace ParcelTest
             var mwb = MockWorkbook.standardMockWorkbook();
             var e = mwb.envForSheet(1);
 
-            var f = "=SUMX2MY2(A4:A10,B4:B10)";
+            var f = "SUMX2MY2(A4:A10,B4:B10)";
 
             //AST.Range range = new AST.Range(
             //    AST.Address.fromA1(1, "A", e.WorkbookName, e.WorkbookName, e.Path),
