@@ -51,7 +51,7 @@ namespace ParcelTest
                         new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
                             new AST.ReferenceConstant(e, 2),
                             null))));
-            AST.Reference correct = new AST.ReferenceFunction(e, "IF",  )
+            AST.Reference correct = new AST.ReferenceFunction(e, "IF", args, Microsoft.FSharp.Core.FSharpOption<int>(3));
         }
 
         [TestMethod]
