@@ -266,7 +266,7 @@
     let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
     let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"]
     let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["SUMX2MY2"]
-    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 [""]
+    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["IF"]
     let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 [""]
     let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 [""]
     let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT"]

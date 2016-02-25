@@ -35,11 +35,30 @@ namespace ParcelTest
             Assert.AreEqual(r, correct);
         }
 
+        [TestMethod] 
+        public void basicIfExpression()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+            string s = "IF(TRUE, 1, 2)";
+
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            Microsoft.FSharp.Collections.FSharpList<AST.Expression> args = new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+                new AST.ReferenceNamed(e, "TRUE"),
+                new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+                    new AST.ReferenceConstant(e, 1),
+                    new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+                        new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+                            new AST.ReferenceConstant(e, 2),
+                            null))));
+            AST.Reference correct = new AST.ReferenceFunction(e, "IF",  )
+        }
+
         [TestMethod]
         public void ifStatement()
         {
             var mwb = MockWorkbook.standardMockWorkbook();
-            string s = "=IF(SUM(A1:A5) = 10, \"yes\", \"no\")";
+            string s = "IF(SUM(A1:A5) = 10, \"yes\", \"no\")";
 
             IEnumerable<AST.Range> rngs = new List<AST.Range>();
             try
