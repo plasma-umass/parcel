@@ -267,7 +267,7 @@
 
     let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
 
-    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"; "ACOS";
+    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH";
 "MEDIAN"; "MINUTE"; "MODE.MULT"; "MAX"; "MAXA"; "MDETERM"; "MDETERM"; "MODE.SNGL"; "MIN"; "MINA"; "MINVERSE"; "MODE"; "MULTINOMIAL"; "MUNIT";
 "N"; "NORMSDIST"; "NORM.S.INV"; "NORMSINV"; "NOT"; "NUMBERVALUE"; 
 "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
