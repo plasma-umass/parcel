@@ -43,15 +43,18 @@ namespace ParcelTest
             string s = "IF(TRUE, 1, 2)";
 
             AST.Reference r = Parcel.simpleReferenceParser(s, e);
-            Microsoft.FSharp.Collections.FSharpList<AST.Expression> args = new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
-                new AST.ReferenceNamed(e, "TRUE"),
-                new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
-                    new AST.ReferenceConstant(e, 1),
-                    new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
-                        new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
-                            new AST.ReferenceConstant(e, 2),
-                            null))));
-            AST.Reference correct = new AST.ReferenceFunction(e, "IF", args, Microsoft.FSharp.Core.FSharpOption<int>(3));
+
+            throw new NotImplementedException("FINISH THIS TEST.");
+
+            //Microsoft.FSharp.Collections.FSharpList<AST.Expression> args = new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+            //    new AST.ReferenceNamed(e, "TRUE"),
+            //    new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+            //        new AST.ReferenceConstant(e, 1),
+            //        new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+            //            new Microsoft.FSharp.Collections.FSharpList<AST.Expression>(
+            //                new AST.ReferenceConstant(e, 2),
+            //                null))));
+            //AST.Reference correct = new AST.ReferenceFunction(e, "IF", args, Microsoft.FSharp.Core.FSharpOption<int>(3));
         }
 
         [TestMethod]
