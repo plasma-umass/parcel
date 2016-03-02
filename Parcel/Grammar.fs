@@ -267,7 +267,8 @@
 
     let Arity0FunctionName: P<string> = ArityFunctionNameMaker 0 ["NA", "NOW", "PI", "RAND", "ROW", "SHEET", "SHEETS", "TODAY", "TRUE"]
 
-    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS", 
+    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"
+"MEDIAN", "MINUTE", "MODE.MULT", "MAX", "MAXA", "MDETERM", "MDETERM", "MODE.SNGL", "MIN", "MINA", "MINVERSE", "MODE", "MULTINOMIAL", "MUNIT",
 "N", "NORMSDIST", "NORM.S.INV", "NORMSINV", "NOT", "NUMBERVALUE", 
 "OCT2BIN, "OCT2DEC", "OCT2HEX", "ODD", "OR", 
 "PHI", "PHONETIC", "PRODUCT", "PROPER",
@@ -281,6 +282,7 @@
 "YEAR"]
 
     let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE", "DAYS", "FIND", "FINDB", "INDEX", "LOOKUP", "MATCH",
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MODE.SNGL", "MIN", "MINA", "MMULT", "MOD", "MODE", "MONTH", "MROUND", "MULTINOMIAL",	    
 "NETWORKDAYS.INTL", "NETWORKDAYS", "NOMINAL", "NORM.S.DIST", "NPV", "NUMBERVALUE", 
 "OCT2BIN", "OCT2DEC", "OCT2HEX", "ODDFPRICE", "OR",
 "PEARSON", "PERCENTILE.EXC", "PERCENTILE.INC", "PERCENTILE", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERCENTRANK", "PERMUT", "PERMUTATIONA", "POWER", "PROB", "PRODUCT", 
@@ -295,6 +297,7 @@
 "ZTEST", "Z.TEST"]	    
 
     let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE", "DATE", "FIND", "FINDB", "IF", "INDEX", "LOOKUP", "MATCH",
+"MEDIAN", "MIRR", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MID", "MIDB", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NEGBINOMDIST", "NETWORKDAYS", "NETWORKDAYS.INTL", "NORM.INV", "NORMINV", "NPER", "NPV", "NUMBERVALUE", 
 "OFFSET", "OR",
 "PDURATION", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERCENTRANK", "PMT", "POISSON.DIST", "POISSON", "PROB", "PRODUCT", "PV", 
@@ -308,6 +311,7 @@
 "ZTEST", "Z.TEST"]
 
     let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["CHOOSE", 
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NEGBINOM.DIST", "NETWORKDAYS.INTL", "NORM.DIST", "NORMDIST", "NPER", "NPV", 
 "OFFSET", "OR",
 "PMT", "PPMT", "PRICEDISC", "PRICEMAT", "PROB", "PRODUCT", "PV", 
@@ -320,6 +324,7 @@
 "YIELDDISC"]
 
     let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["CHOOSE",
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MDURATION", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NPER", "NPV",     
 "OFFSET", "OR",
 "PMT", "PPMT", "PRICEDISC", "PRICEMAT", "PRODUCT", "PV", 
@@ -331,6 +336,7 @@
 "YIELDDISC", "YIELDMAT"]
 
     let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT", "CHOOSE", 
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MDURATION", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NPV", 
 "OR",
 "PPMT", "PRICE", "PRODUCT", 
@@ -342,6 +348,7 @@
 "YIELD", "YIELDMAT"]
 
     let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT", "CHOOSE", 
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NPV", 
 "ODDLPRICE", "ODDLYIELD", "OR",
 "PRICE", "PRODUCT", 
@@ -353,6 +360,7 @@
 "YIELD"]
 
     let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT", "CHOOSE", 
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NPV", 
 "ODDFPRICE", "ODDFYIELD", "ODDLPRICE", "ODDLYIELD", "OR",
 "PRODUCT", 
@@ -363,6 +371,7 @@
 "XOR"]
 
     let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 ["ACCRINT", "CHOOSE",
+"MEDIAN", "MODE.MULT", "MAX", "MAXA", "MAXIFS", "MODE.SNGL", "MIN", "MINIFS", "MINA", "MODE", "MULTINOMIAL",
 "NPV", 
 "ODDFPRICE", "ODDFYIELD" "OR",
 "PRODUCT", 
