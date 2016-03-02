@@ -264,14 +264,54 @@
 //                       <!> "FunctionName"
 
     let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
-    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS", "SUM"]
-    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE", "DAYS", "FIND", "FINDB", "INDEX", "LOOKUP", "MATCH", "SUM", "SUMX2MY2"]
-    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE", "DATE", "FIND", "FINDB", "IF", "INDEX", "LOOKUP", "MATCH", "SUM", "VLOOKUP"]
-    let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["CHOOSE", "SUM", "VLOOKUP"]
-    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["CHOOSE", "SUM"]
-    let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT", "CHOOSE", "SUM"]
-    let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT", "CHOOSE", "SUM"]
-    let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT", "CHOOSE", "SUM"]
+    let Arity0FunctionName: P<string> = ArityFunctionNameMaker 0 ["TODAY", "TRUE"]
+    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS", "SUM", 
+"T", "TAN", "TANH", "TIMEVALUE", "TRANSPOSE", "TREND", "TRIM", "TRUNC", "TYPE",
+"UNICHAR", "UNICODE", "UPPER",
+"VALUE", "VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA", 
+"WEBSERVICE", "WEEKDAY", "WEEKNUM", 
+"XOR",  
+"YEAR"]
+    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE", "DAYS", "FIND", "FINDB", "INDEX", "LOOKUP", "MATCH", "SUM", "SUMX2MY2", 
+"TBILLYIELD", "T.DIST.RT", "TEXT", "T.INV", "TINV", "T.INV.2T", "TREND", "TRIMMEAN", "TRUNC",
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA",
+"WEEKDAY", "WEEKNUM", "WORKDAY", "WORKDAY.INTL",
+"XIRR", "XOR",
+"YEARFRAC", 
+"ZTEST", "Z.TEST"]	    
+    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE", "DATE", "FIND", "FINDB", "IF", "INDEX", "LOOKUP", "MATCH", "SUM", 
+"TBILLEQ", "TBILLPRICE", "T.DIST", "TDIST", "T.DIST.2T", "TEXTJOIN", "TIME", "TREND",
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA", "VLOOKUP", 
+"WORKDAY", "WORKDAY.INTL",
+"XIRR", "XNPV", "XOR",
+"YEARFRAC", 
+"ZTEST", "Z.TEST"]
+    let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["CHOOSE", "SUM", 
+"TEXTJOIN", "TREND","T.TEST", "TTEST",
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA", "VLOOKUP", 
+"WEIBULL", "WEIBULL.DIST", "WORKDAY.INTL",
+"XOR",
+"YIELDDISC"]
+    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["CHOOSE", "SUM", 
+"TEXTJOIN", 
+"VAR", "VAR.P", "VARA", "VARP","VARPA", "VDB", 
+"XOR",
+"YIELDDISC", "YIELDMAT"]
+    let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT", "CHOOSE", "SUM", 
+"TEXTJOIN", 
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA", "VDB",
+"XOR",
+"YIELD", "YIELDMAT"]
+    let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT", "CHOOSE", "SUM", 
+"TEXTJOIN", 
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA", "VDB",
+"XOR",
+"YIELD"]
+    let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT", "CHOOSE", 
+"TEXTJOIN", 
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA",
+"XOR",
+"SUM"]
 
     let arityNameArr: P<string>[] = 
         [|
