@@ -382,6 +382,7 @@
 
     let arityNameArr: P<string>[] = 
         [|
+            Arity0FunctionName;
             Arity1FunctionName;
             Arity2FunctionName;
             Arity3FunctionName;
@@ -391,7 +392,7 @@
             Arity7FunctionName;
             Arity8FunctionName;
         |]
-    let FunctionNamesForArity i: P<string> = arityNameArr.[i-1]
+    let FunctionNamesForArity i: P<string> = arityNameArr.[i]
 
     let VarArgsFunctionName: P<string> = ["SUM"] |> List.map (fun name -> pstring name) |> choice <!> "VarArgsFunctionName"
 
