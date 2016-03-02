@@ -265,9 +265,10 @@
 
     let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
 
-    let Arity0FunctionName: P<string> = ArityFunctionNameMaker 0 ["PI", "RAND", "ROW", "SHEET", "SHEETS", "TODAY", "TRUE"]
+    let Arity0FunctionName: P<string> = ArityFunctionNameMaker 0 ["NA", "NOW", "PI", "RAND", "ROW", "SHEET", "SHEETS", "TODAY", "TRUE"]
 
     let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS", 
+"N", "NORMSDIST", "NORM.S.INV", "NORMSINV", "NOT", "NUMBERVALUE", 
 "OCT2BIN, "OCT2DEC", "OCT2HEX", "ODD", "OR", 
 "PHI", "PHONETIC", "PRODUCT", "PROPER",
 "RADIANS", "RIGHT", "RIGHTB", "ROMAN", "ROW", "ROWS",
@@ -279,7 +280,8 @@
 "XOR",  
 "YEAR"]
 
-    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE", "DAYS", "FIND", "FINDB", "INDEX", "LOOKUP", "MATCH", 
+    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE", "DAYS", "FIND", "FINDB", "INDEX", "LOOKUP", "MATCH",
+"NETWORKDAYS.INTL", "NETWORKDAYS", "NOMINAL", "NORM.S.DIST", "NPV", "NUMBERVALUE", 
 "OCT2BIN", "OCT2DEC", "OCT2HEX", "ODDFPRICE", "OR",
 "PEARSON", "PERCENTILE.EXC", "PERCENTILE.INC", "PERCENTILE", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERCENTRANK", "PERMUT", "PERMUTATIONA", "POWER", "PROB", "PRODUCT", 
 "QUARTILE", "QUARTILE.EXC", "QUARTILE.INC", "QUOTIENT",
@@ -292,7 +294,8 @@
 "YEARFRAC", 
 "ZTEST", "Z.TEST"]	    
 
-    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE", "DATE", "FIND", "FINDB", "IF", "INDEX", "LOOKUP", "MATCH", 
+    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE", "DATE", "FIND", "FINDB", "IF", "INDEX", "LOOKUP", "MATCH",
+"NEGBINOMDIST", "NETWORKDAYS", "NETWORKDAYS.INTL", "NORM.INV", "NORMINV", "NPER", "NPV", "NUMBERVALUE", 
 "OFFSET", "OR",
 "PDURATION", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERCENTRANK", "PMT", "POISSON.DIST", "POISSON", "PROB", "PRODUCT", "PV", 
 "RANK.AVG", "RANK.EQ", "RANK", "RATE", "REGISTER.ID", "RRI", "RTD", 
@@ -305,6 +308,7 @@
 "ZTEST", "Z.TEST"]
 
     let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["CHOOSE", 
+"NEGBINOM.DIST", "NETWORKDAYS.INTL", "NORM.DIST", "NORMDIST", "NPER", "NPV", 
 "OFFSET", "OR",
 "PMT", "PPMT", "PRICEDISC", "PRICEMAT", "PROB", "PRODUCT", "PV", 
 "RATE", "RECEIVED", "REPLACE", "REPLACEB", "RTD", 
@@ -315,7 +319,8 @@
 "XOR",
 "YIELDDISC"]
 
-    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["CHOOSE", 
+    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["CHOOSE",
+"NPER", "NPV",     
 "OFFSET", "OR",
 "PMT", "PPMT", "PRICEDISC", "PRICEMAT", "PRODUCT", "PV", 
 "RATE", "RECEIVED", "RTD", 
@@ -326,6 +331,7 @@
 "YIELDDISC", "YIELDMAT"]
 
     let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT", "CHOOSE", 
+"NPV", 
 "OR",
 "PPMT", "PRICE", "PRODUCT", 
 "RATE", "RTD", 
@@ -336,6 +342,7 @@
 "YIELD", "YIELDMAT"]
 
     let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT", "CHOOSE", 
+"NPV", 
 "ODDLPRICE", "ODDLYIELD", "OR",
 "PRICE", "PRODUCT", 
 "RTD", 
@@ -346,6 +353,7 @@
 "YIELD"]
 
     let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT", "CHOOSE", 
+"NPV", 
 "ODDFPRICE", "ODDFYIELD", "ODDLPRICE", "ODDLYIELD", "OR",
 "PRODUCT", 
 "RTD", 
@@ -355,6 +363,7 @@
 "XOR"]
 
     let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 ["ACCRINT", "CHOOSE",
+"NPV", 
 "ODDFPRICE", "ODDFYIELD" "OR",
 "PRODUCT", 
 "RTD",
