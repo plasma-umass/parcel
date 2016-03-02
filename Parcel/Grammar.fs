@@ -268,6 +268,7 @@
     let Arity0FunctionName: P<string> = ArityFunctionNameMaker 0 ["PI", "RAND", "ROW", "SHEET", "SHEETS", "TODAY", "TRUE"]
 
     let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS", 
+"OCT2BIN, "OCT2DEC", "OCT2HEX", "ODD", "OR", 
 "PHI", "PHONETIC", "PRODUCT", "PROPER",
 "RADIANS", "RIGHT", "RIGHTB", "ROMAN", "ROW", "ROWS",
 "SEC", "SECH", "SECOND", "SHEET", "SHEETS", "SIGN", "SIN", "SINH", "SKEW", "SKEW.P", "SQL.REQUEST", "SQRT", "SQRTPI", "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUM", "SUMPRODUCT", "SUMSQ", 
@@ -279,6 +280,7 @@
 "YEAR"]
 
     let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE", "DAYS", "FIND", "FINDB", "INDEX", "LOOKUP", "MATCH", 
+"OCT2BIN", "OCT2DEC", "OCT2HEX", "ODDFPRICE", "OR",
 "PEARSON", "PERCENTILE.EXC", "PERCENTILE.INC", "PERCENTILE", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERCENTRANK", "PERMUT", "PERMUTATIONA", "POWER", "PROB", "PRODUCT", 
 "QUARTILE", "QUARTILE.EXC", "QUARTILE.INC", "QUOTIENT",
 "RANDBETWEEN", "RANK.AVG", "RANK.EQ", "RANK", "REGISTER.ID", "REPT", "RIGHT", "RIGHTB", "ROMAN", "ROUND", "ROUNDDOWN", "ROUNDUP", "RSQ",
@@ -291,6 +293,7 @@
 "ZTEST", "Z.TEST"]	    
 
     let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE", "DATE", "FIND", "FINDB", "IF", "INDEX", "LOOKUP", "MATCH", 
+"OFFSET", "OR",
 "PDURATION", "PERCENTRANK.EXC", "PERCENTRANK.INC", "PERCENTRANK", "PMT", "POISSON.DIST", "POISSON", "PROB", "PRODUCT", "PV", 
 "RANK.AVG", "RANK.EQ", "RANK", "RATE", "REGISTER.ID", "RRI", "RTD", 
 "SEARCH", "SEARCHB", "SKEW", "SKEW.P", "SLN", "SQL.REQUEST", "STANDARDIZE", "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBSTITUTE", "SUBTOTAL", "SUM", "SUMIF", "SUMIFS", "SUMPRODUCT", "SUMSQ", "SWITCH",
@@ -302,6 +305,7 @@
 "ZTEST", "Z.TEST"]
 
     let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["CHOOSE", 
+"OFFSET", "OR",
 "PMT", "PPMT", "PRICEDISC", "PRICEMAT", "PROB", "PRODUCT", "PV", 
 "RATE", "RECEIVED", "REPLACE", "REPLACEB", "RTD", 
 "SERIESSUM", "SKEW", "SKEW.P", "SQL.REQUEST", "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBSTITUTE", "SUBTOTAL", "SUM", "SUMPRODUCT", "SUMSQ", "SWITCH", "SYD",
@@ -312,6 +316,7 @@
 "YIELDDISC"]
 
     let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["CHOOSE", 
+"OFFSET", "OR",
 "PMT", "PPMT", "PRICEDISC", "PRICEMAT", "PRODUCT", "PV", 
 "RATE", "RECEIVED", "RTD", 
 "SKEW", "SKEW.P", "SQL.REQUEST", "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBTOTAL", "SUM", "SUMIFS", "SUMPRODUCT", "SUMSQ", "SWITCH",
@@ -321,6 +326,7 @@
 "YIELDDISC", "YIELDMAT"]
 
     let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT", "CHOOSE", 
+"OR",
 "PPMT", "PRICE", "PRODUCT", 
 "RATE", "RTD", 
 "SKEW", "SKEW.P", "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBTOTAL", "SUM", "SUMPRODUCT", "SUMSQ", "SWITCH",
@@ -330,6 +336,7 @@
 "YIELD", "YIELDMAT"]
 
     let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT", "CHOOSE", 
+"ODDLPRICE", "ODDLYIELD", "OR",
 "PRICE", "PRODUCT", 
 "RTD", 
 "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBTOTAL", "SUM", "SUMIFS", "SUMPRODUCT", "SUMSQ", "SWITCH",
@@ -339,10 +346,19 @@
 "YIELD"]
 
     let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT", "CHOOSE", 
+"ODDFPRICE", "ODDFYIELD", "ODDLPRICE", "ODDLYIELD", "OR",
 "PRODUCT", 
 "RTD", 
 "STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBTOTAL", "SUM", "SUMPRODUCT", "SUMSQ", "SWITCH",
 "TEXTJOIN", 
+"VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA",
+"XOR"]
+
+    let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 ["ACCRINT", "CHOOSE",
+"ODDFPRICE", "ODDFYIELD" "OR",
+"PRODUCT", 
+"RTD",
+"STDEV", "STDEV.P", "STDEV.S", "STDEVA", "STDEVP", "STDEVPA", "SUBTOTAL", "SUM", "SUMPRODUCT", "SUMSQ", "SWITCH",
 "VAR", "VAR.P", "VAR.S", "VARA", "VARP", "VARPA",
 "XOR"]
 
