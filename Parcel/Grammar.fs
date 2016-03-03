@@ -467,9 +467,10 @@
         (
             (   // fixed arity
                 arityNNameArr |>
-                    Array.mapi (fun i _ -> (attempt (ArityNFunction (i + 1) R))) |> choice)
+                    Array.mapi (fun i _ -> (attempt (ArityNFunction i R))) |> choice)
             <|> (// low-bounded arity
                 arityAtLeastNNameArr |>
+                    // note: no "at-least-0" parser; that's just a varargs
                     Array.mapi (fun i _ -> (attempt (ArityAtLeastNFunction (i + 1) R))) |> choice)
                 // varargs
             <|> VarArgsFunction R
