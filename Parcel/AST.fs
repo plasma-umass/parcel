@@ -214,6 +214,11 @@
     | ReferenceString   = 4
     | ReferenceNamed    = 5
 
+    type Arity =
+    | Fixed of int
+    | LowBound of int
+    | VarArgs
+
     [<AbstractClass>]
     type Reference(env: Env) =
 //        abstract member InsideRef: Reference -> bool
@@ -256,15 +261,16 @@
         override self.GetHashCode() : int =
             env.GetHashCode() ||| addr.GetHashCode()
 
-    and ReferenceFunction(env: Env, fnname: string, arglist: Expression list, arity: int option) =
+    and ReferenceFunction(env: Env, fnname: string, arglist: Expression list, arity: Arity) =
         inherit Reference(env)
         override self.Type = ReferenceType.ReferenceFunction
         member self.ArgumentList = arglist
         member self.FunctionName = fnname.ToUpper()
         override self.ToString() =
             match arity with
-            | Some a -> self.FunctionName + "[function" + a.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
-            | None -> self.FunctionName + "[functionVarArgs](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            | Fixed a -> self.FunctionName + "[function" + a.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            | LowBound aplus -> self.FunctionName + "[function" + aplus.ToString() + "+](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
+            | VarArgs -> self.FunctionName + "[functionVarArgs](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
         override self.Equals(obj: obj) : bool =
             let rf = obj :?> ReferenceFunction
             let arglists = List.zip arglist rf.ArgumentList

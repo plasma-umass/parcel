@@ -264,6 +264,7 @@
 //                       <!> "FunctionName"
 
     let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
+    let ArityAtLeastNFunctionNameMaker nplus xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + nplus.ToString() + "+FunctionName")
 
     let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
 
@@ -281,6 +282,8 @@
 "XOR";  
 "YEAR"]
 
+    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 []
+
     let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE"; "DAYS"; "FIND"; "FINDB"; "INDEX"; "LOOKUP"; "MATCH";
 "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MODE.SNGL"; "MIN"; "MINA"; "MMULT"; "MOD"; "MODE"; "MONTH"; "MROUND"; "MULTINOMIAL";    
 "NETWORKDAYS.INTL"; "NETWORKDAYS"; "NOMINAL"; "NORM.S.DIST"; "NPV"; "NUMBERVALUE"; 
@@ -296,6 +299,8 @@
 "YEARFRAC"; 
 "ZTEST"; "Z.TEST"]
 
+    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 []
+
     let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE"; "DATE"; "FIND"; "FINDB"; "IF"; "INDEX"; "LOOKUP"; "MATCH";
 "MEDIAN"; "MIRR"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MID"; "MIDB"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
 "NEGBINOMDIST"; "NETWORKDAYS"; "NETWORKDAYS.INTL"; "NORM.INV"; "NORMINV"; "NPER"; "NPV"; "NUMBERVALUE"; 
@@ -309,6 +314,8 @@
 "XIRR"; "XNPV"; "XOR";
 "YEARFRAC"; 
 "ZTEST"; "Z.TEST"]
+
+    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"]
 
     let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["ACCRINTM"; "CHOOSE"; 
 "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
@@ -380,7 +387,11 @@
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
 "XOR"]
 
-    let arityNameArr: P<string>[] = 
+    let VarArgsFunctionName: P<string> =
+        ["SUM"]
+        |> List.map (fun name -> pstring name) |> choice <!> "VarArgsFunctionName"
+
+    let arityNNameArr: P<string>[] = 
         [|
             Arity0FunctionName;
             Arity1FunctionName;
@@ -392,15 +403,32 @@
             Arity7FunctionName;
             Arity8FunctionName;
         |]
-    let FunctionNamesForArity i: P<string> = arityNameArr.[i]
 
-    let VarArgsFunctionName: P<string> = ["SUM"] |> List.map (fun name -> pstring name) |> choice <!> "VarArgsFunctionName"
+    let arityAtLeastNNameArr: P<string>[] =
+        [|
+            // NOTE: "ArityAtLeast0" is just VarArgs
+            ArityAtLeast1FunctionName;
+            ArityAtLeast2FunctionName;
+            ArityAtLeast3FunctionName;
+        |]
 
-    let ArgumentsN R n = (pipe2
-                            (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
-                            (ExpressionDecl R)
-                            (fun exprArr expr -> Array.toList exprArr @ [expr] ) <!> ("Arguments" + n.ToString())
-                          )
+    let FunctionNamesForArity i: P<string> = arityNNameArr.[i]
+    let FunctionNamesForAtLeastArity i: P<string> = arityAtLeastNNameArr.[i-1]
+
+    let ArgumentsN R n =
+        (pipe2
+            (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
+            (ExpressionDecl R)
+            (fun exprArr expr -> Array.toList exprArr @ [expr] ) <!> ("Arguments" + n.ToString())
+        )
+
+    let ArgumentsAtLeastN R n =
+        (pipe3
+            (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
+            (ExpressionDecl R)
+            (ArgumentList R)
+            (fun exprArr expr varArgs -> Array.toList exprArr @ [expr] @ varArgs) <!> ("Arguments" + n.ToString() + "+")
+        )
 
     let ArityNFunction n R =
                 // here, we ignore whatever Range context we are given
@@ -408,10 +436,21 @@
                 getUserState >>=
                 fun us ->
                     pipe2
-                        (FunctionNamesForArity(n) .>> pstring "(")
+                        (FunctionNamesForArity n .>> pstring "(")
                         ((ArgumentsN RangeNoUnion n) .>> pstring ")")
-                        (fun fname arglist -> ReferenceFunction(us, fname, arglist, Some(n)) :> Reference)
+                        (fun fname arglist -> ReferenceFunction(us, fname, arglist, Fixed(n)) :> Reference)
                 <!> ("Arity" + n.ToString() + "Function")
+
+    let ArityAtLeastNFunction n R =
+                // here, we ignore whatever Range context we are given
+                // and use RangeNoUnion instead
+                getUserState >>=
+                fun us ->
+                    pipe2
+                        (FunctionNamesForAtLeastArity n .>> pstring "(")
+                        ((ArgumentsAtLeastN RangeNoUnion n) .>> pstring ")")
+                        (fun fname arglist -> ReferenceFunction(us, fname, arglist, LowBound(n)) :> Reference)
+                <!> ("Arity" + n.ToString() + "PlusFunction")
 
     let VarArgsFunction R =
                   // here, we ignore whatever Range context we are given
@@ -421,12 +460,20 @@
                         pipe2
                             (VarArgsFunctionName .>> pstring "(")
                             ((ArgumentList RangeAny) .>> pstring ")")
-                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, None) :> Reference)
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, VarArgs) :> Reference)
                    <!> "VarArgsFunction"
 
-    let Function R: P<Reference> = (arityNameArr |> Array.mapi (fun i _ -> (attempt (ArityNFunction (i + 1) R))) |> choice
-                                    <|> VarArgsFunction R
-                                    ) <!> "Function"
+    let Function R: P<Reference> =
+        (
+            (   // fixed arity
+                arityNNameArr |>
+                    Array.mapi (fun i _ -> (attempt (ArityNFunction (i + 1) R))) |> choice)
+            <|> (// low-bounded arity
+                arityAtLeastNNameArr |>
+                    Array.mapi (fun i _ -> (attempt (ArityAtLeastNFunction (i + 1) R))) |> choice)
+                // varargs
+            <|> VarArgsFunction R
+        ) <!> "Function"
     
     do ArgumentListImpl := fun (R: P<Range>) -> sepBy (ExpressionDecl R) (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
 
