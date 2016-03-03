@@ -423,12 +423,12 @@
                              return y :: ys }
         | [] -> parse { return [] }
 
-    let Argument R = fun (i: int) -> (((ExpressionDecl R) .>> pstring ",") <!> ("argument #" + i.ToString()))
+    let Argument R = fun (i: int) -> (((ExpressionDecl R) .>> (spaces >>. pstring "," .>> spaces)) <!> ("Argument #" + i.ToString()))
 
     let ArgumentsN R n =
         (pipe2
-            (pmap (Argument R) [0..n-1])
-            (ExpressionDecl R)
+            (pmap (Argument R) [1..n-1])
+            ((ExpressionDecl R) <!> ("Argument #" + n.ToString() + " (last arg)"))
             (fun exprs expr -> exprs @ [expr] ) <!> ("Arguments" + n.ToString())
         )
 
@@ -446,8 +446,8 @@
                 getUserState >>=
                 fun us ->
                     pipe2
-                        (FunctionNamesForArity n .>> pstring "(")
-                        ((ArgumentsN RangeNoUnion n) .>> pstring ")")
+                        (FunctionNamesForArity n .>> (pstring "(" <!> "Arity" + n.ToString() + "FunctionOPENINGBRACE"))
+                        ((ArgumentsN RangeNoUnion n) .>> (pstring ")" <!> "Arity" + n.ToString() + "FunctionCLOSINGBRACE" ))
                         (fun fname arglist -> ReferenceFunction(us, fname, arglist, Fixed(n)) :> Reference)
                 <!> ("Arity" + n.ToString() + "Function")
 
@@ -486,7 +486,7 @@
             <|> VarArgsFunction R
         ) <!> "Function"
     
-    do ArgumentListImpl := fun (R: P<Range>) -> sepBy (ExpressionDecl R) (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
+    do ArgumentListImpl := fun (R: P<Range>) -> sepBy ((ExpressionDecl R) <!> "VarArgs Argument") (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
 
     // Binary arithmetic operators
     let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^' || c = '&') .>> spaces
