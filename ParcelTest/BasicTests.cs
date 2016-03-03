@@ -61,7 +61,7 @@ namespace ParcelTest
         public void ifStatement()
         {
             var mwb = MockWorkbook.standardMockWorkbook();
-            string s = "IF(SUM(A1:A5) = 10, \"yes\", \"no\")";
+            string s = "=IF(SUM(A1:A5) = 10, \"yes\", \"no\")";
 
             IEnumerable<AST.Range> rngs = new List<AST.Range>();
             try
