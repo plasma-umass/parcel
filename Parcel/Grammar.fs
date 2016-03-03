@@ -268,124 +268,128 @@
 
     let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
 
-    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH";
-"MEDIAN"; "MINUTE"; "MODE.MULT"; "MAX"; "MAXA"; "MDETERM"; "MDETERM"; "MODE.SNGL"; "MIN"; "MINA"; "MINVERSE"; "MODE"; "MULTINOMIAL"; "MUNIT";
-"N"; "NORMSDIST"; "NORM.S.INV"; "NORMSINV"; "NOT"; "NUMBERVALUE"; 
-"OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
-"PHI"; "PHONETIC"; "PRODUCT"; "PROPER";
-"RADIANS"; "RIGHT"; "RIGHTB"; "ROMAN"; "ROW"; "ROWS";
-"SEC"; "SECH"; "SECOND"; "SHEET"; "SHEETS"; "SIGN"; "SIN"; "SINH"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "SQRT"; "SQRTPI"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUMPRODUCT"; "SUMSQ"; 
-"T"; "TAN"; "TANH"; "TIMEVALUE"; "TRANSPOSE"; "TREND"; "TRIM"; "TRUNC"; "TYPE";
-"UNICHAR"; "UNICODE"; "UPPER";
-"VALUE"; "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; 
-"WEBSERVICE"; "WEEKDAY"; "WEEKNUM"; 
-"XOR";  
-"YEAR"]
+    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH"; "ARABIC"; "AREAS"; "ASC"; "ASIN"; "ASINH"; "ATAN"; "ATANH";
+        "BAHTTEXT"; "BIN2DEC"; "BIN2HEX"; "BIN2OCT";
+        "MEDIAN"; "MINUTE"; "MODE.MULT"; "MAX"; "MAXA"; "MDETERM"; "MDETERM"; "MODE.SNGL"; "MIN"; "MINA"; "MINVERSE"; "MODE"; "MULTINOMIAL"; "MUNIT";
+        "N"; "NORMSDIST"; "NORM.S.INV"; "NORMSINV"; "NOT"; "NUMBERVALUE"; 
+        "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
+        "PHI"; "PHONETIC"; "PRODUCT"; "PROPER";
+        "RADIANS"; "RIGHT"; "RIGHTB"; "ROMAN"; "ROW"; "ROWS";
+        "SEC"; "SECH"; "SECOND"; "SHEET"; "SHEETS"; "SIGN"; "SIN"; "SINH"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "SQRT"; "SQRTPI"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUMPRODUCT"; "SUMSQ"; 
+        "T"; "TAN"; "TANH"; "TIMEVALUE"; "TRANSPOSE"; "TREND"; "TRIM"; "TRUNC"; "TYPE";
+        "UNICHAR"; "UNICODE"; "UPPER";
+        "VALUE"; "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; 
+        "WEBSERVICE"; "WEEKDAY"; "WEEKNUM"; 
+        "XOR";  
+        "YEAR"]
 
-    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 []
+    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["ADDRESS"; "ATAN2"; "AVERAGEIF"; "BASE"; "BESSELI"; "BESSELJ"; "BESSELK"; "BESSELY";
+        "BIN2HEX"; "BIN2OCT"; "BITAND"; "BITLSHIFT"; "BITOR"; "BITRSHIFT"; "BITXOR";
+        "CHOOSE"; "DAYS"; "FIND"; "FINDB"; "INDEX"; "LOOKUP"; "MATCH";
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MODE.SNGL"; "MIN"; "MINA"; "MMULT"; "MOD"; "MODE"; "MONTH"; "MROUND"; "MULTINOMIAL";    
+        "NETWORKDAYS.INTL"; "NETWORKDAYS"; "NOMINAL"; "NORM.S.DIST"; "NPV"; "NUMBERVALUE"; 
+        "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODDFPRICE"; "OR";
+        "PEARSON"; "PERCENTILE.EXC"; "PERCENTILE.INC"; "PERCENTILE"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PERMUT"; "PERMUTATIONA"; "POWER"; "PROB"; "PRODUCT"; 
+        "QUARTILE"; "QUARTILE.EXC"; "QUARTILE.INC"; "QUOTIENT";
+        "RANDBETWEEN"; "RANK.AVG"; "RANK.EQ"; "RANK"; "REGISTER.ID"; "REPT"; "RIGHT"; "RIGHTB"; "ROMAN"; "ROUND"; "ROUNDDOWN"; "ROUNDUP"; "RSQ";
+        "SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLOPE"; "SMALL"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "STEYX"; "SUBTOTAL"; "SUMIF"; "SUMPRODUCT"; "SUMSQ"; "SUMX2MY2"; "SUMX2PY2"; "SUMXMY2"; 
+        "TBILLYIELD"; "T.DIST.RT"; "TEXT"; "T.INV"; "TINV"; "T.INV.2T"; "TREND"; "TRIMMEAN"; "TRUNC";
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
+        "WEEKDAY"; "WEEKNUM"; "WORKDAY"; "WORKDAY.INTL";
+        "XIRR"; "XOR";
+        "YEARFRAC"; 
+        "ZTEST"; "Z.TEST"]
 
-    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["CHOOSE"; "DAYS"; "FIND"; "FINDB"; "INDEX"; "LOOKUP"; "MATCH";
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MODE.SNGL"; "MIN"; "MINA"; "MMULT"; "MOD"; "MODE"; "MONTH"; "MROUND"; "MULTINOMIAL";    
-"NETWORKDAYS.INTL"; "NETWORKDAYS"; "NOMINAL"; "NORM.S.DIST"; "NPV"; "NUMBERVALUE"; 
-"OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODDFPRICE"; "OR";
-"PEARSON"; "PERCENTILE.EXC"; "PERCENTILE.INC"; "PERCENTILE"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PERMUT"; "PERMUTATIONA"; "POWER"; "PROB"; "PRODUCT"; 
-"QUARTILE"; "QUARTILE.EXC"; "QUARTILE.INC"; "QUOTIENT";
-"RANDBETWEEN"; "RANK.AVG"; "RANK.EQ"; "RANK"; "REGISTER.ID"; "REPT"; "RIGHT"; "RIGHTB"; "ROMAN"; "ROUND"; "ROUNDDOWN"; "ROUNDUP"; "RSQ";
-"SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLOPE"; "SMALL"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "STEYX"; "SUBTOTAL"; "SUMIF"; "SUMPRODUCT"; "SUMSQ"; "SUMX2MY2"; "SUMX2PY2"; "SUMXMY2"; 
-"TBILLYIELD"; "T.DIST.RT"; "TEXT"; "T.INV"; "TINV"; "T.INV.2T"; "TREND"; "TRIMMEAN"; "TRUNC";
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
-"WEEKDAY"; "WEEKNUM"; "WORKDAY"; "WORKDAY.INTL";
-"XIRR"; "XOR";
-"YEARFRAC"; 
-"ZTEST"; "Z.TEST"]
+    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["ADDRESS"; "AVERAGEIF"; "BASE"; "BETADIST"; "BETAINV"; "BETA.INV"; "BINOM.DIST.RANGE"; "BINOM.INV";
+        "CHOOSE"; "DATE"; "FIND"; "FINDB"; "IF"; "INDEX"; "LOOKUP"; "MATCH";
+        "MEDIAN"; "MIRR"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MID"; "MIDB"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NEGBINOMDIST"; "NETWORKDAYS"; "NETWORKDAYS.INTL"; "NORM.INV"; "NORMINV"; "NPER"; "NPV"; "NUMBERVALUE"; 
+        "OFFSET"; "OR";
+        "PDURATION"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PMT"; "POISSON.DIST"; "POISSON"; "PROB"; "PRODUCT"; "PV"; 
+        "RANK.AVG"; "RANK.EQ"; "RANK"; "RATE"; "REGISTER.ID"; "RRI"; "RTD"; 
+        "SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLN"; "SQL.REQUEST"; "STANDARDIZE"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUMIF"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+        "TBILLEQ"; "TBILLPRICE"; "T.DIST"; "TDIST"; "T.DIST.2T"; "TEXTJOIN"; "TIME"; "TREND";
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
+        "WORKDAY"; "WORKDAY.INTL";
+        "XIRR"; "XNPV"; "XOR";
+        "YEARFRAC"; 
+        "ZTEST"; "Z.TEST"]
 
-    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 []
+    let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "BINOMDIST"; "BINOM.DIST";
+        "BINOM.DIST.RANGE";
+        "CHOOSE"; 
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NEGBINOM.DIST"; "NETWORKDAYS.INTL"; "NORM.DIST"; "NORMDIST"; "NPER"; "NPV"; 
+        "OFFSET"; "OR";
+        "PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PROB"; "PRODUCT"; "PV"; 
+        "RATE"; "RECEIVED"; "REPLACE"; "REPLACEB"; "RTD"; 
+        "SERIESSUM"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH"; "SYD";
+        "TEXTJOIN"; "TREND";"T.TEST"; "TTEST";
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
+        "WEIBULL"; "WEIBULL.DIST"; "WORKDAY.INTL";
+        "XOR";
+        "YIELDDISC"]
 
-    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["CHOOSE"; "DATE"; "FIND"; "FINDB"; "IF"; "INDEX"; "LOOKUP"; "MATCH";
-"MEDIAN"; "MIRR"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MID"; "MIDB"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NEGBINOMDIST"; "NETWORKDAYS"; "NETWORKDAYS.INTL"; "NORM.INV"; "NORMINV"; "NPER"; "NPV"; "NUMBERVALUE"; 
-"OFFSET"; "OR";
-"PDURATION"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PMT"; "POISSON.DIST"; "POISSON"; "PROB"; "PRODUCT"; "PV"; 
-"RANK.AVG"; "RANK.EQ"; "RANK"; "RATE"; "REGISTER.ID"; "RRI"; "RTD"; 
-"SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLN"; "SQL.REQUEST"; "STANDARDIZE"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUMIF"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
-"TBILLEQ"; "TBILLPRICE"; "T.DIST"; "TDIST"; "T.DIST.2T"; "TEXTJOIN"; "TIME"; "TREND";
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
-"WORKDAY"; "WORKDAY.INTL";
-"XIRR"; "XNPV"; "XOR";
-"YEARFRAC"; 
-"ZTEST"; "Z.TEST"]
+    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "CHOOSE";
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NPER"; "NPV";     
+        "OFFSET"; "OR";
+        "PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PRODUCT"; "PV"; 
+        "RATE"; "RECEIVED"; "RTD"; 
+        "SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+        "TEXTJOIN"; 
+        "VAR"; "VAR.P"; "VARA"; "VARP";"VARPA"; "VDB"; 
+        "XOR";
+        "YIELDDISC"; "YIELDMAT"]
 
-    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"]
+    let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT"; "AMORDEGRC"; "AMORLINC"; "BETA.DIST"; "CHOOSE"; 
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NPV"; 
+        "OR";
+        "PPMT"; "PRICE"; "PRODUCT"; 
+        "RATE"; "RTD"; 
+        "SKEW"; "SKEW.P"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+        "TEXTJOIN"; 
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
+        "XOR";
+        "YIELD"; "YIELDMAT"]
 
-    let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["ACCRINTM"; "CHOOSE"; 
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NEGBINOM.DIST"; "NETWORKDAYS.INTL"; "NORM.DIST"; "NORMDIST"; "NPER"; "NPV"; 
-"OFFSET"; "OR";
-"PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PROB"; "PRODUCT"; "PV"; 
-"RATE"; "RECEIVED"; "REPLACE"; "REPLACEB"; "RTD"; 
-"SERIESSUM"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH"; "SYD";
-"TEXTJOIN"; "TREND";"T.TEST"; "TTEST";
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
-"WEIBULL"; "WEIBULL.DIST"; "WORKDAY.INTL";
-"XOR";
-"YIELDDISC"]
-
-    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["ACCRINTM"; "CHOOSE";
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NPER"; "NPV";     
-"OFFSET"; "OR";
-"PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PRODUCT"; "PV"; 
-"RATE"; "RECEIVED"; "RTD"; 
-"SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
-"TEXTJOIN"; 
-"VAR"; "VAR.P"; "VARA"; "VARP";"VARPA"; "VDB"; 
-"XOR";
-"YIELDDISC"; "YIELDMAT"]
-
-    let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT"; "CHOOSE"; 
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NPV"; 
-"OR";
-"PPMT"; "PRICE"; "PRODUCT"; 
-"RATE"; "RTD"; 
-"SKEW"; "SKEW.P"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
-"TEXTJOIN"; 
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
-"XOR";
-"YIELD"; "YIELDMAT"]
-
-    let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT"; "CHOOSE"; 
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NPV"; 
-"ODDLPRICE"; "ODDLYIELD"; "OR";
-"PRICE"; "PRODUCT"; 
-"RTD"; 
-"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
-"TEXTJOIN"; 
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
-"XOR";
-"YIELD"]
+    let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT"; "AMORDEGRC"; "AMORLINC"; "CHOOSE"; 
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NPV"; 
+        "ODDLPRICE"; "ODDLYIELD"; "OR";
+        "PRICE"; "PRODUCT"; 
+        "RTD"; 
+        "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+        "TEXTJOIN"; 
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
+        "XOR";
+        "YIELD"]
 
     let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT"; "CHOOSE"; 
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NPV"; 
-"ODDFPRICE"; "ODDFYIELD"; "ODDLPRICE"; "ODDLYIELD"; "OR";
-"PRODUCT"; 
-"RTD"; 
-"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
-"TEXTJOIN"; 
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
-"XOR"]
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NPV"; 
+        "ODDFPRICE"; "ODDFYIELD"; "ODDLPRICE"; "ODDLYIELD"; "OR";
+        "PRODUCT"; 
+        "RTD"; 
+        "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+        "TEXTJOIN"; 
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
+        "XOR"]
 
     let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 ["ACCRINT"; "CHOOSE";
-"MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-"NPV"; 
-"ODDFPRICE"; "ODDFYIELD"; "OR";
-"PRODUCT"; 
-"RTD";
-"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
-"VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
-"XOR"]
+        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "NPV"; 
+        "ODDFPRICE"; "ODDFYIELD"; "OR";
+        "PRODUCT"; 
+        "RTD";
+        "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+        "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
+        "XOR"]
+
+    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 ["AND"; "AVEDEV"; "AVERAGE"; "AVERAGEA"; ]
+    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 []
+    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"; "AVERAGEIFS";]
 
     let VarArgsFunctionName: P<string> =
         ["SUM"]
