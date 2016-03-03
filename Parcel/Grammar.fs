@@ -266,10 +266,11 @@
     let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
     let ArityAtLeastNFunctionNameMaker nplus xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + nplus.ToString() + "+FunctionName")
 
-    let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
+    let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["COLUMN"; "NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
 
     let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH"; "ARABIC"; "AREAS"; "ASC"; "ASIN"; "ASINH"; "ATAN"; "ATANH";
-        "BAHTTEXT"; "BIN2DEC"; "BIN2HEX"; "BIN2OCT"; "CEILING.PRECISE"; "CELL"; "CHAR";
+        "BAHTTEXT"; "BIN2DEC"; "BIN2HEX"; "BIN2OCT"; "CEILING.PRECISE"; "CELL"; "CHAR"; "CLEAN"; "CODE"; "COLUMN"; "COLUMNS"; "COS"; "COSH"; "COT"; "COTH"; "COUNTBLANK";
+        "CSC"; "CSCH"; "CUBESETCOUNT";
         "MEDIAN"; "MINUTE"; "MODE.MULT"; "MAX"; "MAXA"; "MDETERM"; "MDETERM"; "MODE.SNGL"; "MIN"; "MINA"; "MINVERSE"; "MODE"; "MULTINOMIAL"; "MUNIT";
         "N"; "NORMSDIST"; "NORM.S.INV"; "NORMSINV"; "NOT"; "NUMBERVALUE"; 
         "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
@@ -285,7 +286,8 @@
 
     let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 ["ADDRESS"; "ATAN2"; "AVERAGEIF"; "BASE"; "BESSELI"; "BESSELJ"; "BESSELK"; "BESSELY";
         "BIN2HEX"; "BIN2OCT"; "BITAND"; "BITLSHIFT"; "BITOR"; "BITRSHIFT"; "BITXOR"; "CEILING"; "CEILING.PRECISE"; "CELL"; "CHIDIST"; "CHIINV"; "CHITEST";
-        "CHISQ.DIST.RT"; "CHISQ.TEST";
+        "CHISQ.DIST.RT"; "CHISQ.TEST"; "COMBIN"; "COMBINA"; "COMPLEX"; "COUNTIF"; "COVAR"; "COVARIANCE.P"; "COVARIANCE.S"; "CUBEMEMBER"; "CUBERANKEDMEMBER";
+        "CUBESET";
         "DAYS"; "FIND"; "FINDB"; "INDEX"; "LOOKUP"; "MATCH";
         "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MODE.SNGL"; "MIN"; "MINA"; "MMULT"; "MOD"; "MODE"; "MONTH"; "MROUND"; "MULTINOMIAL";    
         "NETWORKDAYS.INTL"; "NETWORKDAYS"; "NOMINAL"; "NORM.S.DIST"; "NPV"; "NUMBERVALUE"; 
@@ -302,7 +304,8 @@
         "ZTEST"; "Z.TEST"]
 
     let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 ["ADDRESS"; "AVERAGEIF"; "BASE"; "BETADIST"; "BETAINV"; "BETA.INV"; "BINOM.DIST.RANGE"; "BINOM.INV";
-        "CEILING.MATH"; "CHISQ.DIST";
+        "CEILING.MATH"; "CHISQ.DIST"; "COMPLEX"; "CONFIDENCE"; "CONFIDENCE.NORM"; "CONFIDENCE.T"; "CONVERT"; "CORREL"; "COUPDAYBS"; "COUPDAYS"; "COUPDAYSNC"; "COUPNCD";
+        "COUPNUM"; "COUPPCD"; "CRITBINOM"; "CUBEKPIMEMBER"; "CUBEMEMBER"; "CUBEMEMBERPROPERTY"; "CUBERANKEDMEMBER"; "CUBESET";
         "DATE"; "FIND"; "FINDB"; "IF"; "INDEX"; "LOOKUP"; "MATCH";
         "MEDIAN"; "MIRR"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MID"; "MIDB"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
         "NEGBINOMDIST"; "NETWORKDAYS"; "NETWORKDAYS.INTL"; "NORM.INV"; "NORMINV"; "NPER"; "NPV"; "NUMBERVALUE"; 
@@ -318,7 +321,7 @@
         "ZTEST"; "Z.TEST"]
 
     let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 ["ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "BINOMDIST"; "BINOM.DIST";
-        "BINOM.DIST.RANGE";
+        "BINOM.DIST.RANGE"; "COUPDAYBS"; "COUPDAYS"; "COUPDAYSNC"; "COUPNCD"; "COUPNUM"; "COUPPCD"; "CUBESET";
         "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
         "NEGBINOM.DIST"; "NETWORKDAYS.INTL"; "NORM.DIST"; "NORMDIST"; "NPER"; "NPV"; 
         "OFFSET"; "OR";
@@ -331,7 +334,7 @@
         "XOR";
         "YIELDDISC"]
 
-    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV";
+    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "CUBESET";
         "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
         "NPER"; "NPV";     
         "OFFSET"; "OR";
@@ -344,6 +347,7 @@
         "YIELDDISC"; "YIELDMAT"]
 
     let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT"; "AMORDEGRC"; "AMORLINC"; "BETA.DIST";
+        "CUMIPMT"; "CUMPRINC";
         "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
         "NPV"; 
         "OR";
@@ -388,8 +392,9 @@
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
         "XOR"]
 
-    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 ["AND"; "AVEDEV"; "AVERAGE"; "AVERAGEA"; "CALL";]
-    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 ["CHOOSE"; ]
+    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 ["AND"; "AVEDEV"; "AVERAGE"; "AVERAGEA";
+        "CALL"; "CONCAT"; "CONCATENATE"; "COUNT"; "COUNTA"; "CUBEVALUE";]
+    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 ["CHOOSE"; "COUNTIFS";]
     let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"; "AVERAGEIFS";]
 
     let VarArgsFunctionName: P<string> =
