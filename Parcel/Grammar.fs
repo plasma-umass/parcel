@@ -266,12 +266,14 @@
     let ArityNFunctionNameMaker n xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
     let ArityAtLeastNFunctionNameMaker nplus xs = xs |> List.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + nplus.ToString() + "+FunctionName")
 
-    let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["COLUMN"; "NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
+    let Arity0NoParensFunctionName: P<string> = ArityNFunctionNameMaker 0 ["FALSE"; "TRUE";]
+
+    let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 ["COLUMN"; "FALSE"; "NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"]
 
     let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 ["ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH"; "ARABIC"; "AREAS"; "ASC"; "ASIN"; "ASINH"; "ATAN"; "ATANH";
         "BAHTTEXT"; "BIN2DEC"; "BIN2HEX"; "BIN2OCT"; "CEILING.PRECISE"; "CELL"; "CHAR"; "CLEAN"; "CODE"; "COLUMN"; "COLUMNS"; "COS"; "COSH"; "COT"; "COTH"; "COUNTBLANK";
         "CSC"; "CSCH"; "CUBESETCOUNT"; "DAY"; "DBCS"; "DEC2BIN"; "DEC2HEX"; "DEC2OCT"; "DEGREES"; "DELTA"; "DOLLAR"; "ENCODEURL"; "ERF"; "ERF.PRECISE"; "ERFC"; "ERFC.PRECISE";
-        "ERROR.TYPE"; "EVEN"; "EXP";
+        "ERROR.TYPE"; "EVEN"; "EXP"; "FACT"; "FACTDOUBLE";
         "MEDIAN"; "MINUTE"; "MODE.MULT"; "MAX"; "MAXA"; "MDETERM"; "MDETERM"; "MODE.SNGL"; "MIN"; "MINA"; "MINVERSE"; "MODE"; "MULTINOMIAL"; "MUNIT";
         "N"; "NORMSDIST"; "NORM.S.INV"; "NORMSINV"; "NOT"; "NUMBERVALUE"; 
         "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
@@ -289,7 +291,7 @@
         "BIN2HEX"; "BIN2OCT"; "BITAND"; "BITLSHIFT"; "BITOR"; "BITRSHIFT"; "BITXOR"; "CEILING"; "CEILING.PRECISE"; "CELL"; "CHIDIST"; "CHIINV"; "CHITEST";
         "CHISQ.DIST.RT"; "CHISQ.TEST"; "COMBIN"; "COMBINA"; "COMPLEX"; "COUNTIF"; "COVAR"; "COVARIANCE.P"; "COVARIANCE.S"; "CUBEMEMBER"; "CUBERANKEDMEMBER";
         "CUBESET"; "DATEVALUE"; "DAYS"; "DAYS360"; "DEC2BIN"; "DEC2HEX"; "DEC2OCT"; "DECIMAL"; "DELTA"; "DOLLAR"; "DOLLARDE"; "DOLLARFR"; "EDATE"; "EFFECT";
-        "EOMONTH"; "ERF"; "EXACT";
+        "EOMONTH"; "ERF"; "EXACT"; "F.DIST";
         "FIND"; "FINDB"; "INDEX"; "LOOKUP"; "MATCH";
         "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MODE.SNGL"; "MIN"; "MINA"; "MMULT"; "MOD"; "MODE"; "MONTH"; "MROUND"; "MULTINOMIAL";    
         "NETWORKDAYS.INTL"; "NETWORKDAYS"; "NOMINAL"; "NORM.S.DIST"; "NPV"; "NUMBERVALUE"; 
@@ -455,6 +457,14 @@
             (fun exprArr expr varArgs -> Array.toList exprArr @ [expr] @ varArgs) <!> ("Arguments" + n.ToString() + "+")
         )
 
+    let Arity0NoParensFunction R =
+        // Range context is irrelevant here since we
+        // have no arguments
+        getUserState >>=
+        fun us ->
+            Arity0FunctionName |>> (fun fname -> ReferenceFunction(us, fname, [], Fixed(0)) :> Reference)
+        <!> ("Arity0NoParensFunction")
+
     let ArityNFunction n R =
                 // here, we ignore whatever Range context we are given
                 // and use RangeNoUnion instead
@@ -489,8 +499,9 @@
                    <!> "VarArgsFunction"
 
     let Function R: P<Reference> =
-        (
-            (   // fixed arity
+        (       // arity 0 and no parens
+            (attempt (Arity0NoParensFunction R))
+            <|> (// fixed arity
                 arityNNameArr |>
                     Array.mapi (fun i _ -> (attempt (ArityNFunction i R))) |> choice)
             <|> (// low-bounded arity
