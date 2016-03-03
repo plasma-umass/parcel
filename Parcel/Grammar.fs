@@ -105,27 +105,27 @@
                   <!> "AnyAddr"
 
     // Ranges
-    let RA1TO_1 = pstring ":" >>. AddrA1 .>> pstring "," <!> "RTO1"
-    let RA1TO_2 = pstring ":" >>. AddrA1 <!> "RTO2"
+    let RA1TO_1 = pstring ":" >>. AddrA1 .>> pstring ","
+    let RA1TO_2 = pstring ":" >>. AddrA1
     let RTO = (attempt RA1TO_1) <|> RA1TO_2
 
-    let RA1TC_1 = pstring "," >>. AddrA1 .>> pstring "," <!> "RTC1"
-    let RA1TC_2 = pstring "," >>. AddrA1 <!> "RTC2"
+    let RA1TC_1 = pstring "," >>. AddrA1 .>> pstring ","
+    let RA1TC_2 = pstring "," >>. AddrA1
     let RTC = (attempt RA1TC_1) <|> RA1TC_2
 
-    let RA1_1 = (* AddrA1 RTC (1)*) pipe2 AddrA1 RTC (fun a1 a2 -> Range([(a2,a2); (a1,a1)])) <!> "AddrA1 RTC ==(1)=="
-    let RA1_2 = (* AddrA1 RTO (2)*) pipe2 AddrA1 RTO (fun a1 a2 -> Range(a1,a2)) <!> "AddrA1 RTO ==(2)=="
+    let RA1_1 = (* AddrA1 RTC (1)*) pipe2 AddrA1 RTC (fun a1 a2 -> Range([(a2,a2); (a1,a1)]))
+    let RA1_2 = (* AddrA1 RTO (2)*) pipe2 AddrA1 RTO (fun a1 a2 -> Range(a1,a2))
 
     let rat_fun = fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])
-    let RA1_3a = pipe3 AddrA1 RA1TO_1 RA1TC_1 rat_fun <!> "AddrA1 RTO1 RTC1 ===(3a)==="
-    let RA1_3b = pipe3 AddrA1 RA1TO_1 RA1TC_2 rat_fun <!> "AddrA1 RTO1 RTC2 ===(3b)==="
-    let RA1_3c = pipe3 AddrA1 RA1TO_2 RA1TC_1 rat_fun <!> "AddrA1 RTO2 RTC1 ===(3c)==="
-    let RA1_3d = pipe3 AddrA1 RA1TO_2 RA1TC_2 rat_fun <!> "AddrA1 RTO2 RTC2 ===(3d)==="
+    let RA1_3a = pipe3 AddrA1 RA1TO_1 RA1TC_1 rat_fun
+    let RA1_3b = pipe3 AddrA1 RA1TO_1 RA1TC_2 rat_fun
+    let RA1_3c = pipe3 AddrA1 RA1TO_2 RA1TC_1 rat_fun
+    let RA1_3d = pipe3 AddrA1 RA1TO_2 RA1TC_2 rat_fun
     let RA1_3 = (* AddrA1 RTO RTC (3)*) 
-                (attempt RA1_3a) <|> (attempt RA1_3b) <|> (attempt RA1_3c) <|> RA1_3d <!> "AddrA1 RTO RTC ==(3)=="
+                (attempt RA1_3a) <|> (attempt RA1_3b) <|> (attempt RA1_3c) <|> RA1_3d
 
-    let RA1_4_UNION = (* AddrA1 "," R (4)*) pipe2 (AddrA1 .>> (pstring ",")) RangeA1Union (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)])) <!> """AddrA1 "," R ==(4)=="""
-    let RA1_5_UNION = (* AddrA1 RTO R (5)*) pipe3 AddrA1 RTO RangeA1Union (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges())) <!> "AddrA1 RTO R ==(5)=="
+    let RA1_4_UNION = (* AddrA1 "," R (4)*) pipe2 (AddrA1 .>> (pstring ",")) RangeA1Union (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)]))
+    let RA1_5_UNION = (* AddrA1 RTO R (5)*) pipe3 AddrA1 RTO RangeA1Union (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges()))
     do RangeA1UnionImpl :=   (attempt RA1_5_UNION)
                         <|> (attempt RA1_4_UNION)
                         <|> (attempt RA1_3)
@@ -177,19 +177,19 @@
                                                 | None      -> ReferenceRange(Env(us.Path, wbname, wsname), rng) :> Reference
                                             )
                                         )
-                                        <!> "RangeReferenceWorkbook"
+//                                        <!> "RangeReferenceWorkbook"
     let RangeReferenceWorksheet R = getUserState >>=
                                     fun (us: Env) ->
                                         pipe2
                                             (WorksheetName .>> pstring "!")
                                             R
                                             (fun wsname rng -> ReferenceRange(Env(us.Path, us.WorkbookName, wsname), rng) :> Reference)
-                                    <!> "RangeReferenceWorksheet"
+//                                    <!> "RangeReferenceWorksheet"
     let RangeReferenceNoWorksheet R = getUserState >>=
                                         fun (us: Env) ->
                                             R
                                             |>> (fun rng -> ReferenceRange(us, rng) :> Reference)
-                                    <!> "RangeReferenceNOWorksheet"
+//                                    <!> "RangeReferenceNOWorksheet"
     let RangeReference R = (attempt (RangeReferenceWorkbook R))
                          <|> (attempt (RangeReferenceWorksheet R))
                          <|> RangeReferenceNoWorksheet R
@@ -211,19 +211,19 @@
                                                 | None      -> ReferenceAddress(Env(us.Path, wbname, wsname), addr) :> Reference
                                             )
                                         )
-                                    <!> "AddressReferenceWorkbook"
+//                                    <!> "AddressReferenceWorkbook"
     let AddressReferenceWorksheet = getUserState >>=
                                         fun us ->
                                             pipe2
                                                 (WorksheetName .>> pstring "!")
                                                 AnyAddr
                                                 (fun wsname addr -> ReferenceAddress(Env(us.Path, us.WorkbookName, wsname), addr) :> Reference)
-                                    <!> "AddressReferenceWorksheet"
+//                                    <!> "AddressReferenceWorksheet"
     let AddressReferenceNoWorksheet = getUserState >>=
                                         fun us ->
                                             AnyAddr
                                             |>> (fun addr -> ReferenceAddress(us, addr) :> Reference)
-                                      <!> "AddressReferenceNOWorksheet"
+//                                      <!> "AddressReferenceNOWorksheet"
     let AddressReference = (attempt AddressReferenceWorkbook)
                            <|> (attempt AddressReferenceWorksheet)
                            <|> AddressReferenceNoWorksheet
@@ -274,7 +274,7 @@
 "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
 "PHI"; "PHONETIC"; "PRODUCT"; "PROPER";
 "RADIANS"; "RIGHT"; "RIGHTB"; "ROMAN"; "ROW"; "ROWS";
-"SEC"; "SECH"; "SECOND"; "SHEET"; "SHEETS"; "SIGN"; "SIN"; "SINH"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "SQRT"; "SQRTPI"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUM"; "SUMPRODUCT"; "SUMSQ"; 
+"SEC"; "SECH"; "SECOND"; "SHEET"; "SHEETS"; "SIGN"; "SIN"; "SINH"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "SQRT"; "SQRTPI"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUMPRODUCT"; "SUMSQ"; 
 "T"; "TAN"; "TANH"; "TIMEVALUE"; "TRANSPOSE"; "TREND"; "TRIM"; "TRUNC"; "TYPE";
 "UNICHAR"; "UNICODE"; "UPPER";
 "VALUE"; "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; 
@@ -291,7 +291,7 @@
 "PEARSON"; "PERCENTILE.EXC"; "PERCENTILE.INC"; "PERCENTILE"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PERMUT"; "PERMUTATIONA"; "POWER"; "PROB"; "PRODUCT"; 
 "QUARTILE"; "QUARTILE.EXC"; "QUARTILE.INC"; "QUOTIENT";
 "RANDBETWEEN"; "RANK.AVG"; "RANK.EQ"; "RANK"; "REGISTER.ID"; "REPT"; "RIGHT"; "RIGHTB"; "ROMAN"; "ROUND"; "ROUNDDOWN"; "ROUNDUP"; "RSQ";
-"SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLOPE"; "SMALL"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "STEYX"; "SUBTOTAL"; "SUM"; "SUMIF"; "SUMPRODUCT"; "SUMSQ"; "SUMX2MY2"; "SUMX2PY2"; "SUMXMY2"; 
+"SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLOPE"; "SMALL"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "STEYX"; "SUBTOTAL"; "SUMIF"; "SUMPRODUCT"; "SUMSQ"; "SUMX2MY2"; "SUMX2PY2"; "SUMXMY2"; 
 "TBILLYIELD"; "T.DIST.RT"; "TEXT"; "T.INV"; "TINV"; "T.INV.2T"; "TREND"; "TRIMMEAN"; "TRUNC";
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
 "WEEKDAY"; "WEEKNUM"; "WORKDAY"; "WORKDAY.INTL";
@@ -307,7 +307,7 @@
 "OFFSET"; "OR";
 "PDURATION"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PMT"; "POISSON.DIST"; "POISSON"; "PROB"; "PRODUCT"; "PV"; 
 "RANK.AVG"; "RANK.EQ"; "RANK"; "RATE"; "REGISTER.ID"; "RRI"; "RTD"; 
-"SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLN"; "SQL.REQUEST"; "STANDARDIZE"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUM"; "SUMIF"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+"SEARCH"; "SEARCHB"; "SKEW"; "SKEW.P"; "SLN"; "SQL.REQUEST"; "STANDARDIZE"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUMIF"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
 "TBILLEQ"; "TBILLPRICE"; "T.DIST"; "TDIST"; "T.DIST.2T"; "TEXTJOIN"; "TIME"; "TREND";
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
 "WORKDAY"; "WORKDAY.INTL";
@@ -323,7 +323,7 @@
 "OFFSET"; "OR";
 "PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PROB"; "PRODUCT"; "PV"; 
 "RATE"; "RECEIVED"; "REPLACE"; "REPLACEB"; "RTD"; 
-"SERIESSUM"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUM"; "SUMPRODUCT"; "SUMSQ"; "SWITCH"; "SYD";
+"SERIESSUM"; "SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBSTITUTE"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH"; "SYD";
 "TEXTJOIN"; "TREND";"T.TEST"; "TTEST";
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
 "WEIBULL"; "WEIBULL.DIST"; "WORKDAY.INTL";
@@ -336,7 +336,7 @@
 "OFFSET"; "OR";
 "PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PRODUCT"; "PV"; 
 "RATE"; "RECEIVED"; "RTD"; 
-"SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUM"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+"SKEW"; "SKEW.P"; "SQL.REQUEST"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
 "TEXTJOIN"; 
 "VAR"; "VAR.P"; "VARA"; "VARP";"VARPA"; "VDB"; 
 "XOR";
@@ -348,7 +348,7 @@
 "OR";
 "PPMT"; "PRICE"; "PRODUCT"; 
 "RATE"; "RTD"; 
-"SKEW"; "SKEW.P"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUM"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+"SKEW"; "SKEW.P"; "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
 "TEXTJOIN"; 
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
 "XOR";
@@ -360,7 +360,7 @@
 "ODDLPRICE"; "ODDLYIELD"; "OR";
 "PRICE"; "PRODUCT"; 
 "RTD"; 
-"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUM"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMIFS"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
 "TEXTJOIN"; 
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
 "XOR";
@@ -372,7 +372,7 @@
 "ODDFPRICE"; "ODDFYIELD"; "ODDLPRICE"; "ODDLYIELD"; "OR";
 "PRODUCT"; 
 "RTD"; 
-"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUM"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
 "TEXTJOIN"; 
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
 "XOR"]
@@ -383,7 +383,7 @@
 "ODDFPRICE"; "ODDFYIELD"; "OR";
 "PRODUCT"; 
 "RTD";
-"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUM"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
+"STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
 "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
 "XOR"]
 
@@ -415,11 +415,21 @@
     let FunctionNamesForArity i: P<string> = arityNNameArr.[i]
     let FunctionNamesForAtLeastArity i: P<string> = arityAtLeastNNameArr.[i-1]
 
+    // from http://stackoverflow.com/a/22252504/480764
+    let rec pmap f xs =
+        match xs with
+        | x :: xs -> parse { let! y = f x
+                             let! ys = pmap f xs
+                             return y :: ys }
+        | [] -> parse { return [] }
+
+    let Argument R = fun (i: int) -> (((ExpressionDecl R) .>> pstring ",") <!> ("argument #" + i.ToString()))
+
     let ArgumentsN R n =
         (pipe2
-            (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
+            (pmap (Argument R) [0..n-1])
             (ExpressionDecl R)
-            (fun exprArr expr -> Array.toList exprArr @ [expr] ) <!> ("Arguments" + n.ToString())
+            (fun exprs expr -> exprs @ [expr] ) <!> ("Arguments" + n.ToString())
         )
 
     let ArgumentsAtLeastN R n =
