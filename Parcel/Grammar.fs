@@ -274,8 +274,8 @@
         "GESTEP"; "GROWTH"; "HEX2BIN"; "HEX2DEC"; "HEX2OCT"; "HOUR"; "HYPERLINK"; "IMABS"; "IMAGINARY"; "IMARGUMENT"; "IMCONJUGATE"; "IMCOS"; "IMCOSH"; "IMCOT"; "IMCSC";
         "IMCSCH"; "IMEXP"; "IMLN"; "IMLOG10"; "IMLOG2"; "IMREAL"; "IMSEC"; "IMSECH"; "IMSIN"; "IMSINH"; "IMSQRT"; "IMTAN"; "INDEX"; "INDIRECT"; "INFO"; "INT";  "IRR";
         "ISBLANK"; "ISERR"; "ISERROR"; "ISEVEN"; "ISFORMULA"; "ISLOGICAL"; "ISNA"; "ISNONTEXT"; "ISNUMBER"; "ISODD"; "ISREF"; "ISTEXT"; "ISO.CEILING"; "ISOWEEKNUM";  "JIS";
-        "LEFT"; "LEFTB"; "LEN"; "LENB"; "LINEST"; "LN"; "LOG"; "LOG10"; "LOGEST"; "LOWER";
-        "MEDIAN"; "MINUTE"; "MODE.MULT"; "MAX"; "MAXA"; "MDETERM"; "MDETERM"; "MODE.SNGL"; "MIN"; "MINA"; "MINVERSE"; "MODE"; "MULTINOMIAL"; "MUNIT";
+        "LEFT"; "LEFTB"; "LEN"; "LENB"; "LINEST"; "LN"; "LOG"; "LOG10"; "LOGEST"; "LOWER"; "MDETERM"; 
+        "MEDIAN"; "MINUTE"; "MDETERM"; "MDETERM"; "MINVERSE"; "MONTH"; "MUNIT";
         "N"; "NORMSDIST"; "NORM.S.INV"; "NORMSINV"; "NOT"; "NUMBERVALUE"; 
         "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODD"; "OR"; 
         "PHI"; "PHONETIC"; "PRODUCT"; "PROPER";
@@ -296,7 +296,7 @@
         "FTEST"; "FVSCHEDULE"; "GESTEP"; "GROWTH"; "HEX2BIN"; "HEX2OCT"; "HYPERLINK"; "IF"; "IFERROR"; "IFNA"; "IMDIV"; "IMPOWER"; "IMSUB"; "INDEX"; "INDIRECT";
         "INTERCEPT"; "IRR"; "ISO.CEILING"; "LARGE"; "LEFT"; "LEFTB"; "LINEST"; "LOG"; "LOGEST"; "LOOKUP";
         "MATCH";
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MODE.SNGL"; "MIN"; "MINA"; "MMULT"; "MOD"; "MODE"; "MONTH"; "MROUND"; "MULTINOMIAL";    
+        "MEDIAN"; "MMULT"; "MOD"; "MROUND";    
         "NETWORKDAYS.INTL"; "NETWORKDAYS"; "NOMINAL"; "NORM.S.DIST"; "NPV"; "NUMBERVALUE"; 
         "OCT2BIN"; "OCT2DEC"; "OCT2HEX"; "ODDFPRICE"; "OR";
         "PEARSON"; "PERCENTILE.EXC"; "PERCENTILE.INC"; "PERCENTILE"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PERMUT"; "PERMUTATIONA"; "POWER"; "PROB"; "PRODUCT"; 
@@ -318,7 +318,7 @@
         "FORECAST.LINEAR"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "FV"; "GAMMA.INV"; "GAMMAINV"; "GROWTH"; "HLOOKUP";
         "IF"; "INDEX"; "LINEST"; "LOGEST"; "LOGINV"; "LOGNORMDIST"; "LOGNORM.INV"; "LOOKUP";
         "MATCH";
-        "MEDIAN"; "MIRR"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MID"; "MIDB"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "MEDIAN"; "MIRR"; "MID"; "MIDB"; "MULTINOMIAL";
         "NEGBINOMDIST"; "NETWORKDAYS"; "NETWORKDAYS.INTL"; "NORM.INV"; "NORMINV"; "NPER"; "NPV"; "NUMBERVALUE"; 
         "OFFSET"; "OR";
         "PDURATION"; "PERCENTRANK.EXC"; "PERCENTRANK.INC"; "PERCENTRANK"; "PMT"; "POISSON.DIST"; "POISSON"; "PROB"; "PRODUCT"; "PV"; 
@@ -335,7 +335,7 @@
         "BINOM.DIST.RANGE"; "COUPDAYBS"; "COUPDAYS"; "COUPDAYSNC"; "COUPNCD"; "COUPNUM"; "COUPPCD"; "CUBESET"; "DB"; "DDB"; "DISC"; "F.DIST"; "FORECAST.ETS";
         "FORECAST.ETS.SEASONALITY"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "FV"; "GAMMA.DIST"; "GAMMADIST"; "GROWTH"; "HLOOKUP"; "HYPGEOMDIST"; "INTRATE";
         "LINEST"; "LOGEST"; "LOGNORM.DIST"; 
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL"; "IPMT"; "ISPMT";
+        "MEDIAN"; "IPMT"; "ISPMT";
         "NEGBINOM.DIST"; "NETWORKDAYS.INTL"; "NORM.DIST"; "NORMDIST"; "NPER"; "NPV"; 
         "OFFSET"; "OR";
         "PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PROB"; "PRODUCT"; "PV"; 
@@ -349,8 +349,8 @@
 
     let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 ["ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "CUBESET"; "DB"; "DDB";
         "DISC"; "DURATION"; "EUROCONVERT"; "FORECAST.ETS"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "FV"; "HYPGEOM.DIST"; "INTRATE"; "IPMT"; 
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
-        "NPER"; "NPV";     
+        "MEDIAN"; "MDURATION"; "MDURATION";
+        "NPER"; "NPV";
         "OFFSET"; "OR";
         "PMT"; "PPMT"; "PRICEDISC"; "PRICEMAT"; "PRODUCT"; "PV"; 
         "RATE"; "RECEIVED"; "RTD"; 
@@ -362,7 +362,7 @@
 
     let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 ["ACCRINT"; "AMORDEGRC"; "AMORLINC"; "BETA.DIST";
         "CUMIPMT"; "CUMPRINC"; "DURATION"; "FORECAST.ETS"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "IPMT"; 
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MDURATION"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "MEDIAN"; "MDURATION"; "MDURATION"; 
         "NPV"; 
         "OR";
         "PPMT"; "PRICE"; "PRODUCT"; 
@@ -374,7 +374,7 @@
         "YIELD"; "YIELDMAT"]
 
     let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 ["ACCRINT"; "AMORDEGRC"; "AMORLINC"; "FORECAST.ETS.CONFINT";
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "MEDIAN"; "MULTINOMIAL";
         "NPV"; 
         "ODDLPRICE"; "ODDLYIELD"; "OR";
         "PRICE"; "PRODUCT"; 
@@ -386,7 +386,7 @@
         "YIELD"]
 
     let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 ["ACCRINT";
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "MEDIAN"; "MULTINOMIAL";
         "NPV"; 
         "ODDFPRICE"; "ODDFYIELD"; "ODDLPRICE"; "ODDLYIELD"; "OR";
         "PRODUCT"; 
@@ -397,7 +397,7 @@
         "XOR"]
 
     let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 ["ACCRINT";
-        "MEDIAN"; "MODE.MULT"; "MAX"; "MAXA"; "MAXIFS"; "MODE.SNGL"; "MIN"; "MINIFS"; "MINA"; "MODE"; "MULTINOMIAL";
+        "MEDIAN"; "MULTINOMIAL";
         "NPV"; 
         "ODDFPRICE"; "ODDFYIELD"; "OR";
         "PRODUCT"; 
@@ -408,9 +408,9 @@
 
     let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 ["AND"; "AVEDEV"; "AVERAGE"; "AVERAGEA";
         "CALL"; "CONCAT"; "CONCATENATE"; "COUNT"; "COUNTA"; "CUBEVALUE"; "DEVSQ"; "GCD"; "GEOMEAN"; "HARMEAN"; "IMPRODUCT";
-        "IMSUM"; "KURT"; "LCM"; ]
+        "IMSUM"; "KURT"; "LCM"; "MAX"; "MAXA"; "MIN"; "MINA"; "MODE"; "MODE.MULT"; "MODE.SNGL"; "MULTINOMIAL"; ]
     let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 ["CHOOSE"; "COUNTIFS"; "GETPIVOTDATA"; "IFS"; ]
-    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"; "AVERAGEIFS";]
+    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"; "AVERAGEIFS"; "MAXIFS"; "MINIFS"; ]
 
     let VarArgsFunctionName: P<string> =
         ["SUM"]
