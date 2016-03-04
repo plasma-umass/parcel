@@ -8,6 +8,28 @@ namespace ParcelTest
 {
     static class Utility
     {
+        public static AST.Range makeRangeForA1(string rng, AST.Env e)
+        {
+            var addrs = rng.Split(':');
+
+            return new AST.Range(
+                makeAddressForA1(addrs[0], e),
+                makeAddressForA1(addrs[1], e)
+            );
+        }
+
+        public static AST.Address makeAddressForA1(string addr, AST.Env e)
+        {
+            var r = new System.Text.RegularExpressions.Regex("([A-Z]+)([0-9]+)");
+
+            var matches = r.Match(addr);
+
+            var col = matches.Groups[1].Value;
+            var row = System.Convert.ToInt32(matches.Groups[2].Value);
+
+            return AST.Address.fromA1(row, col, e.WorksheetName, e.WorkbookName, e.Path);
+        }
+
         public static AST.Address makeAddressForA1(string col, int row, AST.Env env)
         {
             return AST.Address.fromA1(

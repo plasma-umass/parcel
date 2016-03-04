@@ -43,9 +43,9 @@ namespace ParcelTest
         {
             var mwb = MockWorkbook.standardMockWorkbook();
             var e = mwb.envForSheet(1);
-            string s = "=IF(TRUE, 1, 2)";
+            string f = "=IF(TRUE, 1, 2)";
 
-            ExprOpt asto = Parcel.parseFormula(s, e.Path, e.WorkbookName, e.WorksheetName);
+            ExprOpt asto = Parcel.parseFormula(f, e.Path, e.WorkbookName, e.WorksheetName);
 
             Expr[] a = {
                 Expr.NewReferenceExpr(new AST.ReferenceFunction(e, "TRUE", ArgList.Empty, AST.Arity.NewFixed(0))),
@@ -58,10 +58,6 @@ namespace ParcelTest
             try
             {
                 Expr ast = asto.Value;
-
-                System.Diagnostics.Debug.WriteLine(correct.ToString());
-                System.Diagnostics.Debug.WriteLine(ast.ToString());
-
                 Assert.AreEqual(ast, correct);
             } catch (NullReferenceException nre)
             {

@@ -1,5 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using ArgList = Microsoft.FSharp.Collections.FSharpList<AST.Expression>;
+using ExprOpt = Microsoft.FSharp.Core.FSharpOption<AST.Expression>;
+using Expr = AST.Expression;
 
 namespace ParcelTest
 {
@@ -12,18 +15,26 @@ namespace ParcelTest
             var mwb = MockWorkbook.standardMockWorkbook();
             var e = mwb.envForSheet(1);
 
-            var f = "SUMX2MY2(A4:A10,B4:B10)";
+            var f = "=SUMX2MY2(A4:A10,B4:B10)";
 
-            //AST.Range range = new AST.Range(
-            //    AST.Address.fromA1(1, "A", e.WorkbookName, e.WorkbookName, e.Path),
-            //    AST.Address.fromA1(1, "B", e.WorkbookName, e.WorkbookName, e.Path)
-            //    );
+            ExprOpt asto = Parcel.parseFormula(f, e.Path, e.WorkbookName, e.WorksheetName);
 
-            AST.Reference r = Parcel.simpleReferenceParser(f, e);
-            //AST.Reference correct = new AST.ReferenceRange(e, range);
-            //Assert.AreEqual(r, correct);
+            Expr[] a = {
+                Expr.NewReferenceExpr(new AST.ReferenceRange(e, Utility.makeRangeForA1("A4:A10", e))),
+                Expr.NewReferenceExpr(new AST.ReferenceRange(e, Utility.makeRangeForA1("B4:B10", e)))
+            };
+            ArgList args = Utility.makeFSList<AST.Expression>(a);
+            Expr correct = Expr.NewReferenceExpr(new AST.ReferenceFunction(e, "SUMX2MY2", args, AST.Arity.NewFixed(2)));
 
-            throw new NotImplementedException("FINISH THIS TEST");
+            try
+            {
+                Expr ast = asto.Value;
+                Assert.AreEqual(ast, correct);
+            }
+            catch (NullReferenceException nre)
+            {
+                Assert.Fail("Parse error: " + nre.Message);
+            }
         }
     }
 }
