@@ -22,6 +22,8 @@ namespace ParcelTest
             AST.Reference r = Parcel.simpleReferenceParser(f, e);
             //AST.Reference correct = new AST.ReferenceRange(e, range);
             //Assert.AreEqual(r, correct);
+
+            throw new NotImplementedException("FINISH THIS TEST");
         }
     }
 }

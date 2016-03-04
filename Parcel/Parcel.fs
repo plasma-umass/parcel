@@ -90,7 +90,7 @@
         | :? AST.ReferenceFunction as r -> [r.FunctionName]
         | _ -> []
 
-    let formulaNamesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) =
+    let formulaNamesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : seq<string> =
         let abspath = System.IO.Path.GetDirectoryName(wb)
         match (parseFormula formula abspath wb ws),ignore_parse_errors with
         | Some(ast),_ -> formulaNamesFromExpr(ast) |> Seq.ofList
