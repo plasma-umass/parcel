@@ -100,7 +100,7 @@
             let e = self.Path = self.Path
             a && b && c && d && e
         override self.ToString() =
-            "(" + self.Y.ToString() + "," + self.X.ToString() + ")"
+            "(" + self.X.ToString() + "," + self.Y.ToString() + ")"
         static member CharColToInt(col: string) : int =
             let rec ccti(idx: int) : int =
                 let ltr = (int col.[idx]) - 64
