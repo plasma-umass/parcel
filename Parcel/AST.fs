@@ -159,24 +159,36 @@
                             tl.A1Local() + ":" + br.A1Local()
                         ) _regions
             String.Join(",", sregs)
-        member self.GetWorksheetNames() : seq<string> =
-            List.fold (fun wss (tl: Address, br: Address) ->
-                        tl.WorksheetName :: br.WorksheetName :: wss
-                      ) [] _regions |>
-            List.toSeq |>
-            Seq.distinct
-        member self.GetWorkbookNames() : seq<string> =
-            List.fold (fun wss (tl: Address, br: Address) ->
-                        tl.WorkbookName :: br.WorkbookName :: wss
-                      ) [] _regions |>
-            List.toSeq |>
-            Seq.distinct
-        member self.GetPathNames() : seq<string> =
-            List.fold (fun wss (tl: Address, br: Address) ->
-                        tl.Path :: br.Path :: wss
-                      ) [] _regions |>
-            List.toSeq |>
-            Seq.distinct
+        member self.GetWorksheetName() : string =
+            let names = List.fold (fun wss (tl: Address, br: Address) ->
+                                    tl.WorksheetName :: br.WorksheetName :: wss
+                                  ) [] _regions |>
+                        List.toSeq |>
+                        Seq.distinct
+            assert(Seq.length names = 1)
+            Seq.head names
+        member self.GetWorkbookName() : string =
+            // I am fairly certain that cross-workbook / cross-worksheet
+            // ranges are not possible; just return the first
+            // path but check that this is true
+            let names = List.fold (fun wss (tl: Address, br: Address) ->
+                                    tl.WorkbookName :: br.WorkbookName :: wss
+                                  ) [] _regions |>
+                        List.toSeq |>
+                        Seq.distinct
+            assert(Seq.length names = 1)
+            Seq.head names
+        member self.GetPathName() : string =
+            // I am fairly certain that cross-workbook / cross-worksheet
+            // ranges are not possible; just return the first
+            // path but check that this is true
+            let paths = List.fold (fun wss (tl: Address, br: Address) ->
+                                    tl.Path :: br.Path :: wss
+                                  ) [] _regions |>
+                        List.toSeq |>
+                        Seq.distinct
+            assert(Seq.length paths = 1)
+            Seq.head paths
         member self.Ranges() : (Address*Address) list = _regions
         // regions may overlap; thus we only return distinct cell addresses
         member self.Addresses() : Address[] =
