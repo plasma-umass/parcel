@@ -66,8 +66,6 @@
     let (RangeR1C1: P<Range>, RangeR1C1Impl) = createParserForwardedToRef()
 
     // Addresses
-    // We treat relative and absolute addresses the same-- they behave
-    // exactly the same way unless you copy and paste them.
     let AddrR = pstring "R" >>. pint32
     let AddrC = pstring "C" >>. pint32
     let AddrIndirect = getUserState >>=
@@ -84,12 +82,14 @@
                                 AddrR
                                 AddrC
                                 (fun row col ->
+                                    // TODO: R1C1 absolute/relative
                                     Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
                     <!> "AddrR1C1"
+    let AbsOrNot : P<AddressMode> = (attempt ((pstring "$") >>% Absolute) <|> (pstring "" >>% Relative)) 
     let AddrA = many1Satisfy isAsciiUpper
-    let AddrAAbs = (attempt (pstring "$") <|> pstring "") >>. AddrA
+    let AddrAAbs = pipe2 AbsOrNot AddrA (fun mode col -> (mode, col))
     let Addr1 = pint32
-    let Addr1Abs = (attempt (pstring "$") <|> pstring "") >>. Addr1
+    let Addr1Abs = pipe2 AbsOrNot Addr1 (fun mode row -> (mode, row))
     let AddrA1 = getUserState >>=
                     fun (us: Env) ->
                         (attempt AddrIndirect)
@@ -97,7 +97,10 @@
                             AddrAAbs
                             Addr1Abs
                             (fun col row ->
-                                Address.fromA1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
+                                let (colMode,colA) = col
+                                let (rowMode,row1) = row
+                                Address.fromA1withMode(row1, colA, rowMode, colMode, us.WorksheetName, us.WorkbookName, us.Path)
+                                ))
                     
     let AnyAddr = ((attempt AddrIndirect)
                   <|> (attempt AddrR1C1)

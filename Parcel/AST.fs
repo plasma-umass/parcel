@@ -27,7 +27,13 @@
             wsname = d2.WorksheetName
 
     [<Serializable>]
-    type Address(R: int, C: int, env: Env) =
+    type AddressMode =
+    | Absolute
+    | Relative
+
+    [<Serializable>]
+    type Address(R: int, C: int, Rmode: AddressMode, Cmode: AddressMode, env: Env) =
+        new(R: int, C: int, env: Env) = Address(R, C, Relative, Relative, env)
         interface IComparable with
             member self.CompareTo(obj) =
                 let addr = obj :?> Address
@@ -43,8 +49,12 @@
 
         static member fromR1C1(R: int, C: int, wsname: string, wbname: string, path: string) : Address =
             Address(R, C, Env(path, wbname, wsname))
+        static member fromR1C1withMode(R: int, C: int, Rmode: AddressMode, Cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
+            Address(R, C, Rmode, Cmode, Env(path, wbname, wsname))
         static member fromA1(row: int, col: string, wsname: string, wbname: string, path: string) : Address =
             Address(row, Address.CharColToInt(col), Env(path, wbname, wsname))
+        static member fromA1withMode(row: int, col: string, Rmode: AddressMode, Cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
+            Address(row, Address.CharColToInt(col), Rmode, Cmode, Env(path, wbname, wsname))
         member self.copyWithNewEnv(envnew: Env) =
             Address(R, C, envnew)
         member self.A1Local() : string = Address.IntToColChars(self.X) + self.Y.ToString()
@@ -58,8 +68,12 @@
             let wbstr = "[" + env.WorkbookName + "]"
             let pstr = env.Path
             pstr + wbstr + wsstr + "R" + R.ToString() + "C" + C.ToString()
+        member self.XMode = Cmode
+        member self.YMode = Rmode
         member self.X: int = C
         member self.Y: int = R
+        member self.RowMode = Rmode
+        member self.ColMode = Cmode
         member self.Row = R
         member self.Col = C
         member self.Path = env.Path
