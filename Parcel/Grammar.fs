@@ -3,6 +3,8 @@
     open AST
     open System.Text.RegularExpressions
 
+    let DEBUG_MODE = false
+
     // This is a version of the forwarding parser that
     // also takes a generic argument.
     let createParserForwardedToRefWithArguments() =
@@ -48,15 +50,15 @@
 //        p stream // set a breakpoint here
 //
     let (<!>) (p: Parser<_,_>) label : Parser<_,_> =
-        fun stream ->
-//            printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
-//            printfn "%A: Entering %s" stream.Position label
-            let s = String.replicate (int (stream.Position.Column)) " "
-            printfn "%d%sTrying %s(\"%s\")" (stream.Index) s label (stream.PeekString 1000)
-            let reply = p stream
-            printfn "%d%s%s(\"%s\") (%A)" (stream.Index) s label (stream.PeekString 1000) reply.Status
-//            printfn "%A: Leaving %s (%A)" stream.Position label reply.Status
-            reply
+        if DEBUG_MODE then
+            fun stream ->
+                let s = String.replicate (int (stream.Position.Column)) " "
+                printfn "%d%sTrying %s(\"%s\")" (stream.Index) s label (stream.PeekString 1000)
+                let reply = p stream
+                printfn "%d%s%s(\"%s\") (%A)" (stream.Index) s label (stream.PeekString 1000) reply.Status
+                reply
+        else
+            p
 
     // Grammar forward references
     let (ArgumentList: P<Range> -> P<Expression list>, ArgumentListImpl) = createParserForwardedToRefWithArguments()
