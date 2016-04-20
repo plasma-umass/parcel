@@ -47,16 +47,12 @@
                     let c' = Hash.cantorPair (System.Convert.ToUInt32 addr.Row) (System.Convert.ToUInt32 addr.Col) System.UInt32.MaxValue
                     c.CompareTo c'
 
-        static member fromR1C1(R: int, C: int, wsname: string, wbname: string, path: string) : Address =
-            Address(R, C, Env(path, wbname, wsname))
         static member fromR1C1withMode(R: int, C: int, Rmode: AddressMode, Cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
             Address(R, C, Rmode, Cmode, Env(path, wbname, wsname))
-        static member fromA1(row: int, col: string, wsname: string, wbname: string, path: string) : Address =
-            Address(row, Address.CharColToInt(col), Env(path, wbname, wsname))
         static member fromA1withMode(row: int, col: string, Rmode: AddressMode, Cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
             Address(row, Address.CharColToInt(col), Rmode, Cmode, Env(path, wbname, wsname))
         member self.copyWithNewEnv(envnew: Env) =
-            Address(R, C, envnew)
+            Address(R, C, Rmode, Cmode, envnew)
         member self.A1Local() : string = Address.IntToColChars(self.X) + self.Y.ToString()
         member self.A1Path() : string = env.Path
         member self.A1Worksheet() : string = env.WorksheetName
@@ -129,7 +125,7 @@
             let m = reg.Match(addr)
             let r = System.Convert.ToInt32(m.Groups.["row"].Value)
             let c = System.Convert.ToInt32(m.Groups.["column"].Value)
-            Address.fromR1C1(r, c, wsname, wbname, path)
+            Address.fromR1C1withMode(r, c, AddressMode.Relative, AddressMode.Relative, wsname, wbname, path)
         static member IntToColChars(dividend: int) : string =
             let mutable quot = dividend / 26
             let rem = dividend % 26
@@ -213,7 +209,7 @@
                     // and every row in that region
                     Array.map (fun r ->
                         // get the address of the cell contained
-                        Address.fromR1C1(r, c, tl.WorksheetName, tl.WorkbookName, tl.Path)
+                        Address.fromR1C1withMode(r, c, tl.RowMode, tl.ColMode, tl.WorksheetName, tl.WorkbookName, tl.Path)
                     ) [|tl.Y..br.Y|]
                 ) [|tl.X..br.X|] |>
                 Array.concat

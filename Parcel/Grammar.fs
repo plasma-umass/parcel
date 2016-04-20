@@ -85,7 +85,7 @@
                                 AddrC
                                 (fun row col ->
                                     // TODO: R1C1 absolute/relative
-                                    Address.fromR1C1(row, col, us.WorksheetName, us.WorkbookName, us.Path)))
+                                    Address.fromR1C1withMode(row, col, AddressMode.Relative, AddressMode.Relative, us.WorksheetName, us.WorkbookName, us.Path)))
                     <!> "AddrR1C1"
     let AbsOrNot : P<AddressMode> = (attempt ((pstring "$") >>% Absolute) <|> (pstring "" >>% Relative)) 
     let AddrA = many1Satisfy isAsciiUpper
