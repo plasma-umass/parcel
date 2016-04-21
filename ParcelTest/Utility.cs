@@ -6,7 +6,7 @@ using FSC = Microsoft.FSharp.Collections;
 
 namespace ParcelTest
 {
-    static class Utility
+    public static class Utility
     {
         public static AST.Range makeRangeForA1(string rng, AST.Env e)
         {
