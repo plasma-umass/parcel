@@ -20,14 +20,16 @@ namespace ParcelTest
 
         public static AST.Address makeAddressForA1(string addr, AST.Env e)
         {
-            var r = new System.Text.RegularExpressions.Regex("([A-Z]+)([0-9]+)");
+            var r = new System.Text.RegularExpressions.Regex(@"(\$?)([A-Z]+)(\$?)([0-9]+)");
 
             var matches = r.Match(addr);
 
-            var col = matches.Groups[1].Value;
-            var row = Convert.ToInt32(matches.Groups[2].Value);
+            var colMode = String.IsNullOrEmpty(matches.Groups[1].Value) ? AST.AddressMode.Relative : AST.AddressMode.Absolute;
+            var col = matches.Groups[2].Value;
+            var rowMode = String.IsNullOrEmpty(matches.Groups[3].Value) ? AST.AddressMode.Relative : AST.AddressMode.Absolute;
+            var row = Convert.ToInt32(matches.Groups[4].Value);
 
-            return AST.Address.fromA1withMode(row, col, AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path);
+            return AST.Address.fromA1withMode(row, col, rowMode, colMode, e.WorksheetName, e.WorkbookName, e.Path);
         }
 
         public static AST.Address makeAddressForA1(string col, int row, AST.Env env)
