@@ -20,8 +20,8 @@ namespace ParcelTest
                 new AST.ReferenceRange(
                     e,
                     new AST.Range(
-                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                        AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                        AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                     )
                 );
             Assert.AreEqual(r, correct);
@@ -40,12 +40,12 @@ namespace ParcelTest
                     e,
                     new AST.Range(
                         new AST.Range(
-                            AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         ),
                         new AST.Range(
-                            AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         )
                     )
                 );
@@ -65,12 +65,12 @@ namespace ParcelTest
                     e,
                     new AST.Range(
                         new AST.Range(
-                            AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         ),
                         new AST.Range(
-                            AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         )
                     )
                 );
@@ -90,12 +90,12 @@ namespace ParcelTest
                     e,
                     new AST.Range(
                         new AST.Range(
-                            AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         ),
                         new AST.Range(
-                            AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         )
                     )
                 );
@@ -115,12 +115,12 @@ namespace ParcelTest
                     e,
                     new AST.Range(
                         new AST.Range(
-                            AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         ),
                         new AST.Range(
-                            AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                            AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                            AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                            AST.Address.fromA1withMode(4, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                         )
                     )
                 );
@@ -136,24 +136,24 @@ namespace ParcelTest
 
             AddrPair[] addrpairs = {
                                     new AddrPair(
-                                        AST.Address.fromA1(5, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(5, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(5, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(5, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(4, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(4, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     )
                                    };
 
@@ -171,16 +171,16 @@ namespace ParcelTest
 
             AddrPair[] addrpairs = {
                                     new AddrPair(
-                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(1, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(2, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(2, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     ),
                                     new AddrPair(
-                                        AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path),
-                                        AST.Address.fromA1(4, "A", e.WorksheetName, e.WorkbookName, e.Path)
+                                        AST.Address.fromA1withMode(4, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path),
+                                        AST.Address.fromA1withMode(4, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path)
                                     )
                                    };
 
@@ -198,8 +198,62 @@ namespace ParcelTest
             String s = "A1:B1";
 
             AST.Range range = new AST.Range(
-                AST.Address.fromA1(1, "A", e.WorkbookName, e.WorkbookName, e.Path),
-                AST.Address.fromA1(1, "B", e.WorkbookName, e.WorkbookName, e.Path)
+                AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorkbookName, e.WorkbookName, e.Path),
+                AST.Address.fromA1withMode(1, "B", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorkbookName, e.WorkbookName, e.Path)
+                );
+
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            AST.Reference correct = new AST.ReferenceRange(e, range);
+            Assert.AreEqual(r, correct);
+        }
+
+        [TestMethod]
+        public void absoluteRangeTest()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+
+            String s = "$A$1:$B$1";
+
+            AST.Range range = new AST.Range(
+                AST.Address.fromA1withMode(1, "A", AST.AddressMode.Absolute, AST.AddressMode.Absolute, e.WorkbookName, e.WorkbookName, e.Path),
+                AST.Address.fromA1withMode(1, "B", AST.AddressMode.Absolute, AST.AddressMode.Absolute, e.WorkbookName, e.WorkbookName, e.Path)
+                );
+
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            AST.Reference correct = new AST.ReferenceRange(e, range);
+            Assert.AreEqual(r, correct);
+        }
+
+        [TestMethod]
+        public void mixedRangeTest1()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+
+            String s = "$A1:$B1";
+
+            AST.Range range = new AST.Range(
+                AST.Address.fromA1withMode(1, "A", AST.AddressMode.Relative, AST.AddressMode.Absolute, e.WorkbookName, e.WorkbookName, e.Path),
+                AST.Address.fromA1withMode(1, "B", AST.AddressMode.Relative, AST.AddressMode.Absolute, e.WorkbookName, e.WorkbookName, e.Path)
+                );
+
+            AST.Reference r = Parcel.simpleReferenceParser(s, e);
+            AST.Reference correct = new AST.ReferenceRange(e, range);
+            Assert.AreEqual(r, correct);
+        }
+
+        [TestMethod]
+        public void mixedRangeTest2()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+
+            String s = "A$1:B$1";
+
+            AST.Range range = new AST.Range(
+                AST.Address.fromA1withMode(1, "A", AST.AddressMode.Absolute, AST.AddressMode.Relative, e.WorkbookName, e.WorkbookName, e.Path),
+                AST.Address.fromA1withMode(1, "B", AST.AddressMode.Absolute, AST.AddressMode.Relative, e.WorkbookName, e.WorkbookName, e.Path)
                 );
 
             AST.Reference r = Parcel.simpleReferenceParser(s, e);

@@ -25,16 +25,18 @@ namespace ParcelTest
             var matches = r.Match(addr);
 
             var col = matches.Groups[1].Value;
-            var row = System.Convert.ToInt32(matches.Groups[2].Value);
+            var row = Convert.ToInt32(matches.Groups[2].Value);
 
-            return AST.Address.fromA1(row, col, e.WorksheetName, e.WorkbookName, e.Path);
+            return AST.Address.fromA1withMode(row, col, AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path);
         }
 
         public static AST.Address makeAddressForA1(string col, int row, AST.Env env)
         {
-            return AST.Address.fromA1(
+            return AST.Address.fromA1withMode(
                 row,
                 col,
+                AST.AddressMode.Relative,
+                AST.AddressMode.Relative,
                 env.WorksheetName,
                 env.WorkbookName,
                 env.Path

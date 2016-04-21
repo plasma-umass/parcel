@@ -19,7 +19,7 @@ namespace ParcelTest
             String s = "A3";
 
             AST.Reference r = Parcel.simpleReferenceParser(s, e);
-            AST.Reference correct = new AST.ReferenceAddress(e, AST.Address.fromA1(3, "A", e.WorksheetName, e.WorkbookName, e.Path));
+            AST.Reference correct = new AST.ReferenceAddress(e, AST.Address.fromA1withMode(3, "A", AST.AddressMode.Relative, AST.AddressMode.Relative, e.WorksheetName, e.WorkbookName, e.Path));
             Assert.AreEqual(r, correct);
         }
 
