@@ -108,9 +108,7 @@
             let c = self.WorksheetName = addr.WorksheetName
             let d = self.WorkbookName = addr.WorkbookName
             let e = self.Path = addr.Path
-            let f = self.ColMode = addr.ColMode
-            let g = self.RowMode = addr.RowMode
-            a && b && c && d && e && f && g
+            a && b && c && d && e
         override self.ToString() =
             "(" + self.X.ToString() + "," + self.Y.ToString() + ")"
         static member CharColToInt(col: string) : int =
