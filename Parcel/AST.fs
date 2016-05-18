@@ -111,6 +111,7 @@
             a && b && c && d && e
         override self.ToString() =
             "(" + self.X.ToString() + "," + self.Y.ToString() + ")"
+        member self.ToFormula = self.A1FullyQualified()
         static member CharColToInt(col: string) : int =
             let rec ccti(idx: int) : int =
                 let ltr = (int col.[idx]) - 64
@@ -219,6 +220,32 @@
             // ensure that we only enumerate overlapping cells once
             Seq.distinct |>
             Array.ofSeq
+
+        static member addrsInRegion(lt: int*int)(rb: int*int) : (int*int)[] =
+            let lt_x = fst lt
+            let lt_y = snd lt
+            let rb_x = fst rb
+            let rb_y = snd rb
+
+            // for every contigious region
+            // for every column in that region
+            Array.map (fun c ->
+                // and every row in that region
+                Array.map (fun r -> (c, r)
+                ) [|lt_y..rb_y|]
+            ) [|lt_x..rb_x|] |>
+            Array.concat
+
+        // converts a set of regions into a coalesced, vertical normal form
+        // e.g., A1,A2:B3,B4 and A1,B4,A2,B2:B3,A3 both become A1:A3,B2:B4
+        static member contiguousRegions(regions: (Address*Address) list) : (Address*Address) list =
+            // sort regions
+//            let sReg = List.sortWith (fun r1 r2 ->
+//                           match (r1,r2) with 
+//                           | 
+//                           
+//                       ) regionsb 
+            failwith "foo"
             
         override self.GetHashCode() : int =
             Hash.jenkinsOneAtATimeHash _regions
@@ -227,6 +254,14 @@
             let r_set = Set.ofArray(r.Addresses())
             let self_set = Set.ofArray(self.Addresses())
             self_set = r_set
+        member self.Equals2(obj: obj) : bool =
+            let r = obj :?> Range
+            failwith "no"
+        member self.ToFormula : string =
+            let subrngs = List.map (fun (a1: Address,a2: Address) ->
+                              a1.A1FullyQualified() + ":" + a2.A1Local()
+                          ) _regions
+            String.Join(",", subrngs)
 
     type ReferenceType =
     | ReferenceAddress  = 0
@@ -243,12 +278,11 @@
 
     [<AbstractClass>]
     type Reference(env: Env) =
-//        abstract member InsideRef: Reference -> bool
         abstract member Type: ReferenceType
+        abstract member ToFormula: string
         member self.Path = env.Path
         member self.WorkbookName = env.WorkbookName
         member self.WorksheetName = env.WorksheetName
-//        default self.InsideRef(ref: Reference) = false
 
     and ReferenceRange(env: Env, rng: Range) =
         inherit Reference(env)
@@ -266,6 +300,7 @@
             self.Range = rr.Range
         override self.GetHashCode() : int =
             env.GetHashCode() ||| rng.GetHashCode()
+        override self.ToFormula : string = rng.ToFormula
 
     and ReferenceAddress(env: Env, addr: Address) =
         inherit Reference(env)
@@ -282,6 +317,7 @@
             self.Address = ra.Address
         override self.GetHashCode() : int =
             env.GetHashCode() ||| addr.GetHashCode()
+        override self.ToFormula = addr.ToFormula
 
     and ReferenceFunction(env: Env, fnname: string, arglist: Expression list, arity: Arity) =
         inherit Reference(env)
@@ -304,6 +340,8 @@
             List.fold (fun acc (ethis, ethat) -> acc && ethis = ethat) true arglists
         override self.GetHashCode() : int =
             env.GetHashCode() ||| fnname.GetHashCode() ||| arglist.GetHashCode()
+        override self.ToFormula = self.FunctionName +
+                                  "(" + String.Join(",", (List.map (fun (arg: Expression) -> arg.ToFormula) arglist)) + ")"
 
     and ReferenceConstant(env: Env, value: double) =
         inherit Reference(env)
@@ -318,6 +356,7 @@
             self.Value = rc.Value
         override self.GetHashCode() : int =
             env.GetHashCode() ||| value.GetHashCode()
+        override self.ToFormula = value.ToString()
 
     and ReferenceString(env: Env, value: string) =
         inherit Reference(env)
@@ -332,6 +371,7 @@
             self.Value = rs.Value
         override self.GetHashCode() : int =
             env.GetHashCode() ||| value.GetHashCode()
+        override self.ToFormula = value
 
     and ReferenceNamed(env: Env, varname: string) =
         inherit Reference(env)
@@ -346,6 +386,7 @@
             self.Name = rn.Name
         override self.GetHashCode() : int =
             env.GetHashCode() ||| varname.GetHashCode()
+        override self.ToFormula = varname
 
     // TODO: implement .Equals!
     and Expression =
@@ -359,3 +400,9 @@
             | BinOpExpr(op,e1,e2) -> "BinOpExpr(" + op.ToString() + "," + e1.ToString() + "," + e2.ToString() + ")"
             | UnaryOpExpr(op, e) -> "UnaryOpExpr(" + op.ToString() + "," + e.ToString() + ")"
             | ParensExpr(e) -> "ParensExpr(" + e.ToString() + ")"
+        member self.ToFormula =
+            match self with
+            | ReferenceExpr(r) -> r.ToFormula
+            | BinOpExpr(op,e1,e2) -> e1.ToFormula + op + e2.ToFormula
+            | UnaryOpExpr(op, e) -> op.ToString() + e.ToFormula
+            | ParensExpr(e) -> "(" + e.ToFormula + ")"
