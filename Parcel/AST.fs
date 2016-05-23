@@ -33,7 +33,10 @@
 
     [<Serializable>]
     type Address(R: int, C: int, Rmode: AddressMode, Cmode: AddressMode, env: Env) =
+        let mutable _cachedHC : int option = None
+
         new(R: int, C: int, env: Env) = Address(R, C, Relative, Relative, env)
+
         interface IComparable with
             member self.CompareTo(obj) =
                 let addr = obj :?> Address
@@ -97,7 +100,12 @@
             int32 hashcode // this casts; it does not convert
         // necessary because Address is used as a Dictionary key
         override self.GetHashCode() : int =
-            Address.addressHash R C self.WorksheetName
+            match _cachedHC with
+            | Some(hc) -> hc
+            | None ->
+                let hc = Address.addressHash R C self.WorksheetName
+                _cachedHC <- Some(hc)
+                hc
         override self.Equals(obj: obj) : bool =
             let addr = obj :?> Address
             self.SameAs addr
