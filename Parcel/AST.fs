@@ -56,7 +56,16 @@
             Address(row, Address.CharColToInt(col), Rmode, Cmode, Env(path, wbname, wsname))
         member self.copyWithNewEnv(envnew: Env) =
             Address(R, C, Rmode, Cmode, envnew)
-        member self.A1Local() : string = Address.IntToColChars(self.X) + self.Y.ToString()
+        member self.A1Local() : string =
+            let cmode =
+                match self.ColMode with
+                | AddressMode.Absolute -> "$"
+                | AddressMode.Relative -> ""
+            let rmode =
+                match self.RowMode with
+                | AddressMode.Absolute -> "$"
+                | AddressMode.Relative -> ""
+            cmode + Address.IntToColChars(self.X) + rmode + self.Y.ToString()
         member self.A1Path() : string = env.Path
         member self.A1Worksheet() : string = env.WorksheetName
         member self.A1Workbook() : string = env.WorkbookName
