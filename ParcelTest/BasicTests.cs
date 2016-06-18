@@ -76,7 +76,7 @@ namespace ParcelTest
             {
                 rngs = Parcel.rangeReferencesFromFormula(s, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
             }
-            catch (Parcel.ParseException e)
+            catch (Parcel.ParseException)
             {
                 Assert.Fail(String.Format("\"{0}\" should parse.", s));
             }
@@ -98,7 +98,7 @@ namespace ParcelTest
             {
                 addrs = Parcel.addrReferencesFromFormula(formula, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
             }
-            catch (Parcel.ParseException e)
+            catch (Parcel.ParseException)
             {
                 Assert.Fail(String.Format("\"{0}\" should parse.", formula));
             }
@@ -197,7 +197,7 @@ namespace ParcelTest
             {
                 Parcel.parseFormula(formula4, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
             }
-            catch (Parcel.ParseException e)
+            catch (Parcel.ParseException)
             {
                 // OK
             }

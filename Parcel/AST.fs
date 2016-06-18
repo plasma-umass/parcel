@@ -50,10 +50,10 @@
                     let c' = Hash.cantorPair (System.Convert.ToUInt32 addr.Row) (System.Convert.ToUInt32 addr.Col) System.UInt32.MaxValue
                     c.CompareTo c'
 
-        static member fromR1C1withMode(R: int, C: int, Rmode: AddressMode, Cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
-            Address(R, C, Rmode, Cmode, Env(path, wbname, wsname))
-        static member fromA1withMode(row: int, col: string, Rmode: AddressMode, Cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
-            Address(row, Address.CharColToInt(col), Rmode, Cmode, Env(path, wbname, wsname))
+        static member fromR1C1withMode(R: int, C: int, rmode: AddressMode, cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
+            Address(R, C, rmode, cmode, Env(path, wbname, wsname))
+        static member fromA1withMode(row: int, col: string, rmode: AddressMode, cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
+            Address(row, Address.CharColToInt(col), rmode, cmode, Env(path, wbname, wsname))
         member self.copyWithNewEnv(envnew: Env) =
             Address(R, C, Rmode, Cmode, envnew)
         member self.A1Local() : string =
