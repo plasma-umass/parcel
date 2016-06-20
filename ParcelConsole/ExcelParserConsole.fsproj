@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>ExcelParserConsole</RootNamespace>
     <AssemblyName>ExcelParserConsole</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <Name>ExcelParserConsole</Name>
@@ -86,7 +86,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
