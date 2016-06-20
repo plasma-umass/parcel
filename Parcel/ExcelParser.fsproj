@@ -60,18 +60,20 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FParsec">
-      <HintPath>$(SolutionDir)\packages\FParsec.1.0.2\lib\net40-client\FParsec.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FParsecCS">
-      <HintPath>$(SolutionDir)\packages\FParsec.1.0.2\lib\net40-client\FParsecCS.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
+    <Reference Include="FSharp.Core, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FParsecCS\FParsecCS.csproj">
+      <Name>FParsecCS</Name>
+      <Project>{35888456-3095-4133-92c8-6dd3205f4c2d}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\FParsec\FParsec.fsproj">
+      <Name>FParsec</Name>
+      <Project>{d8a416fa-be7d-4929-8a6a-da28b206853c}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
