@@ -170,7 +170,7 @@
     //   A workbook name prefix
     //   A worksheet name prefix
     //   A single-cell address ("Address") or multi-cell address ("Range")
-    let RRWQuoted = (between (pstring "'") (pstring "'") (Workbook .>>. WorksheetNameUnquoted))
+    let RRWQuoted = (between (pstring "'") (pstring "'") (Workbook .>>. WorksheetNameUnquoted)) <!> "RRWQuoted"
     let RangeReferenceWorkbook R = getUserState >>=
                                     fun (us: Env) ->
                                         (pipe2

@@ -423,3 +423,4 @@
             | BinOpExpr(op,e1,e2) -> e1.ToFormula + op + e2.ToFormula
             | UnaryOpExpr(op, e) -> op.ToString() + e.ToFormula
             | ParensExpr(e) -> "(" + e.ToFormula + ")"
+        member self.WellFormedFormula = "=" + self.ToFormula
