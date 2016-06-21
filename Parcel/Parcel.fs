@@ -42,9 +42,19 @@
         | Failure(errorMsg, _, _)   -> false
 
     let parseFormula(formula: string)(path: string)(wbname: string)(wsname: string): AST.Expression option =
-        match runParserOnString Grammar.Formula (AST.Env(path, wbname, wsname)) "" formula with
-        | Success(formula, _, _) -> Some(formula)
-        | Failure(errorMsg, _, _) -> None
+        try
+            match runParserOnString Grammar.Formula (AST.Env(path, wbname, wsname)) "" formula with
+            | Success(formula, _, _) -> Some(formula)
+            | Failure(errorMsg, _, _) -> None
+        with
+        | e ->
+            let rec f = (fun (e:exn) ->
+                            e.Message +
+                            "\n\n" +
+                            if (e.InnerException <> null) then f e.InnerException else ""
+                        )
+            failwith (f e)
+            
 
     let parseFormulaAtAddress(fAddr: AST.Address)(formula: string): AST.Expression =
         match parseFormula formula fAddr.Path fAddr.WorkbookName fAddr.WorksheetName with
