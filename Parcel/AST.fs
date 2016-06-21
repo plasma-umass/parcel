@@ -13,7 +13,7 @@
     // qualified AST nodes.
     [<Serializable>]
     type Env(path: string, wbname: string, wsname: string) =
-        member self.Path = path
+        member self.Path = if path.EndsWith @"\" then path else path + @"\"
         member self.WorkbookName = wbname
         member self.WorksheetName = wsname
         override self.GetHashCode() : int =
@@ -70,7 +70,7 @@
         member self.A1Worksheet() : string = env.WorksheetName
         member self.A1Workbook() : string = env.WorkbookName
         member self.A1FullyQualified() : string =
-            "'" + self.A1Path() + "\[" + self.A1Workbook() + "]" + self.A1Worksheet() + "'!" + self.A1Local()
+            "'" + self.A1Path() + "[" + self.A1Workbook() + "]" + self.A1Worksheet() + "'!" + self.A1Local()
         member self.R1C1 =
             let wsstr = env.WorksheetName + "!"
             let wbstr = "[" + env.WorkbookName + "]"
