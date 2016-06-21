@@ -70,7 +70,7 @@
         member self.A1Worksheet() : string = env.WorksheetName
         member self.A1Workbook() : string = env.WorkbookName
         member self.A1FullyQualified() : string =
-            "[" + self.A1Workbook() + "]" + self.A1Worksheet() + "!" + self.A1Local()
+            "'" + self.A1Path() + "\[" + self.A1Workbook() + "]" + self.A1Worksheet() + "'!" + self.A1Local()
         member self.R1C1 =
             let wsstr = env.WorksheetName + "!"
             let wbstr = "[" + env.WorkbookName + "]"
