@@ -144,6 +144,12 @@
             let r = System.Convert.ToInt32(m.Groups.["row"].Value)
             let c = Address.CharColToInt(m.Groups.["column"].Value)
             Address.fromR1C1withMode(r, c, AddressMode.Relative, AddressMode.Relative, wsname, wbname, path)
+        static member FromA1StringForceMode(addr: string, rmode: AddressMode, cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
+            let reg = System.Text.RegularExpressions.Regex("(?<column>[A-Z]+)(?<row>[0-9]+)")
+            let m = reg.Match(addr)
+            let r = System.Convert.ToInt32(m.Groups.["row"].Value)
+            let c = Address.CharColToInt(m.Groups.["column"].Value)
+            Address.fromR1C1withMode(r, c, rmode, cmode, wsname, wbname, path)
         static member FromString(addr: string, wsname: string, wbname: string, path: string) : Address =
             let reg = System.Text.RegularExpressions.Regex("R(?<row>[0-9]+)C(?<column>[0-9]+)")
             let m = reg.Match(addr)
