@@ -38,6 +38,62 @@ namespace ParcelTest
             Assert.AreEqual(r, correct);
         }
 
+        [TestMethod]
+        public void relativeAddress()
+        {
+            var addrstr = "A1";
+            var worksheet = "Worksheet";
+            var workbook = "Workbook";
+            var path = "";
+
+            var addr = AST.Address.FromA1String(addrstr, worksheet, workbook, path);
+
+            Assert.IsTrue(addr.RowMode == AST.AddressMode.Relative);
+            Assert.IsTrue(addr.ColMode == AST.AddressMode.Relative);
+        }
+
+        [TestMethod]
+        public void absoluteAddress()
+        {
+            var addrstr = "$A$1";
+            var worksheet = "Worksheet";
+            var workbook = "Workbook";
+            var path = "";
+
+            var addr = AST.Address.FromA1String(addrstr, worksheet, workbook, path);
+
+            Assert.IsTrue(addr.RowMode == AST.AddressMode.Absolute);
+            Assert.IsTrue(addr.ColMode == AST.AddressMode.Absolute);
+        }
+
+        [TestMethod]
+        public void halfAbsoluteAddress()
+        {
+            var addrstr = "A$1";
+            var worksheet = "Worksheet";
+            var workbook = "Workbook";
+            var path = "";
+
+            var addr = AST.Address.FromA1String(addrstr, worksheet, workbook, path);
+
+            Assert.IsTrue(addr.RowMode == AST.AddressMode.Absolute);
+            Assert.IsTrue(addr.ColMode == AST.AddressMode.Relative);
+        }
+
+        [TestMethod]
+        public void halfSharkAlligatorHalfMan()
+        {
+            var addrstr = "$A1";
+            var worksheet = "Worksheet";
+            var workbook = "Workbook";
+            var path = "";
+
+            var addr = AST.Address.FromA1String(addrstr, worksheet, workbook, path);
+
+            Assert.IsTrue(addr.RowMode == AST.AddressMode.Relative);
+            Assert.IsTrue(addr.ColMode == AST.AddressMode.Absolute);
+        }
+
         [TestMethod] 
         public void basicIfExpression()
         {

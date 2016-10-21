@@ -138,11 +138,13 @@
                     num + ccti(idx - 1)
             ccti(col.Length - 1)
         static member FromA1String(addr: string, wsname: string, wbname: string, path: string) : Address =
-            let reg = System.Text.RegularExpressions.Regex("(?<column>[A-Z]+)(?<row>[0-9]+)")
+            let reg = System.Text.RegularExpressions.Regex("(?<cmode>\$?)(?<column>[A-Z]+)(?<rmode>\$?)(?<row>[0-9]+)")
             let m = reg.Match(addr)
             let r = System.Convert.ToInt32(m.Groups.["row"].Value)
             let c = Address.CharColToInt(m.Groups.["column"].Value)
-            Address.fromR1C1withMode(r, c, AddressMode.Relative, AddressMode.Relative, wsname, wbname, path)
+            let rmode = if String.IsNullOrEmpty(m.Groups.["rmode"].Value) then AddressMode.Relative else AddressMode.Absolute
+            let cmode = if String.IsNullOrEmpty(m.Groups.["cmode"].Value) then AddressMode.Relative else AddressMode.Absolute
+            Address.fromR1C1withMode(r, c, rmode, cmode, wsname, wbname, path)
         static member FromA1StringForceMode(addr: string, rmode: AddressMode, cmode: AddressMode, wsname: string, wbname: string, path: string) : Address =
             let reg = System.Text.RegularExpressions.Regex("\$?(?<column>[A-Z]+)\$?(?<row>[0-9]+)")
             let m = reg.Match(addr)
