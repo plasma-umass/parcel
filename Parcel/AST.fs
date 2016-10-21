@@ -124,8 +124,7 @@
             let b = self.Y = addr.Y
             let c = self.WorksheetName = addr.WorksheetName
             let d = self.WorkbookName = addr.WorkbookName
-            let e = self.Path = addr.Path
-            a && b && c && d && e
+            a && b && c && d
         override self.ToString() =
             "(" + self.X.ToString() + "," + self.Y.ToString() + ")"
         member self.ToFormula = self.A1FullyQualified()
