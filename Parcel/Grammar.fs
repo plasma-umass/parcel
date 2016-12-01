@@ -3,7 +3,7 @@
     open AST
     open System.Text.RegularExpressions
 
-    let DEBUG_MODE = false
+    let DEBUG_MODE = true
 
     // This is a version of the forwarding parser that
     // also takes a generic argument.
@@ -411,9 +411,10 @@
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
         "XOR"]
 
-    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 ["AND"; "AVEDEV"; "AVERAGE"; "AVERAGEA";
-        "CALL"; "CONCAT"; "CONCATENATE"; "COUNT"; "COUNTA"; "CUBEVALUE"; "DEVSQ"; "GCD"; "GEOMEAN"; "HARMEAN"; "IMPRODUCT";
-        "IMSUM"; "KURT"; "LCM"; "MAX"; "MAXA"; "MIN"; "MINA"; "MODE"; "MODE.MULT"; "MODE.SNGL"; "MULTINOMIAL"; ]
+    // If any of these are substrings of another, the longest version MUST come first!
+    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 ["AND"; "AVEDEV"; "AVERAGEA"; "AVERAGE";
+        "CALL"; "CONCATENATE"; "CONCAT"; "COUNTA"; "COUNT"; "CUBEVALUE"; "DEVSQ"; "GCD"; "GEOMEAN"; "HARMEAN"; "IMPRODUCT";
+        "IMSUM"; "KURT"; "LCM"; "MAXA"; "MAX"; "MINA"; "MIN"; "MODE.MULT"; "MODE.SNGL"; "MODE"; "MULTINOMIAL"; ]
     let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 ["CHOOSE"; "COUNTIFS"; "GETPIVOTDATA"; "IFS"; ]
     let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 ["AGGREGATE"; "AVERAGEIFS"; "MAXIFS"; "MINIFS"; ]
 

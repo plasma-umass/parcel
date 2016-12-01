@@ -366,8 +366,8 @@ namespace ParcelTest
             try
             {
                 var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
-                Assert.IsTrue(Microsoft.FSharp.Core.FSharpOption<AST.Expression>.get_IsSome(ast));
-                var expr = (AST.Expression.ReferenceExpr)ast.Value;
+                Assert.IsTrue(ExprOpt.get_IsSome(ast));
+                var expr = (Expr.ReferenceExpr)ast.Value;
                 var formula = (AST.ReferenceFunction)expr.Item;
 
                 Assert.IsTrue(formula.FunctionName == "HLOOKUP");
@@ -377,6 +377,29 @@ namespace ParcelTest
                 Assert.Fail(e.Message);
             }
 
+        }
+
+        [TestMethod]
+        public void testCOUNTA()
+        {
+            // a parse that failed in the wild:
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "Calculations", "Status" });
+            var f = "=COUNTA(A6:A33)";
+
+            // parse
+            try
+            {
+                var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Assert.IsTrue(ExprOpt.get_IsSome(ast));
+                var expr = (Expr.ReferenceExpr)ast.Value;
+                var formula = (AST.ReferenceFunction)expr.Item;
+
+                Assert.IsTrue(formula.FunctionName == "COUNTA");
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
         }
     }
 }
