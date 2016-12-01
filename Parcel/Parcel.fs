@@ -88,6 +88,19 @@
         | None,false -> raise (ParseException formula)
         | None,true -> [||]    // just ignore parse exceptions for now
 
+    let rec operatorNamesFromExpr(ast: AST.Expression): string list =
+        match ast with
+        | AST.ReferenceExpr(r) -> operatorNamesFromRef(r)
+        | AST.BinOpExpr(op, e1, e2) -> op :: operatorNamesFromExpr(e1) @ operatorNamesFromExpr(e2)
+        | AST.UnaryOpExpr(op, e) -> op.ToString() :: operatorNamesFromExpr(e)
+        | AST.ParensExpr(e) -> operatorNamesFromExpr(e)
+
+    and operatorNamesFromRef(ref: AST.Reference): string list =
+        match ref with
+        | :? AST.ReferenceFunction as r -> [r.FunctionName]
+        | _ -> []
+
+
     let rec formulaNamesFromExpr(ast: AST.Expression): string list =
         match ast with
         | AST.ReferenceExpr(r) -> formulaNamesFromRef(r)
