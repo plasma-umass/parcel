@@ -94,7 +94,7 @@ namespace ParcelTest
             Assert.IsTrue(addr.ColMode == AST.AddressMode.Absolute);
         }
 
-        [TestMethod] 
+        [TestMethod]
         public void basicIfExpression()
         {
             var mwb = MockWorkbook.standardMockWorkbook();
@@ -400,6 +400,15 @@ namespace ParcelTest
             {
                 Assert.Fail(e.Message);
             }
+        }
+
+        [TestMethod]
+        public void longestMatchFirstTest()
+        {
+            string[] isa = { "COLUMN", "FALSE", "NA", "NOW", "PI", "RAND", "ROW", "SHEET", "SHEETS", "TODAY", "TRUE" };
+            string[] esa = { "COLUMN", "SHEETS", "FALSE", "SHEET", "TODAY", "RAND", "TRUE", "NOW", "ROW", "NA", "PI" };
+            string[] asa = Grammar.lmf(isa);
+            Assert.IsTrue(esa.SequenceEqual(asa));
         }
     }
 }
