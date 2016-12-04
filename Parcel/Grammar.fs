@@ -3,7 +3,7 @@
     open AST
     open System.Text.RegularExpressions
 
-    let DEBUG_MODE = true
+    let DEBUG_MODE = false
 
     // This is a version of the forwarding parser that
     // also takes a generic argument.
