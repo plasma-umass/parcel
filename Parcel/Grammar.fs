@@ -482,11 +482,15 @@
         )
 
     let ArgumentsAtLeastN R n =
+        // What I really want is sepByN; this parser basically
+        // does the same thing by requiring a mandator match of
+        // n-1 arguments, then one more, and then any number
+        // of optional arguments.
         (pipe3
             (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
-            (ExpressionDecl R)
+            (sepBy1 (ExpressionDecl R) (pstring ","))
             (ArgumentList R)
-            (fun exprArr expr varArgs -> Array.toList exprArr @ [expr] @ varArgs) <!> ("Arguments" + n.ToString() + "+")
+            (fun exprArrReqd exprAtLeastOne varArgs -> (Array.toList exprArrReqd) @ exprAtLeastOne @ varArgs) <!> ("Arguments" + n.ToString() + "+")
         )
 
     let Arity0NoParensFunction R =

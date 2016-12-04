@@ -410,5 +410,31 @@ namespace ParcelTest
             string[] asa = Grammar.lmf(isa);
             Assert.IsTrue(esa.SequenceEqual(asa));
         }
+
+        [TestMethod]
+        public void testMAXVarArgs()
+        {
+            // a parse that failed in the wild:
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "Calculations", "Status" });
+            var f = "=MAX(B6-10,0)";
+
+            // parse
+            try
+            {
+                var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Assert.IsTrue(ExprOpt.get_IsSome(ast));
+                var expr = (Expr.ReferenceExpr)ast.Value;
+                var formula = (AST.ReferenceFunction)expr.Item;
+
+                Assert.IsTrue(formula.FunctionName == "MAX");
+                Assert.AreEqual(formula.ArgumentList.Length, 2);
+                Assert.IsTrue(formula.ArgumentList.First().IsBinOpExpr);
+                Assert.IsTrue(formula.ArgumentList.Last().IsReferenceExpr);
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
     }
 }
