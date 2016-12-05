@@ -300,6 +300,7 @@
     | ReferenceConstant = 3
     | ReferenceString   = 4
     | ReferenceNamed    = 5
+    | ReferenceBoolean  = 6
 
     type Arity =
     | Fixed of int
@@ -380,6 +381,21 @@
         override self.ToString() = "Constant(" + value.ToString() + ")"
         override self.Equals(obj: obj) : bool =
             let rc = obj :?> ReferenceConstant
+            self.Path = rc.Path &&
+            self.WorkbookName = rc.WorkbookName &&
+            self.WorksheetName = rc.WorksheetName &&
+            self.Value = rc.Value
+        override self.GetHashCode() : int =
+            env.GetHashCode() ||| value.GetHashCode()
+        override self.ToFormula = value.ToString()
+
+    and ReferenceBoolean(env: Env, value: bool) =
+        inherit Reference(env)
+        override self.Type = ReferenceType.ReferenceBoolean
+        member self.Value = value
+        override self.ToString() = "Boolean(" + value.ToString() + ")"
+        override self.Equals(obj: obj) : bool =
+            let rc = obj :?> ReferenceBoolean
             self.Path = rc.Path &&
             self.WorkbookName = rc.WorkbookName &&
             self.WorksheetName = rc.WorksheetName &&

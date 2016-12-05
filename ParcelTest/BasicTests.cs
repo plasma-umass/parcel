@@ -104,7 +104,7 @@ namespace ParcelTest
             ExprOpt asto = Parcel.parseFormula(f, e.Path, e.WorkbookName, e.WorksheetName);
 
             Expr[] a = {
-                Expr.NewReferenceExpr(new AST.ReferenceFunction(e, "TRUE", ArgList.Empty, AST.Arity.NewFixed(0))),
+                Expr.NewReferenceExpr(new AST.ReferenceBoolean(e, true)),
                 Expr.NewReferenceExpr(new AST.ReferenceConstant(e, 1.0)),
                 Expr.NewReferenceExpr(new AST.ReferenceConstant(e, 2.0))
             };
@@ -434,6 +434,49 @@ namespace ParcelTest
             catch (Parcel.ParseException e)
             {
                 Assert.Fail(e.Message);
+            }
+        }
+
+        [TestMethod]
+        public void testTODAY()
+        {
+            // a parse that failed in the wild:
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "Calculations", "Status" });
+            var f = "=TODAY()";
+
+            // parse
+            try
+            {
+                var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Assert.IsTrue(ExprOpt.get_IsSome(ast));
+                var expr = (Expr.ReferenceExpr)ast.Value;
+                var formula = (AST.ReferenceFunction)expr.Item;
+
+                Assert.IsTrue(formula.FunctionName == "TODAY");
+                Assert.AreEqual(formula.ArgumentList.Length, 0);
+            }
+            catch (Parcel.ParseException e)
+            {
+                Assert.Fail(e.Message);
+            }
+        }
+
+        [TestMethod]
+        public void testTODAY2()
+        {
+            // a parse that should fail:
+            var mwb = new MockWorkbook("C:\\FOOBAR", "workbook.xls", new[] { "sheet1", "Calculations", "Status" });
+            var f = "=TODAY";
+
+            // parse
+            try
+            {
+                var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
+                Assert.Fail("Should not parse.");
+            }
+            catch (Parcel.ParseException e)
+            {
+                // pass
             }
         }
     }

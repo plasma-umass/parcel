@@ -3,7 +3,7 @@
     open AST
     open System.Text.RegularExpressions
 
-    let DEBUG_MODE = false
+    let DEBUG_MODE = true
 
     // This is a version of the forwarding parser that
     // also takes a generic argument.
@@ -258,12 +258,12 @@
                                         |>> fun r -> ReferenceConstant(us, r / 100.0) :> Reference))
                                     <|> (pfloat |>> (fun r -> ReferenceConstant(us, r) :> Reference))
                             <!> "ConstantReference"
-    let Reference R = (attempt (RangeReference R))
-                        <|> (attempt AddressReference)
-                        <|> (attempt ConstantReference)
-                        <|> (attempt StringReference)
-                        <|> NamedReference
-                    <!> "Reference"
+    let BooleanReference = getUserState >>=
+                             fun us ->
+                                 Array.map (fun b -> attempt (pstring b)) [| "TRUE"; "FALSE" |]
+                                 |> choice
+                                 |>> fun r -> ReferenceBoolean(us, System.Boolean.Parse(r)) :> Reference
+                           <!> "BooleanReference"
 
     // This helper function sorts strings from
     // longest length to shortest length; length
@@ -287,11 +287,10 @@
     let ArityNFunctionNameMaker n xs = xs |> Array.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + n.ToString() + "FunctionName")
     let ArityAtLeastNFunctionNameMaker nplus xs = xs |> Array.map (fun name -> attempt (pstring name)) |> choice <!> ("Arity" + nplus.ToString() + "+FunctionName")
 
-    let Arity0NoParensFunctionName: P<string> = ArityNFunctionNameMaker 0 [|"FALSE"; "TRUE";|]
+    let Arity0Names: string[] = [|"COLUMN"; "NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"|]
+    let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 (lmf Arity0Names)
 
-    let Arity0FunctionName: P<string> = ArityNFunctionNameMaker 0 (lmf [|"COLUMN"; "FALSE"; "NA"; "NOW"; "PI"; "RAND"; "ROW"; "SHEET"; "SHEETS"; "TODAY"; "TRUE"|])
-
-    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 (lmf [|"ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH"; "ARABIC"; "AREAS"; "ASC"; "ASIN"; "ASINH"; "ATAN"; "ATANH";
+    let Arity1Names: string[] = [|"ABS"; "ACOS"; "ACOSH"; "ACOT"; "ACOTH"; "ARABIC"; "AREAS"; "ASC"; "ASIN"; "ASINH"; "ATAN"; "ATANH";
         "BAHTTEXT"; "BIN2DEC"; "BIN2HEX"; "BIN2OCT"; "CEILING.PRECISE"; "CELL"; "CHAR"; "CLEAN"; "CODE"; "COLUMN"; "COLUMNS"; "COS"; "COSH"; "COT"; "COTH"; "COUNTBLANK";
         "CSC"; "CSCH"; "CUBESETCOUNT"; "DAY"; "DBCS"; "DEC2BIN"; "DEC2HEX"; "DEC2OCT"; "DEGREES"; "DELTA"; "DOLLAR"; "ENCODEURL"; "ERF"; "ERF.PRECISE"; "ERFC"; "ERFC.PRECISE";
         "ERROR.TYPE"; "EVEN"; "EXP"; "FACT"; "FACTDOUBLE"; "FISHER"; "FISHERINV"; "FIXED"; "FLOOR.PRECISE"; "FORMULATEXT"; "GAMMA"; "GAMMALN"; "GAMMALN.PRECISE"; "GAUSS";
@@ -310,9 +309,10 @@
         "VALUE"; "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; 
         "WEBSERVICE"; "WEEKDAY"; "WEEKNUM"; 
         "XOR";  
-        "YEAR"|])
+        "YEAR"|]
+    let Arity1FunctionName: P<string> = ArityNFunctionNameMaker 1 (lmf Arity1Names)
 
-    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 (lmf [|"ADDRESS"; "ATAN2"; "AVERAGEIF"; "BASE"; "BESSELI"; "BESSELJ"; "BESSELK"; "BESSELY";
+    let Arity2Names: string[] = [|"ADDRESS"; "ATAN2"; "AVERAGEIF"; "BASE"; "BESSELI"; "BESSELJ"; "BESSELK"; "BESSELY";
         "BIN2HEX"; "BIN2OCT"; "BITAND"; "BITLSHIFT"; "BITOR"; "BITRSHIFT"; "BITXOR"; "CEILING"; "CEILING.PRECISE"; "CELL"; "CHIDIST"; "CHIINV"; "CHITEST";
         "CHISQ.DIST.RT"; "CHISQ.TEST"; "COMBIN"; "COMBINA"; "COMPLEX"; "COUNTIF"; "COVAR"; "COVARIANCE.P"; "COVARIANCE.S"; "CUBEMEMBER"; "CUBERANKEDMEMBER";
         "CUBESET"; "DATEVALUE"; "DAYS"; "DAYS360"; "DEC2BIN"; "DEC2HEX"; "DEC2OCT"; "DECIMAL"; "DELTA"; "DOLLAR"; "DOLLARDE"; "DOLLARFR"; "EDATE"; "EFFECT";
@@ -332,9 +332,10 @@
         "WEEKDAY"; "WEEKNUM"; "WORKDAY"; "WORKDAY.INTL";
         "XIRR"; "XOR";
         "YEARFRAC"; 
-        "ZTEST"; "Z.TEST"|])
+        "ZTEST"; "Z.TEST"|]
+    let Arity2FunctionName: P<string> = ArityNFunctionNameMaker 2 (lmf Arity2Names)
 
-    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 (lmf [|"ADDRESS"; "AVERAGEIF"; "BASE"; "BETADIST"; "BETAINV"; "BETA.INV"; "BINOM.DIST.RANGE"; "BINOM.INV";
+    let Arity3Names: string[] = [|"ADDRESS"; "AVERAGEIF"; "BASE"; "BETADIST"; "BETAINV"; "BETA.INV"; "BINOM.DIST.RANGE"; "BINOM.INV";
         "CEILING.MATH"; "CHISQ.DIST"; "COMPLEX"; "CONFIDENCE"; "CONFIDENCE.NORM"; "CONFIDENCE.T"; "CONVERT"; "CORREL"; "COUPDAYBS"; "COUPDAYS"; "COUPDAYSNC"; "COUPNCD";
         "COUPNUM"; "COUPPCD"; "CRITBINOM"; "CUBEKPIMEMBER"; "CUBEMEMBER"; "CUBEMEMBERPROPERTY"; "CUBERANKEDMEMBER"; "CUBESET";
         "DATE"; "DATEDIF"; "DAVERAGE"; "DAYS360"; "DCOUNT"; "DCOUNTA"; "DGET"; "DMAX"; "DMIN"; "DPRODUCT"; "DSTDEV"; "DSTDEVP"; "DSUM"; "DVAR"; "DVARP"; "EXPON.DIST";
@@ -353,9 +354,10 @@
         "WORKDAY"; "WORKDAY.INTL";
         "XIRR"; "XNPV"; "XOR";
         "YEARFRAC"; 
-        "ZTEST"; "Z.TEST"|])
+        "ZTEST"; "Z.TEST"|]
+    let Arity3FunctionName: P<string> = ArityNFunctionNameMaker 3 (lmf Arity3Names)
 
-    let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 (lmf [|"ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "BINOMDIST"; "BINOM.DIST";
+    let Arity4Names: string[] = [|"ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "BINOMDIST"; "BINOM.DIST";
         "BINOM.DIST.RANGE"; "COUPDAYBS"; "COUPDAYS"; "COUPDAYSNC"; "COUPNCD"; "COUPNUM"; "COUPPCD"; "CUBESET"; "DB"; "DDB"; "DISC"; "F.DIST"; "FORECAST.ETS";
         "FORECAST.ETS.SEASONALITY"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "FV"; "GAMMA.DIST"; "GAMMADIST"; "GROWTH"; "HLOOKUP"; "HYPGEOMDIST"; "INTRATE";
         "LINEST"; "LOGEST"; "LOGNORM.DIST"; 
@@ -369,9 +371,10 @@
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VLOOKUP"; 
         "WEIBULL"; "WEIBULL.DIST"; "WORKDAY.INTL";
         "XOR";
-        "YIELDDISC"|])
+        "YIELDDISC"|]
+    let Arity4FunctionName: P<string> = ArityNFunctionNameMaker 4 (lmf Arity4Names)
 
-    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 (lmf [|"ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "CUBESET"; "DB"; "DDB";
+    let Arity5Names = [|"ADDRESS"; "ACCRINTM"; "BETADIST"; "BETA.DIST"; "BETAINV"; "BETA.INV"; "CUBESET"; "DB"; "DDB";
         "DISC"; "DURATION"; "EUROCONVERT"; "FORECAST.ETS"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "FV"; "HYPGEOM.DIST"; "INTRATE"; "IPMT"; 
         "MEDIAN"; "MDURATION"; "MDURATION";
         "NPER"; "NPV";
@@ -382,9 +385,10 @@
         "TEXTJOIN"; 
         "VAR"; "VAR.P"; "VARA"; "VARP";"VARPA"; "VDB"; 
         "XOR";
-        "YIELDDISC"; "YIELDMAT"|])
+        "YIELDDISC"; "YIELDMAT"|]
+    let Arity5FunctionName: P<string> = ArityNFunctionNameMaker 5 (lmf Arity5Names)
 
-    let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 (lmf [|"ACCRINT"; "AMORDEGRC"; "AMORLINC"; "BETA.DIST";
+    let Arity6Names: string[] = [|"ACCRINT"; "AMORDEGRC"; "AMORLINC"; "BETA.DIST";
         "CUMIPMT"; "CUMPRINC"; "DURATION"; "FORECAST.ETS"; "FORECAST.ETS.CONFINT"; "FORECAST.ETS.STAT"; "IPMT"; 
         "MEDIAN"; "MDURATION"; "MDURATION"; 
         "NPV"; 
@@ -395,9 +399,10 @@
         "TEXTJOIN"; 
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
         "XOR";
-        "YIELD"; "YIELDMAT"|])
+        "YIELD"; "YIELDMAT"|]
+    let Arity6FunctionName: P<string> = ArityNFunctionNameMaker 6 (lmf Arity6Names)
 
-    let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 (lmf [|"ACCRINT"; "AMORDEGRC"; "AMORLINC"; "FORECAST.ETS.CONFINT";
+    let Arity7Names: string[] = [|"ACCRINT"; "AMORDEGRC"; "AMORLINC"; "FORECAST.ETS.CONFINT";
         "MEDIAN"; "MULTINOMIAL";
         "NPV"; 
         "ODDLPRICE"; "ODDLYIELD"; "OR";
@@ -407,9 +412,10 @@
         "TEXTJOIN"; 
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA"; "VDB";
         "XOR";
-        "YIELD"|])
+        "YIELD"|]
+    let Arity7FunctionName: P<string> = ArityNFunctionNameMaker 7 (lmf Arity7Names)
 
-    let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 (lmf [|"ACCRINT";
+    let Arity8Names: string[] = [|"ACCRINT";
         "MEDIAN"; "MULTINOMIAL";
         "NPV"; 
         "ODDFPRICE"; "ODDFYIELD"; "ODDLPRICE"; "ODDLYIELD"; "OR";
@@ -418,9 +424,10 @@
         "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
         "TEXTJOIN"; 
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
-        "XOR"|])
+        "XOR"|]
+    let Arity8FunctionName: P<string> = ArityNFunctionNameMaker 8 (lmf Arity8Names)
 
-    let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 (lmf [|"ACCRINT";
+    let Arity9Names: string[] = [|"ACCRINT";
         "MEDIAN"; "MULTINOMIAL";
         "NPV"; 
         "ODDFPRICE"; "ODDFYIELD"; "OR";
@@ -428,16 +435,23 @@
         "RTD";
         "STDEV"; "STDEV.P"; "STDEV.S"; "STDEVA"; "STDEVP"; "STDEVPA"; "SUBTOTAL"; "SUMPRODUCT"; "SUMSQ"; "SWITCH";
         "VAR"; "VAR.P"; "VAR.S"; "VARA"; "VARP"; "VARPA";
-        "XOR"|])
+        "XOR"|]
+    let Arity9FunctionName: P<string> = ArityNFunctionNameMaker 9 (lmf Arity9Names)
 
-    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 (lmf [|"AND"; "AVEDEV"; "AVERAGEA"; "AVERAGE";
+    let ArityAtLeast1Names: string[] = [|"AND"; "AVEDEV"; "AVERAGEA"; "AVERAGE";
         "CALL"; "CONCATENATE"; "CONCAT"; "COUNTA"; "COUNT"; "CUBEVALUE"; "DEVSQ"; "GCD"; "GEOMEAN"; "HARMEAN"; "IMPRODUCT";
-        "IMSUM"; "KURT"; "LCM"; "MAXA"; "MAX"; "MINA"; "MIN"; "MODE.MULT"; "MODE.SNGL"; "MODE"; "MULTINOMIAL"; |])
-    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 (lmf [|"CHOOSE"; "COUNTIFS"; "GETPIVOTDATA"; "IFS"; |])
-    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 (lmf [|"AGGREGATE"; "AVERAGEIFS"; "MAXIFS"; "MINIFS"; |])
+        "IMSUM"; "KURT"; "LCM"; "MAXA"; "MAX"; "MINA"; "MIN"; "MODE.MULT"; "MODE.SNGL"; "MODE"; "MULTINOMIAL"; |]
+    let ArityAtLeast1FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 1 (lmf ArityAtLeast1Names)
 
+    let ArityAtLeast2Names: string[] = [|"CHOOSE"; "COUNTIFS"; "GETPIVOTDATA"; "IFS"; |]
+    let ArityAtLeast2FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 2 (lmf ArityAtLeast2Names)
+
+    let ArityAtLeast3Names: string[] = [|"AGGREGATE"; "AVERAGEIFS"; "MAXIFS"; "MINIFS"; |]
+    let ArityAtLeast3FunctionName: P<string> = ArityAtLeastNFunctionNameMaker 3 (lmf ArityAtLeast3Names)
+
+    let VarArgsNames: string[] = [|"SUM"|]
     let VarArgsFunctionName: P<string> =
-        (lmf [|"SUM"|])
+        (lmf VarArgsNames)
         |> Array.map (fun name -> pstring name) |> choice <!> "VarArgsFunctionName"
 
     let arityNNameArr: P<string>[] = 
@@ -452,6 +466,27 @@
             Arity7FunctionName;
             Arity8FunctionName;
         |]
+
+    let ReservedWords: P<string>[] = 
+        [|
+            Arity0Names;
+            Arity1Names;
+            Arity2Names;
+            Arity3Names;
+            Arity4Names;
+            Arity5Names;
+            Arity6Names;
+            Arity7Names;
+            Arity8Names;
+            Arity9Names;
+            ArityAtLeast1Names;
+            ArityAtLeast2Names;
+            ArityAtLeast3Names;
+            VarArgsNames;
+        |]
+        |> Array.concat
+        |> lmf
+        |> Array.map (fun ns -> pstring ns)
 
     let arityAtLeastNNameArr: P<string>[] =
         [|
@@ -493,23 +528,22 @@
             (fun exprArrReqd exprAtLeastOne varArgs -> (Array.toList exprArrReqd) @ exprAtLeastOne @ varArgs) <!> ("Arguments" + n.ToString() + "+")
         )
 
-    let Arity0NoParensFunction R =
-        // Range context is irrelevant here since we
-        // have no arguments
-        getUserState >>=
-        fun us ->
-            Arity0FunctionName |>> (fun fname -> ReferenceFunction(us, fname, [], Fixed(0)) :> Reference)
-        <!> ("Arity0NoParensFunction")
-
     let ArityNFunction n R =
                 // here, we ignore whatever Range context we are given
                 // and use RangeNoUnion instead
-                getUserState >>=
-                fun us ->
-                    pipe2
-                        (FunctionNamesForArity n .>> (pstring "(" <!> "Arity" + n.ToString() + "FunctionOPENINGBRACE"))
-                        ((ArgumentsN RangeNoUnion n) .>> (pstring ")" <!> "Arity" + n.ToString() + "FunctionCLOSINGBRACE" ))
-                        (fun fname arglist -> ReferenceFunction(us, fname, arglist, Fixed(n)) :> Reference)
+                if n = 0 then
+                    getUserState >>=
+                    fun us ->
+                        (FunctionNamesForArity n .>> (pstring "()" <!> "Arity" + n.ToString() + "FunctionOPENCLOSEBRACE"))
+                        |>>
+                            (fun fname -> ReferenceFunction(us, fname, [], Fixed(0)) :> Reference)
+                else
+                    getUserState >>=
+                    fun us ->
+                        pipe2
+                            (FunctionNamesForArity n .>> (pstring "(" <!> "Arity" + n.ToString() + "FunctionOPENINGBRACE"))
+                            ((ArgumentsN RangeNoUnion n) .>> (pstring ")" <!> "Arity" + n.ToString() + "FunctionCLOSINGBRACE" ))
+                            (fun fname arglist -> ReferenceFunction(us, fname, arglist, Fixed(n)) :> Reference)
                 <!> ("Arity" + n.ToString() + "Function")
 
     let ArityAtLeastNFunction n R =
@@ -535,17 +569,16 @@
                    <!> "VarArgsFunction"
 
     let Function R: P<Reference> =
-        (       // arity 0 and no parens
-            (attempt (Arity0NoParensFunction R))
-            <|> (// fixed arity
+        (       
+            (   // fixed arity
                 arityNNameArr |>
                     Array.mapi (fun i _ -> (attempt (ArityNFunction i R))) |> choice)
             <|> (// low-bounded arity
                 arityAtLeastNNameArr |>
                     // note: no "at-least-0" parser; that's just a varargs
                     Array.mapi (fun i _ -> (attempt (ArityAtLeastNFunction (i + 1) R))) |> choice)
-                // varargs
-            <|> VarArgsFunction R
+            <|> (// varargs
+                VarArgsFunction R)
         ) <!> "Function"
     
     do ArgumentListImpl := fun (R: P<Range>) -> sepBy ((ExpressionDecl R) <!> "VarArgs Argument") (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
@@ -560,13 +593,30 @@
     // Unary operators
     let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
 
+    // reserved words
+    let ReservedWordsReference =
+        (Array.map (fun (rwp: P<string>) -> (attempt rwp)) ReservedWords)
+        |> choice
+        |>> (fun s -> failwith ("'" + s + "' is a reserved word."))
+
+    // references
+    let Reference R = (attempt (RangeReference R))
+                        <|> (attempt AddressReference)
+                        <|> (attempt BooleanReference)
+                        <|> (attempt ConstantReference)
+                        <|> (attempt ReservedWordsReference)
+                        <|> (attempt StringReference)
+                        <|> NamedReference
+                      <!> "Reference"
+
     // Expressions
     let ParensExpr(R: P<Range>): P<Expression> = ((between (pstring "(") (pstring ")") (ExpressionDecl R)) |>> ParensExpr) <!> "ParensExpr"
     let ExpressionAtom(R: P<Range>): P<Expression> = (((attempt (Function R)) <|> (Reference R)) |>> ReferenceExpr) <!> "ExpressionAtom"
     let ExpressionSimple(R: P<Range>): P<Expression> = ((attempt (ExpressionAtom R)) <|> (ParensExpr R)) <!> "ExpressionSimple"
     let UnaryOpExpr(R: P<Range>): P<Expression> = pipe2 UnaryOpChar (ExpressionDecl R) (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
     let BinOpExpr(R: P<Range>): P<Expression> = pipe2 (ExpressionSimple R) (BinOp R) (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
-    
+   
+
     // This is very confusing without some context:
     // BASICALLY, parsing Excel argument lists is ambiguous without knowing
     // the arity of the function that you are parsing.  Thus the Expression parser
