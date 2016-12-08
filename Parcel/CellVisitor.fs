@@ -14,7 +14,8 @@
         | :? AST.ReferenceFunction as r -> addrsFromFunctionRef(r)
         | :? AST.ReferenceConstant -> []
         | :? AST.ReferenceString -> []
-        | _ -> failwith "Unknown reference type."
+        | :? AST.ReferenceBoolean -> []
+        | _ -> raise (AST.ParseException "Unknown reference type.")
 
     and addrsFromAddrRef(ref: AST.ReferenceAddress) : AST.Address list = [ref.Address]
 

@@ -19,4 +19,5 @@
         | :? AST.ReferenceFunction as r -> rangesFromFunctionRef(r)
         | :? AST.ReferenceConstant -> []
         | :? AST.ReferenceString -> []
-        | _ -> failwith "Unknown reference type."
+        | :? AST.ReferenceBoolean -> []
+        | _ -> raise (AST.ParseException "Unknown reference type.")

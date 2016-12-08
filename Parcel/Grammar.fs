@@ -594,10 +594,12 @@
     let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
 
     // reserved words
-    let ReservedWordsReference =
+    let ReservedWordsReference: P<Reference> =
         (Array.map (fun (rwp: P<string>) -> (attempt rwp)) ReservedWords)
         |> choice
-        |>> (fun s -> failwith ("'" + s + "' is a reserved word."))
+        |>> (fun s ->
+                raise (AST.ParseException ("'" + s + "' is a reserved word."))
+            )
 
     // references
     let Reference R = (attempt (RangeReference R))

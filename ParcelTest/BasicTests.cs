@@ -132,7 +132,7 @@ namespace ParcelTest
             {
                 rngs = Parcel.rangeReferencesFromFormula(s, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
             }
-            catch (Parcel.ParseException)
+            catch (AST.ParseException)
             {
                 Assert.Fail(String.Format("\"{0}\" should parse.", s));
             }
@@ -154,7 +154,7 @@ namespace ParcelTest
             {
                 addrs = Parcel.addrReferencesFromFormula(formula, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
             }
-            catch (Parcel.ParseException)
+            catch (AST.ParseException)
             {
                 Assert.Fail(String.Format("\"{0}\" should parse.", formula));
             }
@@ -190,7 +190,7 @@ namespace ParcelTest
                     {
                         // OK   
                     }
-                    else if (e is Parcel.ParseException)
+                    else if (e is AST.ParseException)
                     {
                         System.Diagnostics.Debug.WriteLine("Fail: " + f);
                         failures.Enqueue(f);
@@ -243,7 +243,7 @@ namespace ParcelTest
                 Parcel.parseFormula(formula2, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
                 Parcel.parseFormula(formula3, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -253,7 +253,7 @@ namespace ParcelTest
             {
                 Parcel.parseFormula(formula4, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
             }
-            catch (Parcel.ParseException)
+            catch (AST.ParseException)
             {
                 // OK
             }
@@ -277,7 +277,7 @@ namespace ParcelTest
                 Assert.IsTrue(addrs.Contains(f1a2));
                 Assert.IsTrue(addrs.Length == 2);
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -297,7 +297,7 @@ namespace ParcelTest
                 Assert.IsTrue(addrs.Contains(addr));
                 Assert.IsTrue(addrs.Length == 1);
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -320,7 +320,7 @@ namespace ParcelTest
                 Assert.IsTrue(rngs.Contains(rng));
                 Assert.IsTrue(rngs.Length == 1);
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -349,7 +349,7 @@ namespace ParcelTest
                 Assert.IsTrue(rngs.Contains(rng4));
                 Assert.IsTrue(rngs.Length == 4);
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -372,7 +372,7 @@ namespace ParcelTest
 
                 Assert.IsTrue(formula.FunctionName == "HLOOKUP");
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -396,7 +396,7 @@ namespace ParcelTest
 
                 Assert.IsTrue(formula.FunctionName == "COUNTA");
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -431,7 +431,7 @@ namespace ParcelTest
                 Assert.IsTrue(formula.ArgumentList.First().IsBinOpExpr);
                 Assert.IsTrue(formula.ArgumentList.Last().IsReferenceExpr);
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -455,7 +455,7 @@ namespace ParcelTest
                 Assert.IsTrue(formula.FunctionName == "TODAY");
                 Assert.AreEqual(formula.ArgumentList.Length, 0);
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException e)
             {
                 Assert.Fail(e.Message);
             }
@@ -474,9 +474,10 @@ namespace ParcelTest
                 var ast = Parcel.parseFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1));
                 Assert.Fail("Should not parse.");
             }
-            catch (Parcel.ParseException e)
+            catch (AST.ParseException)
             {
                 // pass
+                Assert.IsTrue(true);
             }
         }
     }

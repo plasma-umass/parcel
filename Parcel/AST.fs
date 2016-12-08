@@ -4,6 +4,10 @@
     open System.Collections.Generic
     open System.Text
 
+    type ParseException(formula: string, reason: string) =
+        inherit System.Exception(formula)
+        new(formula: string) = ParseException(formula, "")
+
     type IndirectAddressingNotSupportedException(expression: string) =
         inherit Exception(expression)
 

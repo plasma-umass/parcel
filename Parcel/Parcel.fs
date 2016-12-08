@@ -2,13 +2,6 @@
     open FParsec
 
     (*
-     * TYPES
-     *)
-    type ParseException(formula: string, reason: string) =
-        inherit System.Exception(formula)
-        new(formula: string) = ParseException(formula, "")
-
-    (*
      * PRIVATE IMPLEMENTATIONS
      *)
 
@@ -53,7 +46,7 @@
                             "\n\n" +
                             if (e.InnerException <> null) then f e.InnerException else ""
                         )
-            failwith (f e)
+            raise (AST.ParseException (f e))
             
 
     let parseFormulaAtAddress(fAddr: AST.Address)(formula: string): AST.Expression =
@@ -75,7 +68,7 @@
         try
             match (parseFormula formula path workbook worksheet),ignore_parse_errors with
             | Some(tree),_ -> RangeVisitor.rangesFromExpr(tree) |> Seq.distinct |> Seq.toArray
-            | None,false -> raise (ParseException(formula))
+            | None,false -> raise (AST.ParseException(formula))
             | None,true -> [||]    // just ignore parse exceptions for now
         with
         // right now, we recognize indirect addresses but do not correctly dereference them,
@@ -85,7 +78,7 @@
     let addrReferencesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : AST.Address[] =
         match (parseFormula formula path wb ws),ignore_parse_errors with
         | Some(ast),_ -> CellVisitor.addrsFromExpr(ast) |> Seq.distinct |> Seq.toArray
-        | None,false -> raise (ParseException formula)
+        | None,false -> raise (AST.ParseException formula)
         | None,true -> [||]    // just ignore parse exceptions for now
 
     let rec operatorNamesFromExpr(ast: AST.Expression): string list =
@@ -117,6 +110,6 @@
         let abspath = System.IO.Path.GetDirectoryName(wb)
         match (parseFormula formula abspath wb ws),ignore_parse_errors with
         | Some(ast),_ -> formulaNamesFromExpr(ast) |> Seq.ofList
-        | None,false -> raise (ParseException formula)
+        | None,false -> raise (AST.ParseException formula)
         | None,true -> Seq.empty    // just ignore parse exceptions for now
 
