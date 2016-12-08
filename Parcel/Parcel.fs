@@ -40,7 +40,9 @@
             | Success(formula, _, _) -> Some(formula)
             | Failure(errorMsg, _, _) -> None
         with
-        | e ->
+        | :? AST.IndirectAddressingNotSupportedException as e -> raise e    // rethrow
+        | :? AST.ParseException as e -> raise e                             // rethrow
+        | e ->                                                              // wrap other exception
             let rec f = (fun (e:exn) ->
                             e.Message +
                             "\n\n" +
