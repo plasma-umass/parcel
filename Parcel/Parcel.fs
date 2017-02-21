@@ -83,9 +83,12 @@
         | None,false -> raise (AST.ParseException formula)
         | None,true -> [||]    // just ignore parse exceptions for now
 
+    let constantsFromExpr(e: AST.Expression) : AST.ReferenceConstant[] =
+        CellVisitor.constantsFromExpr e |> Seq.toArray
+
     let constantsFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : AST.ReferenceConstant[] =
         match (parseFormula formula path wb ws),ignore_parse_errors with
-        | Some(ast),_ -> CellVisitor.constantsFromExpr ast |> Seq.toArray
+        | Some(ast),_ -> constantsFromExpr ast
         | None,false -> raise (AST.ParseException formula)
         | None,true -> [||]    // just ignore parse exceptions for now
 
