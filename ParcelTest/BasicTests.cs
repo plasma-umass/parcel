@@ -318,7 +318,7 @@ namespace ParcelTest
             {
                 var rngs = Parcel.rangeReferencesFromFormula(f, mwb.Path, mwb.WorkbookName, mwb.worksheetName(1), false);
                 Assert.IsTrue(rngs.Contains(rng));
-                Assert.IsTrue(rngs.Length == 1);
+                Assert.IsTrue(rngs.Length == 2);
             }
             catch (AST.ParseException e)
             {
@@ -347,7 +347,7 @@ namespace ParcelTest
                 Assert.IsTrue(rngs.Contains(rng2));
                 Assert.IsTrue(rngs.Contains(rng3));
                 Assert.IsTrue(rngs.Contains(rng4));
-                Assert.IsTrue(rngs.Length == 4);
+                Assert.IsTrue(rngs.Length == 6);
             }
             catch (AST.ParseException e)
             {
