@@ -63,6 +63,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeTests.cs" />
     <Compile Include="Utility.cs" />
+    <Compile Include="VisitorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

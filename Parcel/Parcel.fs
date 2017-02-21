@@ -69,7 +69,7 @@
     let rangeReferencesFromFormula(formula: string, path: string, workbook: string, worksheet: string, ignore_parse_errors: bool) : AST.Range[] =
         try
             match (parseFormula formula path workbook worksheet),ignore_parse_errors with
-            | Some(tree),_ -> RangeVisitor.rangesFromExpr(tree) |> Seq.distinct |> Seq.toArray
+            | Some(tree),_ -> RangeVisitor.rangesFromExpr tree |> Seq.toArray
             | None,false -> raise (AST.ParseException(formula))
             | None,true -> [||]    // just ignore parse exceptions for now
         with
@@ -79,7 +79,13 @@
 
     let addrReferencesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : AST.Address[] =
         match (parseFormula formula path wb ws),ignore_parse_errors with
-        | Some(ast),_ -> CellVisitor.addrsFromExpr(ast) |> Seq.distinct |> Seq.toArray
+        | Some(ast),_ -> CellVisitor.addrsFromExpr ast |> Seq.toArray
+        | None,false -> raise (AST.ParseException formula)
+        | None,true -> [||]    // just ignore parse exceptions for now
+
+    let constantsFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : AST.ReferenceConstant[] =
+        match (parseFormula formula path wb ws),ignore_parse_errors with
+        | Some(ast),_ -> CellVisitor.constantsFromExpr ast |> Seq.toArray
         | None,false -> raise (AST.ParseException formula)
         | None,true -> [||]    // just ignore parse exceptions for now
 
