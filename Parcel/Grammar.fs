@@ -131,10 +131,9 @@
                 | [] -> pzero
                 | hd::tl ->
                     fun stream ->
-                        let stateTag = stream.StateTag
                         let mutable hd, tl = hd, tl
                         let mutable reply = hd stream
-                        while reply.Status = Error && stateTag = stream.StateTag
+                        while reply.Status = Error && stream.StateTag = stream.StateTag
                               && (match tl with
                                   | h::t -> hd <- h; tl <- t; true
                                   | _ -> false)
@@ -144,9 +143,8 @@
             | _ -> fun stream ->
                        use iter = ps.GetEnumerator()
                        if iter.MoveNext() then
-                           let stateTag = stream.StateTag
                            let mutable reply = iter.Current stream
-                           while reply.Status = Error && stateTag = stream.StateTag && iter.MoveNext() do
+                           while reply.Status = Error && stream.StateTag = stream.StateTag && iter.MoveNext() do
                                reply <- iter.Current stream
                            reply
                        else
