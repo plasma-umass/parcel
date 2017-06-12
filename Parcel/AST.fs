@@ -269,17 +269,6 @@
                 ) [|lt_y..rb_y|]
             ) [|lt_x..rb_x|] |>
             Array.concat
-
-        // converts a set of regions into a coalesced, vertical normal form
-        // e.g., A1,A2:B3,B4 and A1,B4,A2,B2:B3,A3 both become A1:A3,B2:B4
-        static member contiguousRegions(regions: (Address*Address) list) : (Address*Address) list =
-            // sort regions
-//            let sReg = List.sortWith (fun r1 r2 ->
-//                           match (r1,r2) with 
-//                           | 
-//                           
-//                       ) regionsb 
-            failwith "foo"
             
         override self.GetHashCode() : int =
             Hash.jenkinsOneAtATimeHash _regions
