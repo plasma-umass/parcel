@@ -29,7 +29,7 @@ namespace ParcelTest
             try
             {
                 Expr ast = asto.Value;
-                Assert.AreEqual(ast, correct);
+                Assert.AreEqual(correct, ast);
             }
             catch (NullReferenceException nre)
             {
@@ -57,7 +57,37 @@ namespace ParcelTest
             try
             {
                 Expr ast = asto.Value;
-                Assert.AreEqual(ast, correct);
+                Assert.AreEqual(correct, ast);
+            }
+            catch (NullReferenceException nre)
+            {
+                Assert.Fail("Parse error: " + nre.Message);
+            }
+        }
+
+        [TestMethod]
+        public void SpacesInArgListTest()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+
+            var f = "=SUM(A1,A2,A3, A4)";
+
+            ExprOpt asto = Parcel.parseFormula(f, e.Path, e.WorkbookName, e.WorksheetName);
+
+            string[] addrs = { "A1", "A2", "A3", "A4" };
+            var rng = Utility.makeUnionRangeFromA1Addrs(addrs, e);
+
+            Expr[] a = {
+                Expr.NewReferenceExpr(new AST.ReferenceRange(e, rng))
+            };
+            ArgList args = Utility.makeFSList(a);
+            Expr correct = Expr.NewReferenceExpr(new AST.ReferenceFunction(e, "SUM", args, AST.Arity.VarArgs));
+
+            try
+            {
+                Expr ast = asto.Value;
+                Assert.AreEqual(correct, ast);
             }
             catch (NullReferenceException nre)
             {

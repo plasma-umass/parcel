@@ -18,6 +18,16 @@ namespace ParcelTest
             );
         }
 
+        public static AST.Range makeUnionRangeFromA1Addrs(string[] addrs, AST.Env e)
+        {
+            // note that we reverse the array because this is how it is parsed
+            var addr_pairs = addrs.Zip(
+                addrs,
+                (a1, a2) => new Tuple<AST.Address, AST.Address>(makeAddressForA1(a1, e), makeAddressForA1(a2, e))).Reverse().ToArray();
+            var addr_pairs_fs = makeFSList<Tuple<AST.Address, AST.Address>>(addr_pairs);
+            return new AST.Range(addr_pairs_fs);
+        }
+
         public static AST.Address makeAddressForA1(string addr, AST.Env e)
         {
             var r = new System.Text.RegularExpressions.Regex(@"(\$?)([A-Z]+)(\$?)([0-9]+)");

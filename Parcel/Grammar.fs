@@ -157,7 +157,8 @@
             fun stream ->
                 let s = String.replicate (int (stream.Position.Column)) " "
                 printfn "%d%sTrying %s(\"%s\")" (stream.Index) s label (stream.PeekString 1000)
-                let reply = p stream
+//                printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
+                let reply = p stream    // set a breakpoint here when debugging
                 printfn "%d%s%s(\"%s\") (%A)" (stream.Index) s label (stream.PeekString 1000) reply.Status
                 reply
         else
@@ -202,18 +203,15 @@
     let isWSChar(c: char) : bool =
         isDigit(c) || isLetter(c) || c = '-' || c = ' '
 
-    // Special breakpoint-friendly parser
-//    let BP (p: Parser<_,_>)(stream: CharStream<'b>) =
-//        printfn "At index: %d, string remaining: %s" (stream.Index) (stream.PeekString 1000)
-//        p stream // set a breakpoint here
-//
-
     // Grammar forward references
     let (ArgumentList: P<Range> -> P<Expression list>, ArgumentListImpl) = createParserForwardedToRefWithArguments()
     let (ExpressionDecl: P<Range> -> P<Expression>, ExpressionDeclImpl) = createParserForwardedToRefWithArguments()
     let (RangeA1Union: P<Range>, RangeA1UnionImpl) = createParserForwardedToRef()
     let (RangeA1NoUnion: P<Range>, RangeA1NoUnionImpl) = createParserForwardedToRef()
     let (RangeR1C1: P<Range>, RangeR1C1Impl) = createParserForwardedToRef()
+
+    // space-insensitive commas
+    let Comma = spaces >>. pstring "," .>> spaces
 
     // Addresses
     let AddrR = pstring "R" >>. pint32
@@ -258,27 +256,27 @@
                   <!> "AnyAddr"
 
     // Ranges
-    let RA1TO_1 = pstring ":" >>. AddrA1 .>> pstring ","
-    let RA1TO_2 = pstring ":" >>. AddrA1
-    let RTO = (attempt_opt RA1TO_1) <||> RA1TO_2
+    let RA1TO_1 = (pstring ":" >>. AddrA1 .>> Comma) <!> "RA1TO_1"
+    let RA1TO_2 = (pstring ":" >>. AddrA1) <!> "RA1TO_2"
+    let RTO = ((attempt_opt RA1TO_1) <||> RA1TO_2) <!> "RTO"
 
-    let RA1TC_1 = pstring "," >>. AddrA1 .>> pstring ","
-    let RA1TC_2 = pstring "," >>. AddrA1
-    let RTC = (attempt_opt RA1TC_1) <||> RA1TC_2
+    let RA1TC_1 = (Comma >>. AddrA1 .>> Comma) <!> "RA1TC_1"
+    let RA1TC_2 = (Comma >>. AddrA1) <!> "RA1TC_2"
+    let RTC = ((attempt_opt RA1TC_1) <||> RA1TC_2) <!> "RTC"
 
-    let RA1_1 = (* AddrA1 RTC (1)*) pipe2 AddrA1 RTC (fun a1 a2 -> Range([(a2,a2); (a1,a1)]))
-    let RA1_2 = (* AddrA1 RTO (2)*) pipe2 AddrA1 RTO (fun a1 a2 -> Range(a1,a2))
+    let RA1_1 = (* AddrA1 RTC (1)*) (pipe2 AddrA1 RTC (fun a1 a2 -> Range([(a2,a2); (a1,a1)]))) <!> "RA1_1"
+    let RA1_2 = (* AddrA1 RTO (2)*) (pipe2 AddrA1 RTO (fun a1 a2 -> Range(a1,a2))) <!> "RA1_2"
 
     let rat_fun = fun a1 a2 a3 -> Range([(a1,a2);(a3,a3)])
-    let RA1_3a = pipe3 AddrA1 RA1TO_1 RA1TC_1 rat_fun
-    let RA1_3b = pipe3 AddrA1 RA1TO_1 RA1TC_2 rat_fun
-    let RA1_3c = pipe3 AddrA1 RA1TO_2 RA1TC_1 rat_fun
-    let RA1_3d = pipe3 AddrA1 RA1TO_2 RA1TC_2 rat_fun
+    let RA1_3a = (pipe3 AddrA1 RA1TO_1 RA1TC_1 rat_fun) <!> "RA1_3a"
+    let RA1_3b = (pipe3 AddrA1 RA1TO_1 RA1TC_2 rat_fun) <!> "RA1_3b"
+    let RA1_3c = (pipe3 AddrA1 RA1TO_2 RA1TC_1 rat_fun) <!> "RA1_3c"
+    let RA1_3d = (pipe3 AddrA1 RA1TO_2 RA1TC_2 rat_fun) <!> "RA1_3d"
     let RA1_3 = (* AddrA1 RTO RTC (3)*) 
-                (attempt_opt RA1_3a) <||> (attempt_opt RA1_3b) <||> (attempt_opt RA1_3c) <||> RA1_3d
+                ((attempt_opt RA1_3a) <||> (attempt_opt RA1_3b) <||> (attempt_opt RA1_3c) <||> RA1_3d) <!> "RA1_3"
 
-    let RA1_4_UNION = (* AddrA1 "," R (4)*) pipe2 (AddrA1 .>> (pstring ",")) RangeA1Union (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)]))
-    let RA1_5_UNION = (* AddrA1 RTO R (5)*) pipe3 AddrA1 RTO RangeA1Union (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges()))
+    let RA1_4_UNION = (* AddrA1 "," R (4)*) (pipe2 (AddrA1 .>> Comma) RangeA1Union (fun a1 r1 -> Range(r1.Ranges() @ [(a1, a1)]))) <!> "RA1_4_UNION"
+    let RA1_5_UNION = (* AddrA1 RTO R (5)*) (pipe3 AddrA1 RTO RangeA1Union (fun a1 a2 r2 -> Range ((a1,a2) :: r2.Ranges()))) <!> "RA1_5_UNION"
     do RangeA1UnionImpl :=   (attempt_opt RA1_5_UNION)
                         <||> (attempt_opt RA1_4_UNION)
                         <||> (attempt_opt RA1_3)
@@ -330,19 +328,19 @@
                                                 | None      -> ReferenceRange(Env(us.Path, wbname, wsname), rng) :> Reference
                                             )
                                         )
-//                                        <!> "RangeReferenceWorkbook"
+                                        <!> "RangeReferenceWorkbook"
     let RangeReferenceWorksheet R = getUserState >>=
                                     fun (us: Env) ->
                                         pipe2
                                             (WorksheetName .>> pstring "!")
                                             R
                                             (fun wsname rng -> ReferenceRange(Env(us.Path, us.WorkbookName, wsname), rng) :> Reference)
-//                                    <!> "RangeReferenceWorksheet"
+                                    <!> "RangeReferenceWorksheet"
     let RangeReferenceNoWorksheet R = getUserState >>=
                                         fun (us: Env) ->
                                             R
                                             |>> (fun rng -> ReferenceRange(us, rng) :> Reference)
-//                                    <!> "RangeReferenceNOWorksheet"
+                                    <!> "RangeReferenceNOWorksheet"
     let RangeReference R = (attempt_opt (RangeReferenceWorkbook R))
                          <||> (attempt_opt (RangeReferenceWorksheet R))
                          <||> RangeReferenceNoWorksheet R
@@ -364,19 +362,19 @@
                                                 | None      -> ReferenceAddress(Env(us.Path, wbname, wsname), addr) :> Reference
                                             )
                                         )
-//                                    <!> "AddressReferenceWorkbook"
+                                    <!> "AddressReferenceWorkbook"
     let AddressReferenceWorksheet = getUserState >>=
                                         fun us ->
                                             pipe2
                                                 (WorksheetName .>> pstring "!")
                                                 AnyAddr
                                                 (fun wsname addr -> ReferenceAddress(Env(us.Path, us.WorkbookName, wsname), addr) :> Reference)
-//                                    <!> "AddressReferenceWorksheet"
+                                    <!> "AddressReferenceWorksheet"
     let AddressReferenceNoWorksheet = getUserState >>=
                                         fun us ->
                                             AnyAddr
                                             |>> (fun addr -> ReferenceAddress(us, addr) :> Reference)
-//                                      <!> "AddressReferenceNOWorksheet"
+                                      <!> "AddressReferenceNOWorksheet"
     let AddressReference = (attempt_opt AddressReferenceWorkbook)
                            <||> (attempt_opt AddressReferenceWorksheet)
                            <||> AddressReferenceNoWorksheet
@@ -655,7 +653,7 @@
                              return y :: ys }
         | [] -> parse { return [] }
 
-    let Argument R = fun (i: int) -> (((ExpressionDecl R) .>> (spaces >>. pstring "," .>> spaces)) <!> ("Argument #" + i.ToString()))
+    let Argument R = fun (i: int) -> (((ExpressionDecl R) .>> Comma) <!> ("Argument #" + i.ToString()))
 
     let ArgumentsN R n =
         (pipe2
@@ -670,8 +668,8 @@
         // n-1 arguments, then one more, and then any number
         // of optional arguments.
         (pipe3
-            (parray (n-1) ((ExpressionDecl R) .>> pstring ",") )
-            (sepBy1 (ExpressionDecl R) (pstring ","))
+            (parray (n-1) ((ExpressionDecl R) .>> Comma) )
+            (sepBy1 (ExpressionDecl R) Comma)
             (ArgumentList R)
             (fun exprArrReqd exprAtLeastOne varArgs -> (Array.toList exprArrReqd) @ exprAtLeastOne @ varArgs) <!> ("Arguments" + n.ToString() + "+")
         )
@@ -729,7 +727,7 @@
                 VarArgsFunction R)
         ) <!> "Function"
     
-    do ArgumentListImpl := fun (R: P<Range>) -> sepBy ((ExpressionDecl R) <!> "VarArgs Argument") (spaces >>. pstring "," .>> spaces) <!> "ArgumentList"
+    do ArgumentListImpl := fun (R: P<Range>) -> sepBy ((ExpressionDecl R) <!> "VarArgs Argument") Comma <!> "ArgumentList"
 
     // Binary arithmetic operators
     let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^' || c = '&') .>> spaces
