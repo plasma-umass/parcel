@@ -66,10 +66,13 @@
         | Success(result, _, _) -> result
         | Failure(errorMsg, _, _) -> failwith ("String \"" + s + "\" does not appear to be a Reference:\n" + errorMsg)
 
+    let rangeReferencesFromExpr(tree: AST.Expression) : AST.Range[] =
+        RangeVisitor.rangesFromExpr tree |> Seq.toArray
+
     let rangeReferencesFromFormula(formula: string, path: string, workbook: string, worksheet: string, ignore_parse_errors: bool) : AST.Range[] =
         try
             match (parseFormula formula path workbook worksheet),ignore_parse_errors with
-            | Some(tree),_ -> RangeVisitor.rangesFromExpr tree |> Seq.toArray
+            | Some(tree),_ -> rangeReferencesFromExpr tree
             | None,false -> raise (AST.ParseException(formula))
             | None,true -> [||]    // just ignore parse exceptions for now
         with
@@ -77,9 +80,12 @@
         // which requires a program interpreter and input spreadsheet :(
         | :? AST.IndirectAddressingNotSupportedException -> [||]
 
+    let addrReferencesFromExpr(tree: AST.Expression) : AST.Address[] =
+        CellVisitor.addrsFromExpr tree |> Seq.toArray
+
     let addrReferencesFromFormula(formula: string, path: string, wb: string, ws: string, ignore_parse_errors: bool) : AST.Address[] =
         match (parseFormula formula path wb ws),ignore_parse_errors with
-        | Some(ast),_ -> CellVisitor.addrsFromExpr ast |> Seq.toArray
+        | Some(tree),_ -> addrReferencesFromExpr tree
         | None,false -> raise (AST.ParseException formula)
         | None,true -> [||]    // just ignore parse exceptions for now
 
