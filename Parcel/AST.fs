@@ -107,8 +107,8 @@
             let pi = Hash.cantorPair k_1 k_2 r
             // shift pi depending on the worksheet hashcode
             // (we don't have access to the real index here; getting the
-            //  sheet's hashcode mod w is an approximation)
-            let sheet_hc = (uint32 sheetname.[sheetname.Length - 1]) % w
+            //  sheetname's hashcode mod w is an approximation)
+            let sheet_hc = uint32 (sheetname.GetHashCode()) % w
             let hashcode = pi + sheet_hc * r
             int32 hashcode // this casts; it does not convert
         // necessary because Address is used as a Dictionary key
@@ -238,22 +238,26 @@
         // regions may overlap; thus we only return distinct cell addresses
         member self.Addresses() : Address[] =
             // for every contigious region
-            List.map (fun (tl: Address, br: Address) ->
-                // for every column in that region
-                Array.map (fun c ->
-                    // and every row in that region
-                    Array.map (fun r ->
-                        // get the address of the cell contained
-                        Address.fromR1C1withMode(r, c, tl.RowMode, tl.ColMode, tl.WorksheetName, tl.WorkbookName, tl.Path)
-                    ) [|tl.Y..br.Y|]
-                ) [|tl.X..br.X|] |>
-                Array.concat
-            ) _regions |>
-            Array.ofList |>
-            Array.concat |>
-            // ensure that we only enumerate overlapping cells once
-            Seq.distinct |>
-            Array.ofSeq
+            let xs =
+                List.map (fun (tl: Address, br: Address) ->
+                    // for every column in that region
+                    Array.map (fun c ->
+                        // and every row in that region
+                        Array.map (fun r ->
+                            // get the address of the cell contained
+                            Address.fromR1C1withMode(r, c, tl.RowMode, tl.ColMode, tl.WorksheetName, tl.WorkbookName, tl.Path)
+                        ) [|tl.Y..br.Y|] |>
+                        Array.toList
+                    ) [|tl.X..br.X|] |>
+                    Array.toList |>
+                    List.concat
+                ) _regions |>
+                List.concat
+            
+            // only enumerate overlapping cells once
+            let dist = xs |> List.distinct
+            let xsa = dist |> Array.ofList
+            xsa
 
         static member addrsInRegion(lt: int*int)(rb: int*int) : (int*int)[] =
             let lt_x = fst lt
