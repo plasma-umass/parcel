@@ -257,7 +257,21 @@
             // only enumerate overlapping cells once
             let dist = xs |> List.distinct
             let xsa = dist |> Array.ofList
-            xsa
+
+            // sort by leftmost-topmost
+            let sorted =
+                xsa |>
+                Array.sortWith (fun a b ->
+                    if a.Row < b.Row then
+                        -1
+                    else if a.Row = b.Row && a.Col < b.Col then
+                        -1
+                    else if a.Row = b.Row && a.Col = b.Col then
+                        0
+                    else
+                        1
+                   )
+            sorted
 
         static member addrsInRegion(lt: int*int)(rb: int*int) : (int*int)[] =
             let lt_x = fst lt

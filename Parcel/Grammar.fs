@@ -3,8 +3,8 @@
     open AST
     open System.Text.RegularExpressions
 
-    let DEBUG_MODE = false
-    let NO_OPTIMIZATIONS = false
+    let DEBUG_MODE = true
+    let NO_OPTIMIZATIONS = true
 
     //#region OPTIMIZED_IMPLEMENTATIONS
     // this is an optimized "choice" parser that disables
@@ -664,7 +664,7 @@
 
     let ArgumentsAtLeastN R n =
         // What I really want is sepByN; this parser basically
-        // does the same thing by requiring a mandator match of
+        // does the same thing by requiring a mandatory match of
         // n-1 arguments, then one more, and then any number
         // of optional arguments.
         (pipe3
@@ -729,13 +729,6 @@
     
     do ArgumentListImpl := fun (R: P<Range>) -> sepBy ((ExpressionDecl R) <!> "VarArgs Argument") Comma <!> "ArgumentList"
 
-    // Binary arithmetic operators
-    let BinOpChar = spaces >>. satisfy (fun c -> c = '+' || c = '-' || c = '/' || c = '*' || c = '<' || c = '>' || c = '=' || c = '^' || c = '&') .>> spaces
-    let BinOp2Char = spaces >>. ((attempt_opt (regex "<=")) <||> (attempt_opt (regex ">=")) <||> regex "<>") .>> spaces
-    let BinOpLong R: P<string*Expression> = pipe2 BinOp2Char (ExpressionDecl R) (fun op rhs -> (op, rhs))
-    let BinOpShort R: P<string*Expression> = pipe2 BinOpChar (ExpressionDecl R) (fun op rhs -> (op.ToString(), rhs))
-    let BinOp R: P<string*Expression> = ((attempt_opt (BinOpLong R)) <||> (BinOpShort R)) <!> "BinaryOp"
-
     // Unary operators
     let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
 
@@ -762,15 +755,33 @@
     let ExpressionAtom(R: P<Range>): P<Expression> = (((attempt_opt (Function R)) <||> (Reference R)) |>> ReferenceExpr) <!> "ExpressionAtom"
     let ExpressionSimple(R: P<Range>): P<Expression> = ((attempt_opt (ExpressionAtom R)) <||> (ParensExpr R)) <!> "ExpressionSimple"
     let UnaryOpExpr(R: P<Range>): P<Expression> = pipe2 UnaryOpChar (ExpressionDecl R) (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
-    let BinOpExpr(R: P<Range>): P<Expression> = pipe2 (ExpressionSimple R) (BinOp R) (fun lhs (op, rhs) -> BinOpExpr(op, lhs, rhs)) <!> "BinaryOpExpr"
    
+    // Binary arithmetic operators for given range
+    // This exists because the OperatorPrecedenceParser does not take an opaque Term type
+    let BinOpForRangeParser(R: P<Range>) =
+        let opp = new OperatorPrecedenceParser<Expression,unit,Env>()
+        opp.TermParser <- (ExpressionSimple R) .>> spaces
+        opp.AddOperator(InfixOperator("<", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("<", lhs, rhs))))
+        opp.AddOperator(InfixOperator(">", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr(">", lhs, rhs))))
+        opp.AddOperator(InfixOperator("=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("=", lhs, rhs))))
+        opp.AddOperator(InfixOperator("<=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<=", lhs, rhs))))
+        opp.AddOperator(InfixOperator(">=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr(">=", lhs, rhs))))
+        opp.AddOperator(InfixOperator("<>", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<>", lhs, rhs))))
+        opp.AddOperator(InfixOperator("&", spaces, 2, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("&", lhs, rhs))))
+        opp.AddOperator(InfixOperator("+", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("+", lhs, rhs))))
+        opp.AddOperator(InfixOperator("-", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("-", lhs, rhs))))
+        opp.AddOperator(InfixOperator("*", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("*", lhs, rhs))))
+        opp.AddOperator(InfixOperator("/", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("/", lhs, rhs))))
+        opp.AddOperator(InfixOperator("^", spaces, 5, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("^", lhs, rhs))))
+        opp
+    
+    let BinOpExpr(R: P<Range>): P<Expression> = (BinOpForRangeParser R).ExpressionParser <!> "BinaryOpExpr"
 
-    // This is very confusing without some context:
-    // BASICALLY, parsing Excel argument lists is ambiguous without knowing
-    // the arity of the function that you are parsing.  Thus the Expression parser
-    // takes a Range parser that either parses a Range with or without union semantics.
-    // The appropriate parser is chosen by the Function parser.
-    // Note that the top-level Formula parser tries to parse both (RangeAny).
+    // Parsing Excel argument lists is ambiguous without knowing
+    // the arity of the function that you are parsing.  Thus parsers in this grammar
+    // take a Range parser that parses ranges with the appropriate semantics.
+    // The appropriate parser is overridden by the Function parser.
+    // By default, the grammar tries to parse both (see top-level Formula parser).
     do ExpressionDeclImpl :=
         fun (R: P<Range>) ->
             (

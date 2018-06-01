@@ -60,6 +60,7 @@
     <Compile Include="ArityTests.cs" />
     <Compile Include="BasicTests.cs" />
     <Compile Include="MockWorkbook.cs" />
+    <Compile Include="PrecedenceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeTests.cs" />
     <Compile Include="Utility.cs" />
