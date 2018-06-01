@@ -3,8 +3,8 @@
     open AST
     open System.Text.RegularExpressions
 
-    let DEBUG_MODE = false
-    let NO_OPTIMIZATIONS = false
+    let DEBUG_MODE = true
+    let NO_OPTIMIZATIONS = true
 
     //#region OPTIMIZED_IMPLEMENTATIONS
     // this is an optimized "choice" parser that disables
@@ -756,24 +756,57 @@
     let ExpressionSimple(R: P<Range>): P<Expression> = ((attempt_opt (ExpressionAtom R)) <||> (ParensExpr R)) <!> "ExpressionSimple"
     let UnaryOpExpr(R: P<Range>): P<Expression> = pipe2 UnaryOpChar (ExpressionDecl R) (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
    
-    // Binary arithmetic operators
-    let opp = new OperatorPrecedenceParser<Expression,unit,Env>()
-    // ignore ranges for now
-    let BinOpExpr(R: P<Range>): P<Expression> = opp.ExpressionParser
-    let term = (ExpressionSimple RangeAny) .>> spaces
-    opp.TermParser <- term
-    opp.AddOperator(InfixOperator("<", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("<", lhs, rhs))))
-    opp.AddOperator(InfixOperator(">", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr(">", lhs, rhs))))
-    opp.AddOperator(InfixOperator("=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("=", lhs, rhs))))
-    opp.AddOperator(InfixOperator("<=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<=", lhs, rhs))))
-    opp.AddOperator(InfixOperator(">=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr(">=", lhs, rhs))))
-    opp.AddOperator(InfixOperator("<>", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<>", lhs, rhs))))
-    opp.AddOperator(InfixOperator("&", spaces, 2, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("&", lhs, rhs))))
-    opp.AddOperator(InfixOperator("+", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("+", lhs, rhs))))
-    opp.AddOperator(InfixOperator("-", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("-", lhs, rhs))))
-    opp.AddOperator(InfixOperator("*", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("*", lhs, rhs))))
-    opp.AddOperator(InfixOperator("/", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("/", lhs, rhs))))
-    opp.AddOperator(InfixOperator("^", spaces, 5, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("^", lhs, rhs))))
+    // Binary arithmetic operators for RangeAny
+    let oppRAny = new OperatorPrecedenceParser<Expression,unit,Env>()
+    oppRAny.TermParser <- (ExpressionSimple RangeAny) .>> spaces
+    oppRAny.AddOperator(InfixOperator("<", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("<", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator(">", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr(">", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("=", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("<=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<=", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator(">=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr(">=", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("<>", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<>", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("&", spaces, 2, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("&", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("+", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("+", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("-", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("-", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("*", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("*", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("/", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("/", lhs, rhs))))
+    oppRAny.AddOperator(InfixOperator("^", spaces, 5, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("^", lhs, rhs))))
+
+    // Binary arithmetic operators for RangeNoUnion
+    let oppNoUnion = new OperatorPrecedenceParser<Expression,unit,Env>()
+    oppNoUnion.TermParser <- (ExpressionSimple RangeNoUnion) .>> spaces
+    oppNoUnion.AddOperator(InfixOperator("<", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("<", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator(">", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr(">", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("=", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("<=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<=", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator(">=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr(">=", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("<>", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<>", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("&", spaces, 2, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("&", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("+", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("+", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("-", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("-", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("*", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("*", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("/", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("/", lhs, rhs))))
+    oppNoUnion.AddOperator(InfixOperator("^", spaces, 5, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("^", lhs, rhs))))
+
+    // Binary arithmetic operators for RangeWithUnion
+    let oppWUnion = new OperatorPrecedenceParser<Expression,unit,Env>()
+    oppWUnion.TermParser <- (ExpressionSimple RangeWithUnion) .>> spaces
+    oppWUnion.AddOperator(InfixOperator("<", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("<", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator(">", spaces, 1, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr(">", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("=", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("<=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<=", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator(">=", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr(">=", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("<>", spaces, 1, Associativity.None, (fun lhs rhs -> AST.BinOpExpr("<>", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("&", spaces, 2, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("&", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("+", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("+", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("-", spaces, 3, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("-", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("*", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("*", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("/", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("/", lhs, rhs))))
+    oppWUnion.AddOperator(InfixOperator("^", spaces, 5, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("^", lhs, rhs))))
+
+    // This exists because the OperatorPrecedenceParser does not take an opaque Term type
+    let BinOpExpr(R: P<Range>): P<Expression> =
+        (attempt oppRAny.ExpressionParser) <||> (attempt oppNoUnion.ExpressionParser) <||> oppWUnion.ExpressionParser
 
     // Parsing Excel argument lists is ambiguous without knowing
     // the arity of the function that you are parsing.  Thus parsers in this grammar
