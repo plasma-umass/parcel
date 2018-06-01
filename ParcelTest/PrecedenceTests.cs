@@ -6,7 +6,7 @@ using Expr = AST.Expression;
 namespace ParcelTest
 {
     [TestClass]
-    class PrecedenceTests
+    public class PrecedenceTests
     {
         [TestMethod]
         public void MultiplicationVsAdditionPrecedenceTest()
