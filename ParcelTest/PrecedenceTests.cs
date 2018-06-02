@@ -39,5 +39,36 @@ namespace ParcelTest
                 Assert.Fail("Parse error: " + nre.Message);
             }
         }
+
+        [TestMethod]
+        public void UnaryPrecedenceTest()
+        {
+            var mwb = MockWorkbook.standardMockWorkbook();
+            var e = mwb.envForSheet(1);
+
+            var f = "=-1 * 2";
+
+            ExprOpt asto = Parcel.parseFormula(f, e.Path, e.WorkbookName, e.WorksheetName);
+
+            Expr correct =
+                Expr.NewBinOpExpr(
+                    "*",
+                    Expr.NewUnaryOpExpr(
+                        '-',
+                        Expr.NewReferenceExpr(new AST.ReferenceConstant(e, 1.0))
+                    ),
+                    Expr.NewReferenceExpr(new AST.ReferenceConstant(e,2.0))
+                );
+
+            try
+            {
+                Expr ast = asto.Value;
+                Assert.AreEqual(correct, ast);
+            }
+            catch (NullReferenceException nre)
+            {
+                Assert.Fail("Parse error: " + nre.Message);
+            }
+        }
     }
 }
