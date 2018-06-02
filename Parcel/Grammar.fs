@@ -3,8 +3,8 @@
     open AST
     open System.Text.RegularExpressions
 
-    let DEBUG_MODE = true
-    let NO_OPTIMIZATIONS = true
+    let DEBUG_MODE = false
+    let NO_OPTIMIZATIONS = false
 
     //#region OPTIMIZED_IMPLEMENTATIONS
     // this is an optimized "choice" parser that disables
