@@ -730,7 +730,7 @@
     do ArgumentListImpl := fun (R: P<Range>) -> sepBy ((ExpressionDecl R) <!> "VarArgs Argument") Comma <!> "ArgumentList"
 
     // Unary operators
-    let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
+    //let UnaryOpChar = (spaces >>. satisfy (fun c -> c = '+' || c = '-') .>> spaces) <!> "UnaryOp"
 
     // reserved words
     let ReservedWordsReference: P<Reference> =
@@ -754,9 +754,9 @@
     let ParensExpr(R: P<Range>): P<Expression> = ((between (pstring "(") (pstring ")") (ExpressionDecl R)) |>> ParensExpr) <!> "ParensExpr"
     let ExpressionAtom(R: P<Range>): P<Expression> = (((attempt_opt (Function R)) <||> (Reference R)) |>> ReferenceExpr) <!> "ExpressionAtom"
     let ExpressionSimple(R: P<Range>): P<Expression> = ((attempt_opt (ExpressionAtom R)) <||> (ParensExpr R)) <!> "ExpressionSimple"
-    let UnaryOpExpr(R: P<Range>): P<Expression> = pipe2 UnaryOpChar (ExpressionDecl R) (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
+    //let UnaryOpExpr(R: P<Range>): P<Expression> = pipe2 UnaryOpChar (ExpressionDecl R) (fun op rhs -> UnaryOpExpr(op, rhs)) <!> "UnaryOpExpr"
    
-    // Binary arithmetic operators for given range
+    // Unary and Binary arithmetic operator parser generator for a given range parser
     // This exists because the OperatorPrecedenceParser does not take an opaque Term type
     let BinOpForRangeParser(R: P<Range>) =
         let opp = new OperatorPrecedenceParser<Expression,unit,Env>()
@@ -773,9 +773,11 @@
         opp.AddOperator(InfixOperator("*", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("*", lhs, rhs))))
         opp.AddOperator(InfixOperator("/", spaces, 4, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("/", lhs, rhs))))
         opp.AddOperator(InfixOperator("^", spaces, 5, Associativity.Left, (fun lhs rhs -> AST.BinOpExpr("^", lhs, rhs))))
+        opp.AddOperator(PrefixOperator("-", spaces, 6, false, (fun rhs -> AST.UnaryOpExpr('-', rhs))))
+        opp.AddOperator(PrefixOperator("+", spaces, 6, false, (fun rhs -> AST.UnaryOpExpr('+', rhs))))
         opp
     
-    let BinOpExpr(R: P<Range>): P<Expression> = (BinOpForRangeParser R).ExpressionParser <!> "BinaryOpExpr"
+    let OpExpr(R: P<Range>): P<Expression> = (BinOpForRangeParser R).ExpressionParser <!> "OpExpr"
 
     // Parsing Excel argument lists is ambiguous without knowing
     // the arity of the function that you are parsing.  Thus parsers in this grammar
@@ -784,11 +786,8 @@
     // By default, the grammar tries to parse both (see top-level Formula parser).
     do ExpressionDeclImpl :=
         fun (R: P<Range>) ->
-            (
-                ((attempt_opt (UnaryOpExpr R))
-                <||> (attempt_opt (BinOpExpr R))
-                <||> (ExpressionSimple R))
-            )
+            (attempt_opt (OpExpr R))
+            <||> (ExpressionSimple R)
             <!> "Expression"
 
     // Formulas
