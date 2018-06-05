@@ -1,8 +1,5 @@
 ﻿module AST
     open System
-    open System.Diagnostics
-    open System.Collections.Generic
-    open System.Text
 
     type ParseException(formula: string, reason: string) =
         inherit System.Exception(formula)
@@ -366,6 +363,7 @@
         override self.Type = ReferenceType.ReferenceFunction
         member self.ArgumentList = arglist
         member self.FunctionName = fnname.ToUpper()
+        member self.Arity = arity
         override self.ToString() =
             match arity with
             | Fixed a -> self.FunctionName + "[function" + a.ToString() + "](" + String.Join(",", (List.map (fun arg -> arg.ToString()) arglist)) + ")"
