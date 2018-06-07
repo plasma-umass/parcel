@@ -322,6 +322,7 @@
         member self.Path = env.Path
         member self.WorkbookName = env.WorkbookName
         member self.WorksheetName = env.WorksheetName
+        member self.Environment = env
 
     and ReferenceRange(env: Env, rng: Range) =
         inherit Reference(env)
@@ -442,6 +443,24 @@
         override self.GetHashCode() : int =
             env.GetHashCode() ||| varname.GetHashCode()
         override self.ToFormula = varname
+
+    and ReferenceUnion(env: Env, refs: Expression list) =
+        inherit Reference(env)
+        override self.Type = ReferenceType.ReferenceNamed
+        member self.Name = "union"
+        member self.References = refs
+        override self.ToString() = "ReferenceUnion(" + String.Join(",", refs) + ")"
+        override self.Equals(obj: obj) : bool =
+            match obj with
+            | :? ReferenceUnion as ru ->
+                List.zip refs ru.References
+                |> List.fold (fun acc (r1,r2) ->
+                      acc && r1 = r2
+                   ) true
+            | _ -> false
+        override self.GetHashCode() : int =
+            refs |> List.fold (fun acc r -> acc ||| r.GetHashCode()) (env.GetHashCode())
+        override self.ToFormula = "(" + String.Join(",", refs) + ")"
 
     // TODO: implement .Equals!
     and Expression =
